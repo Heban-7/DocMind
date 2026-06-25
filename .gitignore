@@ -1,0 +1,15 @@
+# Data corpus (large PDFs) -- keep out of version control
+data/
+
+# Python virtual environment (managed by uv)
+.venv/
+
+# Generated exploration outputs (Phase 0 playground)
+playground_output/
+
+# Python caches / build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
