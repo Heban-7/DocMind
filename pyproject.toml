@@ -8,3 +8,13 @@ dependencies = [
     "pdfplumber>=0.11.10",
     "pydantic>=2.13.4",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+# Put the project root on sys.path so tests can `import src...` cleanly.
+pythonpath = ["."]
+testpaths = ["tests"]
