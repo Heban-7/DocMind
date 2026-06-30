@@ -4,6 +4,9 @@ data/
 # Python virtual environment (managed by uv)
 .venv/
 
+# Project documentation
+Project_Documenation_TheDocumentIntelligenceRefinery.md
+
 # Generated exploration outputs (Phase 0 playground)
 playground_output/
 
