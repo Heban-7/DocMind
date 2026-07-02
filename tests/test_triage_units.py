@@ -12,13 +12,19 @@ import pytest
 from pydantic import ValidationError
 
 from src.agents.domain import KeywordDomainClassifier
-from src.agents.signals import detect_language, estimate_column_count
+from src.agents.signals import (
+    detect_language,
+    estimate_column_count,
+    math_symbol_ratio,
+)
 from src.agents.triage import (
     classify_layout,
     classify_origin,
     estimate_cost,
+    resolve_sample_size,
     sample_page_indices,
 )
+from src.config import Thresholds
 from src.models.document_profile import (
     DomainHint,
     ExtractionCost,
@@ -149,6 +155,40 @@ def test_sampling_large_doc_is_bounded_and_in_range():
     assert len(indices) <= 12
     assert all(0 <= i < 100 for i in indices)
     assert indices == sorted(set(indices))  # unique + ordered
+
+
+# --- Adaptive sample size ---------------------------------------------------
+def test_adaptive_sample_floor_for_small_docs():
+    # 20 pages * 5% = 1, so we clamp up to the floor.
+    assert resolve_sample_size(20) == Thresholds.SAMPLE_MIN_PAGES
+
+
+def test_adaptive_sample_ceiling_for_huge_docs():
+    # 600 pages * 5% = 30, clamped down to the ceiling.
+    assert resolve_sample_size(600) == Thresholds.SAMPLE_MAX_PAGES
+
+
+def test_adaptive_sample_scales_in_between():
+    # 360 pages * 5% = 18, between floor (12) and ceiling (24).
+    assert resolve_sample_size(360) == 18
+
+
+# --- Math symbol ratio ------------------------------------------------------
+def test_math_ratio_zero_for_plain_prose():
+    chars = [{"text": c} for c in "hello world"]
+    assert math_symbol_ratio(chars) == 0.0
+
+
+def test_math_ratio_counts_strong_symbols_only():
+    # 2 strong math chars (U+2211 summation, U+221A sqrt) of 4 non-space chars.
+    chars = [{"text": c} for c in "a\u2211b\u221a"]
+    assert math_symbol_ratio(chars) == pytest.approx(0.5)
+
+
+def test_math_ratio_ignores_financial_punctuation():
+    # Hyphens, slashes, percent and pipes must NOT count as math.
+    chars = [{"text": c} for c in "12/05-2024 50% |x|"]
+    assert math_symbol_ratio(chars) == 0.0
 
 
 # --- Pydantic guardrails ----------------------------------------------------

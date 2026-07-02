@@ -75,6 +75,9 @@ class PageSignals(BaseModel):
     table_count: int = Field(ge=0)
     table_area_ratio: float = Field(ge=0.0, le=1.0)
     column_estimate: int = Field(ge=1)
+    math_symbol_ratio: float = Field(
+        ge=0.0, le=1.0, description="share of math/scientific symbols among chars"
+    )
     has_fonts: bool
     has_form_fields: bool
     page_class: str = Field(description="text | scanned | sparse")
@@ -95,6 +98,7 @@ class DocumentSignals(BaseModel):
     avg_table_area_ratio: float = Field(ge=0.0, le=1.0)
     multi_column_page_ratio: float = Field(ge=0.0, le=1.0)
     form_field_page_ratio: float = Field(ge=0.0, le=1.0)
+    avg_math_symbol_ratio: float = Field(ge=0.0, le=1.0)
     page_signals: list[PageSignals] = Field(default_factory=list)
 
 

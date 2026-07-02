@@ -8,12 +8,28 @@ dependencies = [
     "pandas>=3.0.3",
     "pdfplumber>=0.11.10",
     "pydantic>=2.13.4",
+    "torch>=2.12.1",
+    "torchvision>=0.27.1",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
 ]
+
+# --- GPU PyTorch (CUDA 12.6 build) -------------------------------------------
+# Pull torch/torchvision from PyTorch's CUDA 12.6 wheel index instead of the
+# default CPU wheels. cu126 runs on this machine's NVIDIA driver (546.18) via
+# CUDA minor-version compatibility. Recorded in uv.lock so it persists across
+# `uv run`/`uv sync` (a plain `uv pip install` would get reverted).
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu126" }
+torchvision = { index = "pytorch-cu126" }
 
 [tool.pytest.ini_options]
 # Put the project root on sys.path so tests can `import src...` cleanly.

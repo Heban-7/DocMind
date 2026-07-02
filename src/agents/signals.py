@@ -15,6 +15,30 @@ from src.models.document_profile import PageSignals
 _ETHIOPIC_START = 0x1200
 _ETHIOPIC_END = 0x137F
 
+# Characters that hint at GENUINE mathematical / scientific content. We
+# deliberately exclude ASCII punctuation common in prose and financial tables
+# (- / % | _ ^ * = < >, dates, percentages) to avoid misrouting ordinary
+# business documents to the heavyweight MinerU engine. Kept here: strong math
+# operators not covered by the Unicode block below, Greek letters, and degrees.
+_MATH_SYMBOLS = set("±×÷∞°πθλμσΩαβγδφψω")
+# Unicode "Mathematical Operators" block (U+2200-U+22FF): ∑ ∫ √ ≤ ≥ ≈ ≠ ∂ ∇ ...
+_MATH_BLOCK = range(0x2200, 0x2300)
+
+
+def math_symbol_ratio(chars: list[dict]) -> float:
+    """Share of math/scientific symbols among the page's non-space characters."""
+    math_count = 0
+    total = 0
+    for ch in chars:
+        text = ch.get("text", "")
+        for c in text:
+            if c.isspace():
+                continue
+            total += 1
+            if c in _MATH_SYMBOLS or ord(c) in _MATH_BLOCK:
+                math_count += 1
+    return math_count / total if total else 0.0
+
 
 def _rect_area(x0: float, top: float, x1: float, bottom: float) -> float:
     """Area of a bounding box, clamped so negative/garbage boxes count as 0."""
@@ -135,6 +159,7 @@ def extract_page_signals(page, page_number: int) -> PageSignals:
         table_count=len(tables),
         table_area_ratio=table_area_ratio,
         column_estimate=estimate_column_count(words, width),
+        math_symbol_ratio=math_symbol_ratio(chars),
         has_fonts=has_fonts,
         has_form_fields=page_has_form_widgets(page),
         page_class=classify_page(char_count, image_area_ratio),
