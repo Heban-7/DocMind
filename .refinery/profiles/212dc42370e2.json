@@ -1,7 +1,7 @@
 {
   "doc_id": "212dc42370e2",
   "source_filename": "sample.pdf",
-  "source_path": "C:\\Users\\liulj\\Desktop\\AI_Engineer\\The_Document_Intelligence_Refinery_Project\\DocMind\\data\\data\\sample.pdf",
+  "source_path": "data\\data\\sample.pdf",
   "page_count": 60,
   "origin_type": "native_digital",
   "layout_complexity": "table_heavy",
@@ -25,6 +25,7 @@
     "avg_table_area_ratio": 0.24593081466775746,
     "multi_column_page_ratio": 0.0,
     "form_field_page_ratio": 0.0,
+    "avg_math_symbol_ratio": 0.0,
     "page_signals": [
       {
         "page_number": 1,
@@ -37,6 +38,7 @@
         "table_count": 0,
         "table_area_ratio": 0.0,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -52,6 +54,7 @@
         "table_count": 0,
         "table_area_ratio": 0.0,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -67,6 +70,7 @@
         "table_count": 0,
         "table_area_ratio": 0.0,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -82,6 +86,7 @@
         "table_count": 1,
         "table_area_ratio": 0.07868995385665989,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -97,6 +102,7 @@
         "table_count": 1,
         "table_area_ratio": 0.2826773927095813,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -112,6 +118,7 @@
         "table_count": 1,
         "table_area_ratio": 0.5286488005189742,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -127,6 +134,7 @@
         "table_count": 1,
         "table_area_ratio": 0.49630151742532924,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -142,6 +150,7 @@
         "table_count": 1,
         "table_area_ratio": 0.44702374811803497,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -157,6 +166,7 @@
         "table_count": 0,
         "table_area_ratio": 0.0,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -172,6 +182,7 @@
         "table_count": 2,
         "table_area_ratio": 0.12421000457809786,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -187,6 +198,7 @@
         "table_count": 2,
         "table_area_ratio": 0.4985962896113823,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -202,6 +214,7 @@
         "table_count": 2,
         "table_area_ratio": 0.49502206919502983,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": true,
         "has_form_fields": false,
         "page_class": "text"
@@ -215,6 +228,6 @@
     "domain=financial (confidence=90%)",
     "cost=needs_layout_model: derived from origin 'native_digital' and layout 'table_heavy'"
   ],
-  "triage_version": "1.0.0",
-  "created_at": "2026-06-30T00:06:00.859491Z"
+  "triage_version": "1.1.0",
+  "created_at": "2026-07-02T16:15:36.552869Z"
 }

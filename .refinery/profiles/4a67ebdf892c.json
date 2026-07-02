@@ -1,7 +1,7 @@
 {
-  "doc_id": "45bc9cf4ff5c",
-  "source_filename": "2013-E.C-Assigned-regular-budget-and-expense.pdf",
-  "source_path": "data\\data\\2013-E.C-Assigned-regular-budget-and-expense.pdf",
+  "doc_id": "4a67ebdf892c",
+  "source_filename": "2013-E.C-Procurement-information.pdf",
+  "source_path": "data\\data\\2013-E.C-Procurement-information.pdf",
   "page_count": 3,
   "origin_type": "scanned_image",
   "layout_complexity": "figure_heavy",
@@ -25,11 +25,12 @@
     "avg_table_area_ratio": 0.0,
     "multi_column_page_ratio": 0.0,
     "form_field_page_ratio": 0.0,
+    "avg_math_symbol_ratio": 0.0,
     "page_signals": [
       {
         "page_number": 1,
-        "width": 841.68,
-        "height": 595.44,
+        "width": 595.44,
+        "height": 841.68,
         "char_count": 0,
         "char_density": 0.0,
         "word_count": 0,
@@ -37,14 +38,15 @@
         "table_count": 0,
         "table_area_ratio": 0.0,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": false,
         "has_form_fields": false,
         "page_class": "scanned"
       },
       {
         "page_number": 2,
-        "width": 841.68,
-        "height": 595.44,
+        "width": 595.44,
+        "height": 841.68,
         "char_count": 0,
         "char_density": 0.0,
         "word_count": 0,
@@ -52,14 +54,15 @@
         "table_count": 0,
         "table_area_ratio": 0.0,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": false,
         "has_form_fields": false,
         "page_class": "scanned"
       },
       {
         "page_number": 3,
-        "width": 837.517241379,
-        "height": 592.965517241,
+        "width": 595.44,
+        "height": 841.68,
         "char_count": 0,
         "char_density": 0.0,
         "word_count": 0,
@@ -67,6 +70,7 @@
         "table_count": 0,
         "table_area_ratio": 0.0,
         "column_estimate": 1,
+        "math_symbol_ratio": 0.0,
         "has_fonts": false,
         "has_form_fields": false,
         "page_class": "scanned"
@@ -80,6 +84,6 @@
     "domain=general (confidence=0%)",
     "cost=needs_vision_model: derived from origin 'scanned_image' and layout 'figure_heavy'"
   ],
-  "triage_version": "1.0.0",
-  "created_at": "2026-06-29T18:12:36.277502Z"
+  "triage_version": "1.1.0",
+  "created_at": "2026-07-02T16:38:04.373319Z"
 }

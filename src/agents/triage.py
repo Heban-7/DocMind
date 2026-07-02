@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 
 import pdfplumber
@@ -107,6 +108,7 @@ def aggregate_signals(
             avg_table_area_ratio=0.0,
             multi_column_page_ratio=0.0,
             form_field_page_ratio=0.0,
+            avg_math_symbol_ratio=0.0,
             page_signals=[],
         )
 
@@ -126,6 +128,8 @@ def aggregate_signals(
         avg_table_area_ratio=sum(p.table_area_ratio for p in page_signals) / analyzed,
         multi_column_page_ratio=ratio(lambda p: p.column_estimate >= 2),
         form_field_page_ratio=ratio(lambda p: p.has_form_fields),
+        avg_math_symbol_ratio=sum(p.math_symbol_ratio for p in page_signals)
+        / analyzed,
         page_signals=page_signals,
     )
 
@@ -148,6 +152,17 @@ def sample_page_indices(page_count: int, max_pages: int) -> list[int]:
     return sorted({int(i * step) for i in range(max_pages)})
 
 
+def resolve_sample_size(page_count: int) -> int:
+    """Adaptive sample size: ~5% of pages, clamped to [SAMPLE_MIN, SAMPLE_MAX].
+
+    A 20-page doc samples the floor (12); a 600-page doc samples the ceiling
+    (24). Cheap to raise because triage only reads text, it never renders.
+    """
+    proportional = math.ceil(page_count * Thresholds.SAMPLE_FRACTION)
+    bounded = max(Thresholds.SAMPLE_MIN_PAGES, proportional)
+    return min(Thresholds.SAMPLE_MAX_PAGES, bounded)
+
+
 # --- The agent --------------------------------------------------------------
 class TriageAgent:
     """Inspects a PDF and produces a strictly-typed DocumentProfile."""
@@ -155,9 +170,10 @@ class TriageAgent:
     def __init__(
         self,
         domain_classifier: DomainClassifier | None = None,
-        max_pages: int = Thresholds.MAX_PAGES_TO_ANALYZE,
+        max_pages: int | None = None,
         profiles_dir: Path = PROFILES_DIR,
     ):
+        # max_pages=None means "decide adaptively from the page count".
         self.domain_classifier = domain_classifier or KeywordDomainClassifier()
         self.max_pages = max_pages
         self.profiles_dir = profiles_dir
@@ -173,7 +189,8 @@ class TriageAgent:
 
         with pdfplumber.open(pdf_path) as pdf:
             page_count = len(pdf.pages)
-            for idx in sample_page_indices(page_count, self.max_pages):
+            sample_size = self.max_pages or resolve_sample_size(page_count)
+            for idx in sample_page_indices(page_count, sample_size):
                 page = pdf.pages[idx]
                 page_signals.append(extract_page_signals(page, idx + 1))
                 if sum(len(t) for t in text_parts) < _MAX_TEXT_CHARS:
