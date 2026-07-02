@@ -31,6 +31,11 @@ REFINERY_DIR = PROJECT_ROOT / ".refinery"
 PROFILES_DIR = REFINERY_DIR / "profiles"
 EXTRACTIONS_DIR = REFINERY_DIR / "extractions"
 
+# The model registry (friendly name -> provider/slug/capabilities/pricing).
+MODEL_REGISTRY_PATH = Path(
+    os.getenv("DOCMIND_MODEL_REGISTRY", str(PROJECT_ROOT / "rubric" / "models.yaml"))
+)
+
 # Upper bound on pages sent to the heavy Docling-based engines (layout/vision).
 # Now that extraction runs in small page batches (see DOCLING_PAGE_BATCH), peak
 # RAM is just one batch at a time, so we can safely process the WHOLE document.
@@ -80,21 +85,28 @@ class VisionConfig:
     """
 
     # Explicit overrides (optional). If unset, the factory auto-detects.
-    PROVIDER: str | None = os.getenv("LLM_PROVIDER")  # openrouter | openai | gemini
+    # PROVIDER forces a provider; MODEL forces a model (friendly name or slug).
+    PROVIDER: str | None = os.getenv("LLM_PROVIDER")  # openrouter|openai|gemini|groq
     MODEL: str | None = os.getenv("LLM_MODEL")
+    # Separate default for cheap TEXT tasks (e.g. domain classification). If
+    # unset, the registry's `defaults.text` is used.
+    TEXT_MODEL: str | None = os.getenv("LLM_TEXT_MODEL")
 
     # Credentials are read from the environment (never hardcoded).
     OPENROUTER_API_KEY: str | None = os.getenv("OPENROUTER_API_KEY")
     OPENAI_API_KEY: str | None = os.getenv("OPENAI_API_KEY")
+    GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY")
     GEMINI_API_KEY: str | None = os.getenv("GEMINI_API_KEY") or os.getenv(
         "GOOGLE_API_KEY"
     )
 
-    # Sensible per-provider default models (used when MODEL is unset).
+    # Sensible per-provider default models (used when MODEL is unset). Values are
+    # friendly names resolved through the model registry (rubric/models.yaml).
     DEFAULT_MODELS: dict[str, str] = {
-        "openrouter": "google/gemini-2.0-flash-001",
+        "openrouter": "or-gemini-flash",
         "openai": "gpt-4o-mini",
-        "gemini": "gemini-2.0-flash",
+        "gemini": "gemini-flash",
+        "groq": "groq-llama-vision",
     }
 
     # How many leading pages to send to the PAID VLM, and at what resolution.

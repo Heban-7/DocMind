@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pdfplumber
 
-from src.agents.domain import DomainClassifier, KeywordDomainClassifier
+from src.agents.domain import DomainClassifier, build_default_domain_classifier
 from src.agents.signals import detect_language, extract_page_signals
 from src.config import DEFAULT_SAMPLE_PDF, PROFILES_DIR, TRIAGE_VERSION, Thresholds
 from src.models.document_profile import (
@@ -174,7 +174,11 @@ class TriageAgent:
         profiles_dir: Path = PROFILES_DIR,
     ):
         # max_pages=None means "decide adaptively from the page count".
-        self.domain_classifier = domain_classifier or KeywordDomainClassifier()
+        # Default classifier is LLM-with-keyword-fallback when a key is present,
+        # else keyword-only (fully offline).
+        self.domain_classifier = (
+            domain_classifier or build_default_domain_classifier()
+        )
         self.max_pages = max_pages
         self.profiles_dir = profiles_dir
 
