@@ -1,0 +1,98 @@
+# DocMind model registry
+# ------------------------------------------------------------------------------
+# The SINGLE source of truth for the LLMs the system can use. A user swaps models
+# by referring to a friendly name here (e.g. LLM_MODEL=gemini-flash) OR by passing
+# a raw provider slug. Each entry records:
+#   provider        : which adapter/endpoint runs it (gemini|openai|openrouter|groq)
+#   slug            : the exact model id the provider expects
+#   supports_vision : can it read images? (needed for Strategy C)
+#   context_window  : max tokens (informational / future routing)
+#   input_price     : USD per 1M input tokens  (for the BudgetGuard estimates)
+#   output_price    : USD per 1M output tokens
+#
+# Prices are approximate published rates; they only need to be close enough for
+# the budget guard. Slugs (especially Groq's) evolve -- edit them here, no code
+# change required. That's the whole point of a registry.
+
+# Global fallbacks used when nothing else is specified.
+defaults:
+  text: gemini-flash
+  vision: gemini-flash
+
+models:
+  # --- Google Gemini (direct) ------------------------------------------------
+  gemini-flash:
+    provider: gemini
+    slug: gemini-2.0-flash
+    supports_vision: true
+    context_window: 1000000
+    input_price: 0.10
+    output_price: 0.40
+
+  gemini-flash-lite:
+    provider: gemini
+    slug: gemini-2.0-flash-lite
+    supports_vision: true
+    context_window: 1000000
+    input_price: 0.075
+    output_price: 0.30
+
+  # --- OpenAI (direct) -------------------------------------------------------
+  gpt-4o-mini:
+    provider: openai
+    slug: gpt-4o-mini
+    supports_vision: true
+    context_window: 128000
+    input_price: 0.15
+    output_price: 0.60
+
+  gpt-4o:
+    provider: openai
+    slug: gpt-4o
+    supports_vision: true
+    context_window: 128000
+    input_price: 2.50
+    output_price: 10.00
+
+  # --- OpenRouter (aggregator: one key, any model, swap by string) ----------
+  or-gemini-flash:
+    provider: openrouter
+    slug: google/gemini-2.0-flash-001
+    supports_vision: true
+    context_window: 1000000
+    input_price: 0.10
+    output_price: 0.40
+
+  or-gpt-4o-mini:
+    provider: openrouter
+    slug: openai/gpt-4o-mini
+    supports_vision: true
+    context_window: 128000
+    input_price: 0.15
+    output_price: 0.60
+
+  or-claude-haiku:
+    provider: openrouter
+    slug: anthropic/claude-3.5-haiku
+    supports_vision: true
+    context_window: 200000
+    input_price: 0.80
+    output_price: 4.00
+
+  # --- Groq (aggregator: very fast, open models) ----------------------------
+  # NOTE: Groq slugs change often; update these to the current catalog as needed.
+  groq-llama-text:
+    provider: groq
+    slug: llama-3.3-70b-versatile
+    supports_vision: false
+    context_window: 128000
+    input_price: 0.59
+    output_price: 0.79
+
+  groq-llama-vision:
+    provider: groq
+    slug: meta-llama/llama-4-scout-17b-16e-instruct
+    supports_vision: true
+    context_window: 128000
+    input_price: 0.11
+    output_price: 0.34

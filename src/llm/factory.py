@@ -1,24 +1,30 @@
 """
-The provider factory -- "plug in whatever you have".
+The provider factory -- "plug in whatever you have, swap models by name".
 
-Resolution order:
-  1. If LLM_PROVIDER is set, use exactly that provider (error if its key is
-     missing).
-  2. Otherwise auto-detect: OpenRouter -> OpenAI -> Gemini, by whichever API key
-     is present in the environment.
-  3. If no credential exists at all, return None so the caller can fall back to
-     local OCR.
+`get_client(model=...)` is the single entry point. Resolution:
+  1. If a `model` is requested (arg > LLM_MODEL), resolve it via the registry to
+     a (provider, slug). If that provider's key is present, use it.
+  2. If LLM_PROVIDER is forced, use exactly that provider (error if key missing).
+  3. Otherwise auto-detect a provider by whichever API key is present
+     (OpenRouter -> OpenAI -> Gemini -> Groq) and use its default model.
+  4. If no credential exists at all, return None so the caller can fall back
+     (e.g., local OCR, or keyword domain classification).
 
-The model defaults per-provider but can be overridden with LLM_MODEL.
+`build_vision_client()` / `get_text_client()` are thin wrappers that pick a
+sensible default model for that kind of task.
 """
 
 from __future__ import annotations
 
 from src.config import VisionConfig
-from src.llm.base import VisionLLMClient
+from src.llm import registry
+from src.llm.base import LLMClient
 from src.llm.providers.gemini import GeminiVisionClient
+from src.llm.providers.groq import GroqVisionClient
 from src.llm.providers.openai import OpenAIVisionClient
 from src.llm.providers.openrouter import OpenRouterVisionClient
+
+_AUTODETECT_ORDER = ("openrouter", "openai", "gemini", "groq")
 
 
 def _key_for(provider: str) -> str | None:
@@ -26,37 +32,74 @@ def _key_for(provider: str) -> str | None:
         "openrouter": VisionConfig.OPENROUTER_API_KEY,
         "openai": VisionConfig.OPENAI_API_KEY,
         "gemini": VisionConfig.GEMINI_API_KEY,
+        "groq": VisionConfig.GROQ_API_KEY,
     }.get(provider)
 
 
-def _construct(provider: str, model: str, api_key: str) -> VisionLLMClient:
+def _construct(provider: str, slug: str, api_key: str) -> LLMClient:
     if provider == "openrouter":
-        return OpenRouterVisionClient(model, api_key)
+        return OpenRouterVisionClient(slug, api_key)
     if provider == "openai":
-        return OpenAIVisionClient(model, api_key)
+        return OpenAIVisionClient(slug, api_key)
     if provider == "gemini":
-        return GeminiVisionClient(model, api_key)
+        return GeminiVisionClient(slug, api_key)
+    if provider == "groq":
+        return GroqVisionClient(slug, api_key)
     raise ValueError(f"Unknown LLM provider '{provider}'.")
 
 
-def build_vision_client() -> VisionLLMClient | None:
-    """Return a ready vision client, or None if no credential is available."""
-    explicit = VisionConfig.PROVIDER
+def _autodetect(require_vision: bool) -> LLMClient | None:
+    for provider in _AUTODETECT_ORDER:
+        key = _key_for(provider)
+        if not key:
+            continue
+        spec = registry.resolve(VisionConfig.DEFAULT_MODELS[provider])
+        return _construct(provider, spec.slug, key)
+    return None
 
-    if explicit:
-        key = _key_for(explicit)
+
+def get_client(
+    model: str | None = None, *, require_vision: bool = False
+) -> LLMClient | None:
+    """Return a ready LLM client for a model name, or None if no key exists."""
+    forced_provider = VisionConfig.PROVIDER
+    requested = model or VisionConfig.MODEL
+
+    # (2) Explicit provider override wins.
+    if forced_provider:
+        key = _key_for(forced_provider)
         if not key:
             raise ValueError(
-                f"LLM_PROVIDER='{explicit}' was requested but its API key is not set."
+                f"LLM_PROVIDER='{forced_provider}' was requested but its API key "
+                "is not set."
             )
-        model = VisionConfig.MODEL or VisionConfig.DEFAULT_MODELS[explicit]
-        return _construct(explicit, model, key)
+        if requested:
+            spec = registry.resolve(requested)
+            slug = spec.slug if spec.provider == forced_provider else requested
+        else:
+            slug = registry.resolve(
+                VisionConfig.DEFAULT_MODELS[forced_provider]
+            ).slug
+        return _construct(forced_provider, slug, key)
 
-    # Auto-detect by whichever key is present.
-    for provider in ("openrouter", "openai", "gemini"):
-        key = _key_for(provider)
+    # (1) Honor a requested model if its provider has a key.
+    if requested:
+        spec = registry.resolve(requested)
+        key = _key_for(spec.provider)
         if key:
-            model = VisionConfig.MODEL or VisionConfig.DEFAULT_MODELS[provider]
-            return _construct(provider, model, key)
+            return _construct(spec.provider, spec.slug, key)
+        # Requested model's provider has no key -> fall back to auto-detect.
 
-    return None  # no credentials -> caller decides (e.g., OCR fallback)
+    # (3) Auto-detect by available credential.
+    return _autodetect(require_vision)
+
+
+def build_vision_client() -> LLMClient | None:
+    """A vision-capable client (used by Strategy C)."""
+    return get_client(require_vision=True)
+
+
+def get_text_client() -> LLMClient | None:
+    """A cheap text client for tasks like domain classification."""
+    text_model = VisionConfig.TEXT_MODEL or registry.default_model("text")
+    return get_client(model=text_model, require_vision=False)

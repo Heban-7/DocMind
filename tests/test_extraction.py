@@ -18,7 +18,7 @@ from src.extraction.layout_mineru import MinerULayoutEngine
 from src.extraction.layout_selector import LayoutStrategySelector
 from src.extraction.router import ExtractionRouter
 from src.extraction.vision_augmented import VisionAugmentedEngine
-from src.llm.base import VisionLLMClient, VisionResult
+from src.llm.base import LLMResult, VisionLLMClient
 from src.llm.budget import BudgetExceededError, BudgetGuard
 from src.llm.factory import build_vision_client
 from src.llm.pricing import estimate_cost
@@ -75,11 +75,19 @@ class _FakeClient(VisionLLMClient):
         self.cost_per_call = cost_per_call
         self.calls = 0
 
-    def analyze_image(self, image_png: bytes, prompt: str) -> VisionResult:
+    def chat(
+        self,
+        messages,
+        *,
+        response_format=None,
+        temperature=None,
+        max_tokens=None,
+    ) -> LLMResult:
         self.calls += 1
-        return VisionResult(
+        return LLMResult(
             text=f"# Page transcription {self.calls}",
             model=self.model,
+            provider=self.provider,
             input_tokens=10,
             output_tokens=20,
             cost_usd=self.cost_per_call,
@@ -111,6 +119,7 @@ def _clear_provider_env(monkeypatch):
     monkeypatch.setattr(VisionConfig, "OPENROUTER_API_KEY", None)
     monkeypatch.setattr(VisionConfig, "OPENAI_API_KEY", None)
     monkeypatch.setattr(VisionConfig, "GEMINI_API_KEY", None)
+    monkeypatch.setattr(VisionConfig, "GROQ_API_KEY", None)
 
 
 def test_factory_returns_none_without_credentials(monkeypatch):
