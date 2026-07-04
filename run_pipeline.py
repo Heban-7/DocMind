@@ -1,10 +1,11 @@
 """
-DocMind | End-to-end pipeline runner (Phase 1 + Phase 2).
+DocMind | End-to-end pipeline runner (Phase 1 + Phase 2 + Phase 3).
 
-This script wires the two stages together:
+This script wires the stages together:
 
     PDF --> [TriageAgent] --> DocumentProfile --> [ExtractionRouter] --> Engine
         --> extract() --> unified Markdown --> saved to .refinery/extractions/
+        --> [ContextAwareChunker] --> LDUs --> saved to .refinery/chunks/
 
 Usage:
     uv run python run_pipeline.py                      # uses data/data/sample.pdf
@@ -17,7 +18,8 @@ import argparse
 from pathlib import Path
 
 from src.agents.triage import TriageAgent
-from src.config import DEFAULT_SAMPLE_PDF, EXTRACTIONS_DIR
+from src.chunking.engine import ContextAwareChunker
+from src.config import CHUNKS_DIR, DEFAULT_SAMPLE_PDF, EXTRACTIONS_DIR
 from src.extraction.router import ExtractionRouter
 from src.models.document_profile import DocumentProfile
 
@@ -55,6 +57,24 @@ def run(pdf_path: str) -> tuple[DocumentProfile, Path]:
     print("-" * 72)
     print(f"Extracted chars: {len(markdown):,}")
     print(f"Markdown saved : {out_path}")
+
+    # --- Phase 3: Chunk into RAG-ready LDUs -------------------------------
+    print("-" * 72)
+    print("Chunking into Logical Document Units...")
+    chunker = ContextAwareChunker()
+    chunks = chunker.chunk(markdown)
+
+    CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
+    chunks_path = CHUNKS_DIR / f"{profile.doc_id}.jsonl"
+    with open(chunks_path, "w", encoding="utf-8") as handle:
+        for chunk in chunks:
+            handle.write(chunk.model_dump_json() + "\n")
+
+    avg_words = (
+        sum(c.metadata.word_count for c in chunks) / len(chunks) if chunks else 0
+    )
+    print(f"Chunks created : {len(chunks)} (avg {avg_words:.0f} words/chunk)")
+    print(f"Chunks saved   : {chunks_path}")
     print("=" * 72)
     return profile, out_path
 
