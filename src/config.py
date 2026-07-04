@@ -30,6 +30,14 @@ DEFAULT_SAMPLE_PDF = DATA_DIR / "sample.pdf"
 REFINERY_DIR = PROJECT_ROOT / ".refinery"
 PROFILES_DIR = REFINERY_DIR / "profiles"
 EXTRACTIONS_DIR = REFINERY_DIR / "extractions"
+CHUNKS_DIR = REFINERY_DIR / "chunks"
+
+# --- Chunking (Phase 3) -----------------------------------------------------
+# Soft target and hard ceiling (in words) for a Logical Document Unit. The
+# chunker aims for ~target and never splits atomic structures (tables/code);
+# only prose/lists beyond max are split, on sentence/line boundaries.
+CHUNK_TARGET_WORDS: int = int(os.getenv("DOCMIND_CHUNK_TARGET_WORDS", "450"))
+CHUNK_MAX_WORDS: int = int(os.getenv("DOCMIND_CHUNK_MAX_WORDS", "800"))
 
 # The model registry (friendly name -> provider/slug/capabilities/pricing).
 MODEL_REGISTRY_PATH = Path(

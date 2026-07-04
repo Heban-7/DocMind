@@ -126,6 +126,26 @@ def _build_ocr_options(is_gpu: bool):
     )
 
 
+def _export_pages_with_markers(document, start: int, end: int) -> list[str]:
+    """Export one Markdown section per physical page with provenance markers.
+
+    Docling assigns page numbers 1..N *within the batch PDF* we converted. We
+    map those back to the original document's page indices (``start``..``end``)
+    and prepend ``<!-- page N -->`` before each page's markdown so the chunker
+    can stamp accurate ``page_numbers`` on every LDU.
+    """
+    parts: list[str] = []
+    batch_len = end - start + 1
+    for internal in range(1, batch_len + 1):
+        original_page = start + internal - 1
+        page_md = document.export_to_markdown(page_no=internal).strip()
+        if not page_md:
+            continue
+        parts.append(f"<!-- page {original_page} -->")
+        parts.append(page_md)
+    return parts
+
+
 def convert_to_markdown(
     file_path: str,
     *,
@@ -196,7 +216,9 @@ def convert_to_markdown(
             try:
                 _write_chunk(path, start, end, chunk_path)
                 result = converter.convert(chunk_path)
-                parts.append(result.document.export_to_markdown())
+                parts.extend(
+                    _export_pages_with_markers(result.document, start, end)
+                )
             except Exception as exc:  # keep going; one bad chunk shouldn't kill all
                 parts.append(f"<!-- pages {start}-{end} failed: {exc} -->")
             finally:
