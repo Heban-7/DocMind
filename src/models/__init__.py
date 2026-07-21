@@ -10,6 +10,14 @@ from src.models.document_profile import (
     OriginType,
     PageSignals,
 )
+from src.models.provenance import BoundingBox, Citation, ProvenanceChain
+from src.models.query import (
+    AuditStatus,
+    AuditVerdict,
+    QueryAnswer,
+    ToolName,
+    ToolTrace,
+)
 
 __all__ = [
     "DocumentProfile",
@@ -20,4 +28,12 @@ __all__ = [
     "LayoutComplexity",
     "OriginType",
     "PageSignals",
+    "BoundingBox",
+    "Citation",
+    "ProvenanceChain",
+    "AuditStatus",
+    "AuditVerdict",
+    "QueryAnswer",
+    "ToolName",
+    "ToolTrace",
 ]
