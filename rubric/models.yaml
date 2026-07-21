@@ -18,8 +18,28 @@
 defaults:
   text: gemini-flash
   vision: gemini-flash
+  # OpenAI embedding model used by Phase 4 Chroma ingestion / semantic_search.
+  embedding: text-embedding-3-small
 
 models:
+  # --- Embeddings (OpenAI) ---------------------------------------------------
+  # Price is USD per 1M tokens; output_price unused for embeddings (set 0).
+  text-embedding-3-small:
+    provider: openai
+    slug: text-embedding-3-small
+    supports_vision: false
+    context_window: 8191
+    input_price: 0.02
+    output_price: 0.00
+
+  text-embedding-3-large:
+    provider: openai
+    slug: text-embedding-3-large
+    supports_vision: false
+    context_window: 8191
+    input_price: 0.13
+    output_price: 0.00
+
   # --- Google Gemini (direct) ------------------------------------------------
   gemini-flash:
     provider: gemini

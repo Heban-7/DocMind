@@ -32,6 +32,11 @@ PROFILES_DIR = REFINERY_DIR / "profiles"
 EXTRACTIONS_DIR = REFINERY_DIR / "extractions"
 CHUNKS_DIR = REFINERY_DIR / "chunks"
 
+# --- Phase 4 persistence (query / retrieval / facts) ------------------------
+PAGEINDEX_DIR = REFINERY_DIR / "pageindex"
+CHROMA_DIR = Path(os.getenv("DOCMIND_CHROMA_DIR", str(REFINERY_DIR / "chroma")))
+FACTS_DB_PATH = Path(os.getenv("DOCMIND_FACTS_DB", str(REFINERY_DIR / "facts.db")))
+
 # --- Chunking (Phase 3) -----------------------------------------------------
 # Soft target and hard ceiling (in words) for a Logical Document Unit. The
 # chunker aims for ~target and never splits atomic structures (tables/code);
@@ -130,6 +135,28 @@ class VisionConfig:
     # OCR is local and free, so the fallback processes the WHOLE document by
     # default (None). It is NOT limited by MAX_PAGES (which exists for VLM cost).
     OCR_FALLBACK_MAX_PAGES: int | None = None
+
+
+# --- Embeddings (Phase 4 vector search) -------------------------------------
+class EmbeddingConfig:
+    """OpenAI embedding settings for ChromaDB ingestion + semantic search.
+
+    Uses the same OPENAI_API_KEY as the LLM layer. Default model is the
+    current cost-efficient OpenAI embedding model (text-embedding-3-small).
+    """
+
+    PROVIDER: str = os.getenv("DOCMIND_EMBEDDING_PROVIDER", "openai")
+    MODEL: str = os.getenv("DOCMIND_EMBEDDING_MODEL", "text-embedding-3-small")
+    # text-embedding-3-small native dim is 1536; smaller dims are cheaper to store.
+    DIMENSIONS: int | None = (
+        int(os.environ["DOCMIND_EMBEDDING_DIMS"])
+        if os.getenv("DOCMIND_EMBEDDING_DIMS")
+        else None
+    )
+    # How many LDU texts to embed per OpenAI request (batch for cost/latency).
+    BATCH_SIZE: int = int(os.getenv("DOCMIND_EMBEDDING_BATCH", "64"))
+    # Chroma collection name (one collection; filter by doc_id at query time).
+    COLLECTION_NAME: str = os.getenv("DOCMIND_CHROMA_COLLECTION", "docmind_ldus")
 
 
 # --- Triage heuristic thresholds --------------------------------------------
