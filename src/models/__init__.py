@@ -10,6 +10,7 @@ from src.models.document_profile import (
     OriginType,
     PageSignals,
 )
+from src.models.page_index import PageIndex, SectionNode
 from src.models.provenance import BoundingBox, Citation, ProvenanceChain
 from src.models.query import (
     AuditStatus,
@@ -28,6 +29,8 @@ __all__ = [
     "LayoutComplexity",
     "OriginType",
     "PageSignals",
+    "PageIndex",
+    "SectionNode",
     "BoundingBox",
     "Citation",
     "ProvenanceChain",
