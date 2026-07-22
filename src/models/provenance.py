@@ -41,6 +41,20 @@ class BoundingBox(BaseModel):
             page_width=width, page_height=height,
         )
 
+    @classmethod
+    def unresolved(cls) -> BoundingBox:
+        """Honest placeholder when page geometry could not be read.
+
+        Uses a degenerate box (all zeros, null page size) so we never invent
+        fake US-Letter dimensions. Callers / UIs should treat this as
+        "page known, coordinates not yet resolved."
+        """
+        return cls(x0=0.0, y0=0.0, x1=0.0, y1=0.0, page_width=None, page_height=None)
+
+    @property
+    def is_resolved(self) -> bool:
+        return self.page_width is not None and self.page_height is not None and self.x1 > 0
+
 
 class Citation(BaseModel):
     """One auditable pointer from an answer claim back into a source document."""
