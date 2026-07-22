@@ -1,0 +1,620 @@
+{
+  "doc_id": "212dc42370e2",
+  "source_filename": "sample.pdf",
+  "roots": [
+    {
+      "title": "1.  Introduction",
+      "page_start": 6,
+      "page_end": 6,
+      "path": [
+        "1.  Introduction"
+      ],
+      "summary": "This report provides estimates of federal import tax expenditures during fiscal years 2018/19, 2019/20 and 2020/21. The report is based on shipment-level microdata on customs duty, excise duty, VAT and surtax collections on imports from the Ethiopian Customs Commission.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "49e67f7d-3441-4346-a144-340c25f74d85"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "2.  Policy rationale for and issues with tax expenditures",
+      "page_start": 7,
+      "page_end": 7,
+      "path": [
+        "2.  Policy rationale for and issues with tax expenditures"
+      ],
+      "summary": "The government of Ethiopia has been using tax policies such as tax holidays, tax credits and preferential tax treatments for certain sectors and producers to encourage and expand investment, especially in the manufacturing sector; to strengthen domestic production capacity; and to motivate investors engaged in export trade. The goal of this is to accelerate the economic development of the country...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "92c48162-03b4-44e2-b20b-35084e680b0b"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.1  Defining the benchmark tax system",
+      "page_start": 9,
+      "page_end": 10,
+      "path": [
+        "3.1  Defining the benchmark tax system"
+      ],
+      "summary": "Tax expenditures are defined as deviations from a benchmark system. The first step in estimating tax expenditures is therefore the definition of a benchmark tax system.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "6eb3885a-4556-40cb-9c5b-7b9e1a73319b",
+        "2d2207ec-c932-42c8-81a7-81da189f399d"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.2  Estimating tax expenditures",
+      "page_start": 13,
+      "page_end": 14,
+      "path": [
+        "3.2  Estimating tax expenditures"
+      ],
+      "summary": "The overall tax expenditure for a shipment is the difference between the tax that should have been paid had the benchmark tax system been applied and the actual tax collected. One complication in the Ethiopian import tax system is that customs duty, excise tax, VAT and surtax are charged sequentially, so tax expenditures earlier in the sequence affect the tax base for taxes later in the sequence.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "b7523f6f-2913-493e-a6b3-5b4d16357807",
+        "1bbed871-f66a-45b1-a8b0-9743cd2af1aa"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.3 Data",
+      "page_start": 15,
+      "page_end": 15,
+      "path": [
+        "3.3 Data"
+      ],
+      "summary": "This report uses shipment-level microdata from the Ethiopian Customs Commission at the eight-digit HS level from FY 2018/19 to FY 2020/21. During this period, the Ethiopian Customs Commission transitioned from the Automated System for Customs Data (ASYCUDA++) to the electronic Customs Management System (eCMS).",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "6af3f91b-d9ab-484d-b79b-f43ce12b9e26"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4.1  Overall tax expenditures",
+      "page_start": 16,
+      "page_end": 21,
+      "path": [
+        "4.1  Overall tax expenditures"
+      ],
+      "summary": "Overall tax expenditures were ETB 120.7 billion in FY 2020/21. The overall tax expenditure estimate includes ETB 38.9 billion in forgone customs duty, ETB 18.8 billion in forgone excise duty, ETB 44.6 billion in forgone VAT on imports and ETB 18.4 billion in forgone surtax.",
+      "data_types_present": [
+        "mixed",
+        "prose"
+      ],
+      "chunk_ids": [
+        "9c65c884-18fb-4ffc-9a74-4ec29cd71fe1",
+        "68104987-651c-4e82-a0c4-2ef91073b0a9",
+        "ca853f0d-7a53-409c-a5f9-4c5e74d85c6b",
+        "d895edbf-991b-4637-a39d-3d1378b6cfe4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4.2  Customs duty",
+      "page_start": 22,
+      "page_end": 27,
+      "path": [
+        "4.2  Customs duty"
+      ],
+      "summary": "Tax expenditures in the form of forgone customs duties were ETB 38.9 billion in FY 2020/21. This represents a 67% increase in nominal terms relative to FY 2019/20 when customs duty expenditures were around ETB 23 billion.",
+      "data_types_present": [
+        "mixed",
+        "prose"
+      ],
+      "chunk_ids": [
+        "d16c21b9-9cd5-491d-be4d-035a9c6ed7f7",
+        "7f8fc9b0-9e4c-40c4-807d-f1f2b5c1d033",
+        "f2f5991c-e79e-4c87-82b7-3df71f239ea0",
+        "32f981e3-b345-4a62-a215-88ad5bb77a05",
+        "d330bb0e-fe88-44ff-aaa9-41ee2d3c7d9d"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4.3  Excise duty",
+      "page_start": 27,
+      "page_end": 31,
+      "path": [
+        "4.3  Excise duty"
+      ],
+      "summary": "Total tax expenditures in the form of forgone excise duties were ETB 18.8 billion in FY 2020/21, of which the direct effects constituted ETB 15.8 billion (84.1% of the total excise tax expenditure), while indirect effects made up the remaining 15.9%. Overall excise duty expenditures exhibited a very large increase in FY 2020/21 (by 117%) compared with FY 2019/20 when excise duty expenditures were...",
+      "data_types_present": [
+        "mixed",
+        "prose"
+      ],
+      "chunk_ids": [
+        "b08fde29-a6a9-4904-8d56-f84eb89c74f9",
+        "da7583e8-6b4b-4103-9da6-446725728215",
+        "aa1afb12-fdd1-4bc9-ac39-6e495d95b6a4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4.4  VAT",
+      "page_start": 33,
+      "page_end": 36,
+      "path": [
+        "4.4  VAT"
+      ],
+      "summary": "Tax expenditures in the form of forgone VAT were large at ETB 44.6 billion in FY 2020/21; of this, the direct effects represented ETB 42.2 billion (94.7%) and the indirect effect through surtax represented ETB 2.4 billion (5.3%). Relative to the preceding fiscal year, this represents a 26% increase in nominal terms.",
+      "data_types_present": [
+        "mixed",
+        "prose"
+      ],
+      "chunk_ids": [
+        "c6451412-3162-4be1-b50c-7d6f74f369c9",
+        "e98e53d6-4775-4d30-b453-904872fd88ac",
+        "ba29fcc1-0748-4cec-ae85-fb2e64f7d60f"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4.5  Surtax",
+      "page_start": 36,
+      "page_end": 40,
+      "path": [
+        "4.5  Surtax"
+      ],
+      "summary": "Tax expenditures on forgone surtax were ETB 18.4 billion in FY 2020/21. This represents a 68% increase in nominal terms relative to FY 2019/20 when surtax expenditures were around ETB 11 billion.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "494f25c1-ffc3-4fde-9f86-943fa488a208",
+        "a33fe3a8-dd40-4f9c-a8b7-7cc2ea422bd4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "5.  Conclusions and recommendations",
+      "page_start": 41,
+      "page_end": 41,
+      "path": [
+        "5.  Conclusions and recommendations"
+      ],
+      "summary": "This report estimated import tax expenditures incurred by the government of Ethiopia in FY 2018/19, 2019/20 and 2020/21. To do so, shipment-level microdata from the Ethiopian Customs Commission were used.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "e4ea1cf2-ec19-493a-8e02-b28005b5b6a5"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "A. Negative tax expenditures",
+      "page_start": 43,
+      "page_end": 44,
+      "path": [
+        "A. Negative tax expenditures"
+      ],
+      "summary": "In the main text of this report, we study positive tax expenditures - cases in which an importer is charged at a lower (possibly zero) customs duty/tax rate than the rate in the benchmark tax system. However, for a small minority of shipments in our data, we observe the opposite: a higher customs duty or tax rate being charged than under the benchmark tax system.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "f4d46970-0f4d-45c6-aca1-7e095c40b9f1"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "B. Details on the calculation of indirect effects of tax expenditures",
+      "page_start": 44,
+      "page_end": 45,
+      "path": [
+        "B. Details on the calculation of indirect effects of tax expenditures"
+      ],
+      "summary": "The indirect effect of customs duty expenditures is given by\n\n+ (𝜏 𝑖𝑡 𝑏𝑐 -𝜏𝑖𝑡 𝑎𝑐 )𝜏 𝑖𝑡 𝑏𝑠 𝐶𝐼𝐹 𝑖𝑡 indirect effect of customs exp. through surtax + (𝜏 𝑖𝑡 𝑏𝑐 -𝜏𝑖𝑡 𝑎𝑐 )𝜏 𝑖𝑡 𝑏𝑒 𝜏 𝑖𝑡 𝑏𝑣 𝐶𝐼𝐹 𝑖𝑡 indirect effect of customs exp.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "6ab4dffb-d328-4793-8674-41638f807633"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Box 4.1. Tax expenditures estimated using other methods",
+      "page_start": 21,
+      "page_end": 22,
+      "path": [
+        "Box 4.1. Tax expenditures estimated using other methods"
+      ],
+      "summary": "Alternative methods of estimating tax expenditures differ primarily in the definition of the benchmark tax system. In the context of Ethiopian import tax expenditures, two alternatives to our approach are worth discussing.",
+      "data_types_present": [
+        "mixed",
+        "prose"
+      ],
+      "chunk_ids": [
+        "5274b0de-fc1a-4e7b-9170-aa73031f6e56",
+        "b57f9c08-c2ac-4e36-a9f4-4b3b1aba79c9"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Box 4.2. Tax expenditures on imports of motor vehicles",
+      "page_start": 32,
+      "page_end": 32,
+      "path": [
+        "Box 4.2. Tax expenditures on imports of motor vehicles"
+      ],
+      "summary": "Tax expenditures on motor vehicles constituted a large fraction of total tax expenditures at ETB 23.0 billion (0.5% of GDP) in 2020/21. This is a threefold increase over 2019/20, when total tax expenditures on motor vehicles were around ETB 7 billion.",
+      "data_types_present": [
+        "para",
+        "prose"
+      ],
+      "chunk_ids": [
+        "73ded4f5-1a40-412d-8819-b46d82e3a33b",
+        "1acbd0f5-bb0a-4788-98aa-4c179a506535"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "C. Alternative measures of tax expenditures",
+      "page_start": 45,
+      "page_end": 46,
+      "path": [
+        "C. Alternative measures of tax expenditures"
+      ],
+      "summary": "In the main text, we present tax expenditure estimates as the sum of the direct and indirect effects, where the indirect effects of import taxes through the reduction in tax base on the subsequent taxes are counted as tax expenditure for the original tax. For example, the indirect effect of customs duty expenditure through excise, VAT and/or surtax are considered customs duty expenditures.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "a2308c20-fec9-483e-811e-8ff29b04bd0f"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Contents",
+      "page_start": 3,
+      "page_end": 3,
+      "path": [
+        "Contents"
+      ],
+      "summary": "| Executive summary...................................................................................................................... 4     | Executive summary......................................................................................................................",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "f77d412c-c623-4ac5-91df-0436cf238d23"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Customs duty",
+      "page_start": 10,
+      "page_end": 10,
+      "path": [
+        "Customs duty"
+      ],
+      "summary": "Customs law is governed by Proclamation No. 859/2014.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "76bddb21-cd13-43df-b4b3-0486d7a6a763"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "D. Duplicate records in customs microdata",
+      "page_start": 46,
+      "page_end": 48,
+      "path": [
+        "D. Duplicate records in customs microdata"
+      ],
+      "summary": "Between FY 2017/18 and FY 2019/20, the Ethiopian Customs Commission changed its IT system; it transitioned from the Automated System for Customs Data (ASYCUDA++) to the electronic Customs Management System (eCMS). For the main estimates in this report, we treat customs records in ASYCUDA++ and eCMS as referring to separate shipments.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "c40b3ea8-bd39-494a-9ede-4b57108cde0f"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "E. Commodity categorisation based on twodigit HS code",
+      "page_start": 48,
+      "page_end": 49,
+      "path": [
+        "E. Commodity categorisation based on twodigit HS code"
+      ],
+      "summary": "To look at tax expenditure broken down by commodity category, we classify imports into 21 subcategories based on the two-digit HS codes. These commodity categories with the respective HS codes are shown in Table E.1.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "3cb577aa-6fe8-4312-ac5a-bde1b503381e"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Excise on imports",
+      "page_start": 11,
+      "page_end": 11,
+      "path": [
+        "Excise on imports"
+      ],
+      "summary": "Excise rates are set by Proclamation No. 1186/2020.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "1fc7eb41-0b25-49c4-a2f8-9541bb56e9a5"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Executive summary",
+      "page_start": 4,
+      "page_end": 5,
+      "path": [
+        "Executive summary"
+      ],
+      "summary": "Understanding, estimating and reporting on tax expenditures is an important exercise in public financial management. Tax expenditures - cases in which the tax liability of an individual, a firm or other entity is reduced below the liability under a benchmark tax system use limited public financial resources.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "d2934c43-7e69-48fe-84ea-cc8c683de1ec",
+        "9d829617-2dfb-4dc2-a49a-c831a458db27"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "F. Supplementary tables",
+      "page_start": 49,
+      "page_end": 58,
+      "path": [
+        "F. Supplementary tables"
+      ],
+      "summary": "The following tables present detailed tax expenditure estimates by commodity category for FY 2018/19 to FY 2020/21 in ETB millions. Each table presents tax expenditure estimates for one of the import taxes broken down into a direct effect (which is the tax expenditure owing to exemptions or rate reductions for that particular tax) and indirect effects (tax expenditures due to the effect on the ta...",
+      "data_types_present": [
+        "mixed",
+        "table"
+      ],
+      "chunk_ids": [
+        "6d990412-f2b7-414c-b435-f300e4e4abdf",
+        "a74b5ca8-add5-418f-b0f3-3f4a1aae4c2a",
+        "f754c5c3-c79d-4232-8368-c82ce0f7a68a",
+        "3ef89141-c40d-4d03-bab1-21885252d78c",
+        "fa506eba-da1e-44f2-8d16-3586aa5258c9",
+        "cc33a45e-1985-4408-bee4-f417850d8313",
+        "2b55ff42-eee2-4c3d-9620-05cc61b762a8",
+        "70f8d1ab-854f-4034-ac75-b2e46df87af2",
+        "c39deb58-4ad3-4c94-9b34-88feb51d126e",
+        "cb4651cd-0999-4e06-9771-649ee3ebf02f",
+        "283bf413-faba-4f3c-8d1b-e89c7ba7ec0a",
+        "934d016a-3706-4387-8baf-a8a0aca07c7a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Import tax expenditure report: FY 2018/19 - 2020/21",
+      "page_start": 1,
+      "page_end": 1,
+      "path": [
+        "Import tax expenditure report: FY 2018/19 - 2020/21"
+      ],
+      "summary": "Tax Policy Directorate, Ministry of Finance, Ethiopia\n\nSeptember 2022",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "0186d46a-767a-4b9e-9979-395f2bc49bb4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Import tax expenditure report: FY 2018/19 - 2020/21 42",
+      "page_start": 42,
+      "page_end": 42,
+      "path": [
+        "Import tax expenditure report: FY 2018/19 - 2020/21 42"
+      ],
+      "summary": "which ended over a year ago. The shipment-level microdata are often lacking details crucial for understanding the reason for underpayment on shipments.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "ae97878e-428b-4cf5-886b-61bf6e9be61a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Import tax expenditure report: FY 2018/19 - 2020/21 8",
+      "page_start": 8,
+      "page_end": 8,
+      "path": [
+        "Import tax expenditure report: FY 2018/19 - 2020/21 8"
+      ],
+      "summary": "Together, these effects are intended to help transform the Ethiopian economy into an industrial economy and improve living standards. 3\n\nTax expenditures lack transparency in terms of how much the government is forgoing in tax revenue.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "8a4bcd7b-58c0-478a-afd1-7b0cd60c535a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Preface",
+      "page_start": 2,
+      "page_end": 2,
+      "path": [
+        "Preface"
+      ],
+      "summary": "This report has been prepared by the IFS Centre for Tax Analysis in Developing Countries (TaxDev) team (Daniel Prinz, Edris Seid and Ben Waltmann) in collaboration with the Ethiopian Ministry of Finance Tax Policy Directorate team (led by Mulay Weldu). The authors would like to thank David Phillips (IFS) for useful comments and feedback.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "bd9189e3-20f3-4c8d-8101-dca52347c21f"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "References",
+      "page_start": 59,
+      "page_end": 60,
+      "path": [
+        "References"
+      ],
+      "summary": "- Council of Ministers Regulation No. 133/2007, 'Import Sur-Tax Regulation',\n\nhttps://chilot.files.wordpress.com/2017/10/reg-no-133-2007-import-sur-tax.pdf.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "fc118031-7a14-4e1c-b86b-f87526584605"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Surtax on imports",
+      "page_start": 12,
+      "page_end": 12,
+      "path": [
+        "Surtax on imports"
+      ],
+      "summary": "Surtax is governed by Council of Ministers Regulation No. 133/2007.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "7112cd83-9f51-4a31-b785-153c94b97d73"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "The benchmark system for VAT on imports is defined as follows:",
+      "page_start": 12,
+      "page_end": 12,
+      "path": [
+        "The benchmark system for VAT on imports is defined as follows:"
+      ],
+      "summary": "- The unit of taxation for VAT on imports is the importer, the business or the individual. - The VAT tax base on imports is the sum of the CIF value of imports, customs duty payable and excise duty payable.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "185c7375-aaeb-452a-b541-faf1ce2b55e2"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "The benchmark system for excise on imports is defined as follows:",
+      "page_start": 11,
+      "page_end": 11,
+      "path": [
+        "The benchmark system for excise on imports is defined as follows:"
+      ],
+      "summary": "- The unit of taxation for excise on imports is the importer, the business or the individual. - The benchmark tax base for excise tax on imports is the sum of the CIF value of imports and the customs duty payable.",
+      "data_types_present": [
+        "list"
+      ],
+      "chunk_ids": [
+        "a356e3a0-6b45-40af-86ea-6148b6db19f1"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "The benchmark tax system for customs duty is defined as follows:",
+      "page_start": 10,
+      "page_end": 11,
+      "path": [
+        "The benchmark tax system for customs duty is defined as follows:"
+      ],
+      "summary": "- The unit of taxation for excise on imports is the importer, the business or the individual. - The customs duty tax base is the cost, insurance and freight (CIF) value of imports.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "3e1a1889-be19-4a12-8541-1a14dca4b639"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "The benchmark tax system for surtax on imports is defined as follows:",
+      "page_start": 13,
+      "page_end": 13,
+      "path": [
+        "The benchmark tax system for surtax on imports is defined as follows:"
+      ],
+      "summary": "- The unit of taxation for surtax on imports is the importer, the business or the individual. - The surtax base is the sum of the CIF value of imports, customs duty payable, excise tax payable and VAT payable.",
+      "data_types_present": [
+        "list"
+      ],
+      "chunk_ids": [
+        "fbb86c2c-7710-4fbf-9d05-5f3deb4a1295"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "VAT on imports",
+      "page_start": 11,
+      "page_end": 12,
+      "path": [
+        "VAT on imports"
+      ],
+      "summary": "VAT is governed by Proclamation No. 285/2002.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "66bd7198-b71b-4f2c-9676-b793e2fa989f"
+      ],
+      "key_entities": [],
+      "children": []
+    }
+  ],
+  "created_at": "2026-07-22T15:25:41.673002Z"
+}
