@@ -131,6 +131,10 @@ def _heuristic_route(question: str, docs: list[CorpusDocument]) -> IntentRouter:
     )
 
 
+from src.observability.langsmith import traceable_run
+
+
+@traceable_run("docmind.intent.route")
 def route_intent(
     question: str,
     *,
