@@ -134,7 +134,9 @@ class AuditAgent:
             traces: list[ToolTrace] = []
             for call in state.get("plan_calls") or []:
                 try:
-                    result = _run_one_tool(call, deps)
+                    result = _run_one_tool(
+                        call, deps, active_doc_id=deps.doc_id
+                    )
                 except Exception as exc:
                     name = str(call.get("tool") or ToolName.SEMANTIC_SEARCH.value)
                     try:

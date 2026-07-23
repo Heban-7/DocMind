@@ -2,15 +2,20 @@
 DocMind | Query / Audit CLI (Phase 4).
 
 Usage:
-    # Ask a question (requires Phase 4 indexes for --doc)
-    uv run python run_query.py "What was import tax expenditure in FY 2020/21?" --doc 212dc42370e2
+    # Ask (pin one document)
+    uv run python run_query.py "What was import tax expenditure?" --doc 212dc42370e2
+
+    # Ask across the whole corpus (IntentRouter decides / federates)
+    uv run python run_query.py "What was import tax expenditure?"
 
     # Audit a claim
     uv run python run_query.py --audit "Revenue was $4.2B in Q3" --doc 212dc42370e2
 
-    # One-time index existing chunks (PageIndex + facts; add --embed for Chroma)
-    uv run python run_query.py --index-only --doc 212dc42370e2
-    uv run python run_query.py --index-only --embed --doc 212dc42370e2
+    # Conversational memory
+    uv run python run_query.py "..." --doc 212dc42370e2 --thread demo-1
+
+    # One-time index existing chunks
+    uv run python run_query.py --index-only --embed --doc 212dc42370e2 --name sample.pdf
 """
 
 from __future__ import annotations
@@ -101,7 +106,7 @@ def cmd_index(doc_id: str, *, embed: bool, document_name: str) -> int:
 def cmd_ask(
     question: str,
     *,
-    doc_id: str,
+    doc_id: str | None,
     pdf: Path | None,
     as_json: bool,
     thread_id: str | None = None,
@@ -143,8 +148,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--doc",
-        required=True,
-        help="Document id (e.g. 212dc42370e2).",
+        default=None,
+        help="Document id to pin (omit for IntentRouter / corpus-wide search).",
     )
     parser.add_argument(
         "--audit",
@@ -188,8 +193,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    doc_id = args.doc.strip()
+    doc_id = (args.doc or "").strip() or None
     if args.index_only:
+        if not doc_id:
+            parser.error("--doc is required with --index-only.")
         name = args.name
         if not name:
             pdf_guess = resolve_pdf_path(doc_id, args.pdf)
@@ -199,13 +206,15 @@ def main(argv: list[str] | None = None) -> int:
     if not args.text or not str(args.text).strip():
         parser.error("TEXT is required unless --index-only is set.")
 
-    pdf = resolve_pdf_path(doc_id, args.pdf)
+    pdf = resolve_pdf_path(doc_id, args.pdf) if doc_id else None
     if pdf is None and args.pdf:
         print(f"Warning: --pdf path not found: {args.pdf}", file=sys.stderr)
-    if pdf is None:
+    if pdf is None and doc_id:
         pdf = DEFAULT_SAMPLE_PDF if DEFAULT_SAMPLE_PDF.exists() else None
 
     if args.audit:
+        if not doc_id:
+            parser.error("--doc is required for --audit (for now).")
         return cmd_audit(args.text.strip(), doc_id=doc_id, pdf=pdf, as_json=args.json)
     return cmd_ask(
         args.text.strip(),

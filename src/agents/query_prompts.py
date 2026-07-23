@@ -52,10 +52,11 @@ def planner_user_prompt(
 ) -> str:
     hist = f"\nrecent_conversation:\n{history}\n" if history.strip() else ""
     return (
-        f"doc_id: {doc_id}\n"
+        f"search_scope: {doc_id}\n"
         f"question: {question}\n"
         f"{hist}"
-        "Choose tools now."
+        "Choose tools now. If search_scope is CORPUS, do not call "
+        "pageindex_navigate (it needs a single document)."
     )
 
 

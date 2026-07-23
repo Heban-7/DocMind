@@ -114,5 +114,5 @@ def test_run_query_cli_requires_text_or_index():
     from run_query import main
 
     with pytest.raises(SystemExit) as exc:
-        main(["--doc", "abc"])
+        main([])
     assert exc.value.code == 2
