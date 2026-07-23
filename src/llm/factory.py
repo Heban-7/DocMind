@@ -75,7 +75,14 @@ def get_client(
             )
         if requested:
             spec = registry.resolve(requested)
-            slug = spec.slug if spec.provider == forced_provider else requested
+            if spec.provider == forced_provider:
+                slug = spec.slug
+            else:
+                # e.g. defaults.text=gemini-flash but LLM_PROVIDER=openai:
+                # never send a foreign slug to the forced provider (causes 404).
+                slug = registry.resolve(
+                    VisionConfig.DEFAULT_MODELS[forced_provider]
+                ).slug
         else:
             slug = registry.resolve(
                 VisionConfig.DEFAULT_MODELS[forced_provider]
@@ -100,6 +107,14 @@ def build_vision_client() -> LLMClient | None:
 
 
 def get_text_client() -> LLMClient | None:
-    """A cheap text client for tasks like domain classification."""
-    text_model = VisionConfig.TEXT_MODEL or registry.default_model("text")
+    """A cheap text client for tasks like domain classification / query agent.
+
+    Preference order: ``LLM_TEXT_MODEL`` -> ``LLM_MODEL`` -> registry
+    ``defaults.text``.
+    """
+    text_model = (
+        VisionConfig.TEXT_MODEL
+        or VisionConfig.MODEL
+        or registry.default_model("text")
+    )
     return get_client(model=text_model, require_vision=False)

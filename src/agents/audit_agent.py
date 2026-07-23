@@ -281,6 +281,8 @@ class AuditAgent:
 
     def audit(self, claim: str) -> AuditVerdict:
         """Check a claim; return verified+citations or unverifiable."""
+        from src.observability.langsmith import tracing_enabled
+
         claim = (claim or "").strip()
         if not claim:
             return AuditVerdict(
@@ -289,22 +291,51 @@ class AuditAgent:
                 rationale="Empty claim cannot be verified.",
                 doc_id=self.deps.doc_id,
             )
-        final = self._graph.invoke(
-            {
-                "claim": claim,
-                "doc_id": self.deps.doc_id,
-                "pdf_path": str(self.deps.pdf_path) if self.deps.pdf_path else None,
-                "plan_calls": [],
-                "hits": [],
-                "tool_trace": [],
-                "status": AuditStatus.UNVERIFIABLE.value,
-                "rationale": "",
-                "cite_indices": [],
-                "verdict": None,
-                "error": None,
-            }
-        )
-        return AuditVerdict.model_validate(final.get("verdict") or {})
+
+        def _invoke() -> AuditVerdict:
+            final = self._graph.invoke(
+                {
+                    "claim": claim,
+                    "doc_id": self.deps.doc_id,
+                    "pdf_path": str(self.deps.pdf_path) if self.deps.pdf_path else None,
+                    "plan_calls": [],
+                    "hits": [],
+                    "tool_trace": [],
+                    "status": AuditStatus.UNVERIFIABLE.value,
+                    "rationale": "",
+                    "cite_indices": [],
+                    "verdict": None,
+                    "error": None,
+                }
+            )
+            return AuditVerdict.model_validate(final.get("verdict") or {})
+
+        if not tracing_enabled():
+            return _invoke()
+        try:
+            from langsmith import trace
+        except Exception:  # pragma: no cover
+            return _invoke()
+
+        with trace(
+            name="docmind.audit.audit",
+            run_type="chain",
+            inputs={"claim": claim, "doc_id": self.deps.doc_id},
+            tags=["docmind", "audit"],
+            metadata={"agent": "AuditAgent"},
+        ) as run:
+            verdict = _invoke()
+            try:
+                run.end(
+                    outputs={
+                        "status": verdict.status.value,
+                        "citations": len(verdict.provenance),
+                        "rationale": verdict.rationale,
+                    }
+                )
+            except Exception:  # pragma: no cover
+                pass
+            return verdict
 
 
 def build_audit_agent(

@@ -348,7 +348,7 @@ class QueryAgent:
                     system=SYNTHESIZER_SYSTEM,
                     response_format="json",
                     temperature=0.0,
-                    max_tokens=500,
+                    max_tokens=700,
                 )
                 payload = _extract_json(result.text)
             except Exception as exc:  # pragma: no cover
@@ -468,6 +468,8 @@ class QueryAgent:
         Pass the same ``thread_id`` on later calls to resume conversation memory
         (requires a checkpointer on ``QueryAgentDeps``).
         """
+        from src.observability.langsmith import tracing_enabled
+
         question = (question or "").strip()
         if not question:
             return QueryAnswer(
@@ -477,32 +479,66 @@ class QueryAgent:
                 doc_id=self.deps.doc_id,
             )
 
-        payload_in: dict[str, Any] = {
-            "messages": [HumanMessage(content=question)],
-            "question": question,
-            "doc_id": self.deps.doc_id or "",
-            "active_doc_id": self.deps.doc_id,
-            "intent": {},
-            "pdf_path": str(self.deps.pdf_path) if self.deps.pdf_path else None,
-            "plan_calls": [],
-            "hits": [],
-            "tool_trace": [],
-            "draft_answer": "",
-            "cite_indices": [],
-            "refusal": False,
-            "answer": None,
-            "error": None,
-        }
+        def _invoke() -> QueryAnswer:
+            payload_in: dict[str, Any] = {
+                "messages": [HumanMessage(content=question)],
+                "question": question,
+                "doc_id": self.deps.doc_id or "",
+                "active_doc_id": self.deps.doc_id,
+                "intent": {},
+                "pdf_path": str(self.deps.pdf_path) if self.deps.pdf_path else None,
+                "plan_calls": [],
+                "hits": [],
+                "tool_trace": [],
+                "draft_answer": "",
+                "cite_indices": [],
+                "refusal": False,
+                "answer": None,
+                "error": None,
+            }
 
-        if self.deps.checkpointer is not None:
-            tid = (thread_id or "default").strip() or "default"
-            config = SessionConfig(thread_id=tid).to_runnable_config()
-            final = self._graph.invoke(payload_in, config=config)
-        else:
-            final = self._graph.invoke(payload_in)
+            if self.deps.checkpointer is not None:
+                tid = (thread_id or "default").strip() or "default"
+                config = SessionConfig(thread_id=tid).to_runnable_config()
+                final = self._graph.invoke(payload_in, config=config)
+            else:
+                final = self._graph.invoke(payload_in)
 
-        payload = final.get("answer") or {}
-        return QueryAnswer.model_validate(payload)
+            payload = final.get("answer") or {}
+            return QueryAnswer.model_validate(payload)
+
+        if not tracing_enabled():
+            return _invoke()
+
+        try:
+            from langsmith import trace
+        except Exception:  # pragma: no cover
+            return _invoke()
+
+        with trace(
+            name="docmind.query.ask",
+            run_type="chain",
+            inputs={
+                "question": question,
+                "doc_id": self.deps.doc_id,
+                "thread_id": thread_id,
+            },
+            tags=["docmind", "query"],
+            metadata={"agent": "QueryAgent"},
+        ) as run:
+            answer = _invoke()
+            try:
+                run.end(
+                    outputs={
+                        "answer": answer.answer,
+                        "doc_id": answer.doc_id,
+                        "citations": len(answer.provenance),
+                        "tools": [t.tool.value for t in answer.tool_trace],
+                    }
+                )
+            except Exception:  # pragma: no cover
+                pass
+            return answer
 
     def get_messages(
         self,

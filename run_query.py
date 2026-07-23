@@ -137,6 +137,8 @@ def cmd_audit(claim: str, *, doc_id: str, pdf: Path | None, as_json: bool) -> in
 
 
 def main(argv: list[str] | None = None) -> int:
+    from src.observability.langsmith import configure_langsmith
+
     parser = argparse.ArgumentParser(
         description="Query or audit a DocMind document (Phase 4)."
     )
@@ -191,7 +193,19 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Conversation thread_id (implies --memory). Same id resumes history.",
     )
+    parser.add_argument(
+        "--no-tracing",
+        action="store_true",
+        help="Disable LangSmith upload for this run.",
+    )
     args = parser.parse_args(argv)
+
+    status = configure_langsmith(enabled=False if args.no_tracing else None)
+    if status.enabled and not args.json:
+        print(f"LangSmith   : ON (project={status.project})")
+    elif not args.json and not args.no_tracing and not status.api_key_present:
+        # Quiet hint once -- only when they might expect tracing.
+        pass
 
     doc_id = (args.doc or "").strip() or None
     if args.index_only:
