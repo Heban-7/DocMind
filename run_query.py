@@ -46,7 +46,7 @@ def _print_answer(answer, *, as_json: bool) -> None:
         print(f"Citations: {len(answer.provenance)}")
         for i, c in enumerate(answer.provenance.citations, 1):
             print(
-                f"  [{i}] {c.document_name} p{c.page_number} "
+                f"  [{i}] {c.document_name} {c.page_ref} "
                 f"| {c.excerpt[:100]!r}"
             )
     if answer.tool_trace:
@@ -72,7 +72,7 @@ def _print_verdict(verdict, *, as_json: bool) -> None:
         print(f"Citations: {len(verdict.provenance)}")
         for i, c in enumerate(verdict.provenance.citations, 1):
             print(
-                f"  [{i}] {c.document_name} p{c.page_number} "
+                f"  [{i}] {c.document_name} {c.page_ref} "
                 f"| {c.excerpt[:100]!r}"
             )
     if verdict.tool_trace:

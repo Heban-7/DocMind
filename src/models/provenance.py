@@ -62,7 +62,10 @@ class Citation(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     document_name: str = Field(description="source PDF filename")
-    page_number: int = Field(ge=1, description="1-indexed physical page")
+    page_number: int = Field(
+        ge=1,
+        description="1-indexed physical PDF page (source of truth for bbox / I/O)",
+    )
     bbox: BoundingBox
     content_hash: str = Field(description="SHA-256 of the supporting LDU text")
     chunk_id: str | None = Field(
@@ -72,6 +75,20 @@ class Citation(BaseModel):
         default="",
         description="short supporting quote shown to the user / auditor",
     )
+    printed_page: str | None = Field(
+        default=None,
+        description=(
+            "Document / printed page label from PDF PageLabels when available "
+            "(e.g. 'iii', '12'). None when unknown -- page_number still applies."
+        ),
+    )
+
+    @property
+    def page_ref(self) -> str:
+        """Human-facing page token; dual when printed differs from physical."""
+        from src.query.page_map import format_page_reference
+
+        return format_page_reference(self.page_number, self.printed_page)
 
 
 class ProvenanceChain(BaseModel):

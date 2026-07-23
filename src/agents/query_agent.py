@@ -83,8 +83,10 @@ class QueryAgentDeps:
     checkpointer: BaseCheckpointSaver | None = None
     corpus: list[CorpusDocument] | None = None
     max_tool_calls: int = 3
-    semantic_top_k: int = 5
-    pageindex_top_k: int = 3
+    semantic_top_k: int = 7
+    pageindex_top_k: int = 5
+    min_citations: int = 5
+    max_citations: int = 8
     history_max_messages: int = 12
 
 
@@ -100,7 +102,7 @@ def _default_plan(
     """Cheap heuristic plan used when the LLM returns unusable JSON."""
     q = question.strip()
     calls: list[dict[str, Any]] = [
-        {"tool": ToolName.SEMANTIC_SEARCH.value, "args": {"query": q, "top_k": 5}},
+        {"tool": ToolName.SEMANTIC_SEARCH.value, "args": {"query": q, "top_k": 7}},
     ]
     lowered = q.lower()
     if any(
@@ -125,17 +127,61 @@ def _default_plan(
         calls.append(
             {
                 "tool": ToolName.PAGEINDEX_NAVIGATE.value,
-                "args": {"topic": q, "top_k": 3},
+                "args": {"topic": q, "top_k": 5},
             }
         )
     return calls[:3]
 
 
+def _expand_cite_indices(
+    cite_indices: list[int],
+    hits: list[EvidenceHit],
+    *,
+    min_citations: int,
+    max_citations: int,
+) -> list[int]:
+    """Keep synthesizer cites, then pad with next-best hits up to min/max.
+
+    Retrieval may already have 5-7 related chunks; the LLM often returns only
+    1-3 cite_indices. Padding by score keeps related evidence in the report
+    without inventing new retrieval.
+    """
+    if not hits:
+        return []
+    ceiling = max(1, min(int(max_citations), len(hits)))
+    floor = max(1, min(int(min_citations), ceiling))
+
+    ordered: list[int] = []
+    seen: set[int] = set()
+    for i in cite_indices:
+        if 0 <= i < len(hits) and i not in seen:
+            ordered.append(i)
+            seen.add(i)
+
+    remaining = [
+        i
+        for i, _ in sorted(
+            enumerate(hits),
+            key=lambda pair: (-float(pair[1].score or 0.0), pair[0]),
+        )
+        if i not in seen
+    ]
+    # Meet the preferred minimum first, then fill remaining related hits.
+    while len(ordered) < floor and remaining:
+        ordered.append(remaining.pop(0))
+    while len(ordered) < ceiling and remaining:
+        ordered.append(remaining.pop(0))
+    return ordered[:ceiling]
+
+
 def _format_hit(hit: EvidenceHit, index: int) -> str:
+    from src.query.page_map import format_page_reference
+
+    page_bit = format_page_reference(hit.page_number, hit.printed_page)
     bits = [
         f"tool={hit.tool.value}",
         f"doc={hit.doc_id}" if hit.doc_id else None,
-        f"page={hit.page_number}",
+        f"page={page_bit}",
         f"title={hit.title!r}" if hit.title else None,
         f"excerpt={hit.excerpt!r}",
     ]
@@ -329,6 +375,12 @@ class QueryAgent:
                     )
                 hits.extend(result.hits)
                 traces.append(result.trace)
+            pdf = state.get("pdf_path") or deps.pdf_path
+            from src.query.page_map import enrich_hit_printed_page
+
+            hits = [
+                enrich_hit_printed_page(h, pdf_path=pdf) for h in hits
+            ]
             return {
                 "hits": [h.model_dump(mode="json") for h in hits],
                 "tool_trace": [t.model_dump(mode="json") for t in traces],
@@ -377,8 +429,14 @@ class QueryAgent:
                 if "could not find" not in answer.lower():
                     answer = "I could not find that in the document."
                 cite_indices = []
-            elif not refusal and not cite_indices:
-                cite_indices = list(range(min(3, len(hits))))
+            elif not refusal:
+                # LLM often cites 1-3; pad with next-best retrieved hits (5-7).
+                cite_indices = _expand_cite_indices(
+                    cite_indices,
+                    hits,
+                    min_citations=deps.min_citations,
+                    max_citations=deps.max_citations,
+                )
 
             return {
                 "draft_answer": answer,
@@ -399,12 +457,13 @@ class QueryAgent:
                 provenance = assemble_provenance(
                     selected,
                     pdf_path=pdf_for_cite,
-                    max_citations=8,
+                    max_citations=deps.max_citations,
                 )
                 if provenance.is_empty and selected:
                     provenance = assemble_provenance(
                         [h for h in selected if h.excerpt or h.content_hash],
                         pdf_path=pdf_for_cite,
+                        max_citations=deps.max_citations,
                     )
 
             traces = [
@@ -602,6 +661,13 @@ def build_query_agent(
     if saver is None and enable_memory:
         saver = build_sqlite_checkpointer(checkpoints_db)
 
+    from src.config import (
+        MAX_CITATIONS,
+        MIN_CITATIONS,
+        PAGEINDEX_TOP_K,
+        SEMANTIC_TOP_K,
+    )
+
     return QueryAgent(
         QueryAgentDeps(
             llm=client,
@@ -616,5 +682,9 @@ def build_query_agent(
             checkpointer=saver,
             corpus=corpus,
             max_tool_calls=max_tool_calls,
+            semantic_top_k=SEMANTIC_TOP_K,
+            pageindex_top_k=PAGEINDEX_TOP_K,
+            min_citations=MIN_CITATIONS,
+            max_citations=MAX_CITATIONS,
         )
     )

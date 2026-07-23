@@ -1,0 +1,3209 @@
+{
+  "doc_id": "b9807d59e9ba",
+  "source_filename": "Annual_Report_JUNE-2017.pdf",
+  "roots": [
+    {
+      "title": "(a) Income tax expense",
+      "page_start": 94,
+      "page_end": 94,
+      "path": [
+        "(a) Income tax expense"
+      ],
+      "summary": "Total income tax expense for the year ended 30 June 2019 is as follows:\n\n|                        | 2019 ETB    |\n|------------------------|-------------|\n| Current tax expense    | 10,677,345- |\n| Deferred tax liability | 472,784-    |\n| Income tax expense     | 11,150,129  |",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "c7e6f4e7-2981-4e8c-b2d0-a49e007cefee"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(a) Market risk",
+      "page_start": 71,
+      "page_end": 71,
+      "path": [
+        "(a) Market risk"
+      ],
+      "summary": "Market risk is the risk that changes in the market prices - e.g. foreign exchange rates and equity prices will affect the fulfilment of cash flows of insurance and reinsurance contracts as well as the fair value of future cash flows of financial instruments.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "b10d1e62-e783-45a8-8ce2-42b75a616d2b"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(a) Other related party transactions",
+      "page_start": 98,
+      "page_end": 98,
+      "path": [
+        "(a) Other related party transactions"
+      ],
+      "summary": "|                              | 20 19 ETB        | 20 18 ETB      |\n|------------------------------|------------------|----------------|\n| BBF                          | 1 3,067,1 91     | 9,1 38,384     |\n| Premiumswritten              | 244,479,91 9.1 0 | 21 5,380,307   |\n| Claimspaid                   | (49,052,421 .00) | (56,866,692)   |\n| Commission                   | (68,789,502)     | (5...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "9b4f0fa7-0ff8-4651-8bd5-1d3203d5bf1d"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(a) Present value of funded obligations",
+      "page_start": 88,
+      "page_end": 88,
+      "path": [
+        "(a) Present value of funded obligations"
+      ],
+      "summary": "|                                                     | Gen.Ins   | Long Term Ins   | Total     | Total   |\n|-----------------------------------------------------|-----------|-----------------|-----------|---------|\n| a ) Present value of funded obliga tion             | 2019      | 2019            | 2019      | 2018    |\n| Active Members                                      | 1 00,61 8 | 4,1 92...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "1e4ee875-f7e5-48b1-8f67-7b2ed1b4ddd3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(a) Statement of compliance",
+      "page_start": 42,
+      "page_end": 42,
+      "path": [
+        "(a) Statement of compliance"
+      ],
+      "summary": "The accompanying financial statements have been prepared in accordance with International Financial Reporting Standards ('IFRS') as issued by the International Accounting Standards Board ('IASB').",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "4ec4d136-647b-4bc0-a558-9c7d059fcab2"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(a) Structure of capital",
+      "page_start": 90,
+      "page_end": 90,
+      "path": [
+        "(a) Structure of capital"
+      ],
+      "summary": "The  Company is  wholly  owned  by  Ethiopian  nationals  and/or  organizations  wholly  owned  by Ethiopian  nationals. All  shares  rank  equally  with  regard  to  the  Company's  residual  assets  and shareholders are entitled to one vote per share.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "0c663e9e-cfc1-46f6-816e-6d3b89a2e411"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(a) Underwriting risk (Continued)",
+      "page_start": 70,
+      "page_end": 70,
+      "path": [
+        "(a) Underwriting risk (Continued)"
+      ],
+      "summary": "The Company enters into retrocession arrangements with reputable retrocession Aires to diversify its risks and reduce the risk of catastrophic loss on reinsurance assumed. The retrocession does not relieve the Company of its obligations to the ceding companies.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "fede3777-3ca6-4395-a495-b3bda9e72d6a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(b) Credit risk",
+      "page_start": 74,
+      "page_end": 74,
+      "path": [
+        "(b) Credit risk"
+      ],
+      "summary": "Credit risk is the risk that one party to a financial instrument will fail to discharge an obligation and cause the other party to incur a financial loss. The Company is exposed to credit risk through its financial assets, which include bank deposits, fixed time deposits and receivables.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "e083333b-1fb6-4fff-9028-f0f76a02a3ce"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(b) Functional and presentation currency",
+      "page_start": 43,
+      "page_end": 43,
+      "path": [
+        "(b) Functional and presentation currency"
+      ],
+      "summary": "These financial statements are presented in Ethiopian Birr, which is the Company's functional and presentation currency. Except when otherwise stated, all amounts have been rounded to the nearest unit.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "9a5ac34c-debb-4942-b839-251192b2a4a0"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(b) Income tax expense",
+      "page_start": 95,
+      "page_end": 95,
+      "path": [
+        "(b) Income tax expense"
+      ],
+      "summary": "Total taxable income or loss for the year ended 30 June 2019 is as follows\n\n| INCOME TAX COMPUTATION For the year ended June 30th, 2019 Adjusted tax calculation   | INCOME TAX COMPUTATION For the year ended June 30th, 2019 Adjusted tax calculation   | INCOME TAX COMPUTATION For the year ended June 30th, 2019 Adjusted tax calculation   | INCOME TAX COMPUTATION For the year ended June 30th, 2019 Ad...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "7da8e8a8-fdb0-47a4-953c-f40967b687b2"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(b) Nature and purpose of reserves",
+      "page_start": 90,
+      "page_end": 90,
+      "path": [
+        "(b) Nature and purpose of reserves"
+      ],
+      "summary": "In accordance with Proclamation No. 746/2012 any reinsurer, at the end of each year, is required to transfer to its legal reserve an amount not less than 10% of its net profit until such reserve equals it's paid up capital.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "8105bbf4-05f2-4b42-9ce0-2e913b202495"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(b) Reconciliation of benefit obligations",
+      "page_start": 88,
+      "page_end": 88,
+      "path": [
+        "(b) Reconciliation of benefit obligations"
+      ],
+      "summary": "|                                                      | Total 2019   | Total 2018   |\n|------------------------------------------------------|--------------|--------------|\n| Opening benefit obliga tion                          | 61,398       | 27,155       |\n| Current service cost net of employees' contributions | 43,435       | 38,51 0      |\n| Interest cost...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "de12e452-3c4a-43bf-b3b8-8e5879434a81"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(b) Reinsurance contract",
+      "page_start": 44,
+      "page_end": 44,
+      "path": [
+        "(b) Reinsurance contract"
+      ],
+      "summary": "Reinsurance contracts are those contracts that transfer significant reinsurance risk. Ethiopian Re defines reinsurance risk as the risk that it has to settle claims arising from reinsurance contracts held with cedant companies either from treaty reinsurance or facultative reinsurance.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "3a1b3def-b01b-4cc0-a335-3df732e6004f"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(b) Remuneration of directors and key management personnel",
+      "page_start": 99,
+      "page_end": 101,
+      "path": [
+        "(b) Remuneration of directors and key management personnel"
+      ],
+      "summary": "Ethiopian Re directors received the following payments during the financial year ended 30 June 2019:\n\n|                    | 2019        | 2018    |\n|--------------------|-------------|---------|\n|                    | ETB         | ETB     |\n| DirectorsAllowance | 1 ,361 ,000 | 392,000 |\n\nKey management members received the following remuneration during the financial year ended 30 June, 2019:\n\n|...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "f4c5b09a-6c94-4fbf-821b-f63933a17562"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(c) Actuarial assumptions",
+      "page_start": 88,
+      "page_end": 88,
+      "path": [
+        "(c) Actuarial assumptions"
+      ],
+      "summary": "The principal actuarial assumptions at the reporting date used for the purpose of the severance benefit actuarial valuation are detailed below:\n\n| Discount rate           | 13.5%   |\n|-------------------------|---------|\n| Rate of salary increase | 10%     |",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "8a3a00a4-edb8-4d77-8351-5c805de88503"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(c) Actuarial assumptions (Continued)",
+      "page_start": 89,
+      "page_end": 89,
+      "path": [
+        "(c) Actuarial assumptions (Continued)"
+      ],
+      "summary": "The discount rate was based on the rate of return of fixed term deposit due to lack of a deep and liquid market for long-term bonds in Ethiopia. The salary increases assumption rate of 6.67% per annum is the weighted average rate based on the job grades as provided by management.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "b8e7f995-98cb-4f35-89bf-fe7c67f8d20b"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(c) Credit risk (Continued)",
+      "page_start": 77,
+      "page_end": 79,
+      "path": [
+        "(c) Credit risk (Continued)"
+      ],
+      "summary": "As  at  30  June  2019  the  Company  was  satisfied  that  all  receivables  will  be  collected  and  no allowance for credit losses relating to insurance receivables were recognised. Staff loans were considered recoverable in full as the amounts are deducted from salaries and in the event of employees leaving before settling their debts, outstanding amounts are deducted from their severance pa...",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "e8160b73-f103-4cf0-9823-8fb0a7c2f5d2",
+        "ef08bb1f-ae67-4781-827a-543a993dcc03"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(c) Liquidity risk",
+      "page_start": 79,
+      "page_end": 79,
+      "path": [
+        "(c) Liquidity risk"
+      ],
+      "summary": "The table below analyses the Company's key financial and insurance assets and liabilities into relevant maturity groupings based on the remaining period at 30 June 2019 to the earlier of the re-pricing or contractual maturity date. | Description                                           | Below 1 year   | 1 - 5 years   | > 5 years   | Total         |\n|---------------------------------------------...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "a3aed2ed-3ce1-4490-b454-16fc7ebb09b0"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(c) Use of judgments and estimates",
+      "page_start": 43,
+      "page_end": 43,
+      "path": [
+        "(c) Use of judgments and estimates"
+      ],
+      "summary": "In  preparing  these  financial  statements,  management  has  made  judgments,  estimates  and assumptions that affect the application of the Company's accounting policies and the reported amounts of assets, liabilities, income and expenses. Actual results may differ from these estimates.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "f3af1ceb-774c-42e3-abde-e9897f74ff5d"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(d) Cash and cash equivalents",
+      "page_start": 54,
+      "page_end": 54,
+      "path": [
+        "(d) Cash and cash equivalents"
+      ],
+      "summary": "Cash and cash equivalents comprise cash on hand, cash at banks in current and deposit accounts and short term, highly liquid investments with maturity periods of three months or less. According to IAS 1 - Presentation of Financial Statements, cash funds, that for some reason are restricted and may not be exchanged or used to settle a liability for a period of at least twelve months are excluded f...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "2bf49062-14b3-409f-a464-b3bb2d3dbefe"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(d) Operational risk",
+      "page_start": 80,
+      "page_end": 80,
+      "path": [
+        "(d) Operational risk"
+      ],
+      "summary": "Operational risk is the risk of direct or indirect loss arising from a variety of causes associated with the Company's processes, personnel, technology and infrastructure, and from external factors other than credit, market and liquidity risks such as non-compliance with legal and regulatory requirements and generally accepted standards of corporate behaviour. Operational risk arises from all the...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "b0bb8c25-f740-47bf-80c7-b4172b6b841a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(d) Sensitivity analysis",
+      "page_start": 89,
+      "page_end": 89,
+      "path": [
+        "(d) Sensitivity analysis"
+      ],
+      "summary": "Reasonably possible  changes  at  the  reporting  date,  in  any  of  the  actuarial  assumptions  and assuming that all the other variables remain constant, would have affected the funded obligations as of 30 June, 2019 by the amounts shown below:\n\n|                                                  | SENARIO 1, BASE   | SENARIO 2, DISCOUNT RATE INCREASE BY 1%   | SENARIO 3, SALARY RATE INCREASED...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "306a56a5-3146-4cd0-a198-f8ee092bb8b6"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(e) Capital management",
+      "page_start": 81,
+      "page_end": 81,
+      "path": [
+        "(e) Capital management"
+      ],
+      "summary": "Capital  requirements  are  set  and  regulated  by  the  National  Bank  of  Ethiopia  (NBE). These requirements are put in place to ensure solvency margins are maintained in the insurance industry.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "dff56fd2-fd8e-4045-b2fa-7f04fa17415f"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(e) Operational risk (Continued)",
+      "page_start": 81,
+      "page_end": 81,
+      "path": [
+        "(e) Operational risk (Continued)"
+      ],
+      "summary": "To  mitigate  risks  like  fraud  and  errors,  the  Company  has  established  internal  control systems whereby approval limits for underwriting, reinsurance, claims handling, payment authorization for major capital expenditures and general expenses, investment/divestment, cheque signatories are authorized for different levels of executive management aligned with the hierarchy of Ethiopian Re s...",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "1dcaa158-116a-4bc5-9010-21970cbdadd4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(h) Impairment of non-financial assets",
+      "page_start": 57,
+      "page_end": 57,
+      "path": [
+        "(h) Impairment of non-financial assets"
+      ],
+      "summary": "At each reporting date, the Company reviews the carrying amounts of its non-financial assets (other than deferred tax assets) to determine whether there is any indication of impairment. If any such indication exists, then the asset's recoverable amount is estimated.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "20036af5-d014-4d50-b42a-c9d9ef5b3284"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Company acting as a lessee",
+      "page_start": 55,
+      "page_end": 55,
+      "path": [
+        "(i) Company acting as a lessee"
+      ],
+      "summary": "At inception, the Company determines whether a contract is, or contains, a lease. A contract is, or contains, a lease if the contract conveys the right to control the use of an identified asset for a period of time in exchange for consideration.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "55b68364-f972-46e5-886c-b625b855853d"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Company acting as a lessee - Continued",
+      "page_start": 56,
+      "page_end": 56,
+      "path": [
+        "(i) Company acting as a lessee - Continued"
+      ],
+      "summary": "After the commencement date, the Company measures the right-of-use asset applying the cost model (cost less any cumulative depreciation and any cumulative impairment). In the case of the lease liability, the Company measures it by increasing the carrying amount to reflect interest on the lease liability, reducing the carrying amount to reflect the lease payments made, and re-measuring the carryin...",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "8f15bafe-7b7d-49b3-b5de-4ee1cda6b359"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Currency risk- Continued",
+      "page_start": 74,
+      "page_end": 74,
+      "path": [
+        "(i) Currency risk- Continued"
+      ],
+      "summary": "| Reinsurance contracts            | 2019       |\n|----------------------------------|------------|\n|                                  | USD        |\n| Reinsurance assets (receivables) | 51,694.24  |\n| Reinsurance liability (payables) | 819,073.33 |\n\nA reasonably possible strengthening or weakening of the Ethiopian Birr against the US Dollar at the reporting date would have affected the measureme...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "e3fac4f6-4156-4581-a448-8f8852e4e535"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Current tax",
+      "page_start": 60,
+      "page_end": 60,
+      "path": [
+        "(i) Current tax"
+      ],
+      "summary": "The current income tax is the expected tax payable on the taxable income for the year. The amount of current tax payable is the best estimate of tax expected to be paid and that reflects the uncertainty related to income taxes, if any.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "ec14d687-0563-4373-b304-38260b6b4916"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Defined benefit plans",
+      "page_start": 58,
+      "page_end": 58,
+      "path": [
+        "(i) Defined benefit plans"
+      ],
+      "summary": "A defined benefit plan is a post-employment benefit plan at the termination of the employment relationship, other than a defined contribution plan. The Company accounts not only for its legal obligation under the formal term describe above, but also for any constructive obligation that arise from the Company´s customary practices.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "60966808-9706-4128-b3b4-6e31f9da1c59"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Defined benefit plans - Continued",
+      "page_start": 59,
+      "page_end": 59,
+      "path": [
+        "(i) Defined benefit plans - Continued"
+      ],
+      "summary": "The  calculation  is  performed  annually  by  a  qualified  actuary  using  the  projected  unit  credit method. When the benefits of a plan are improved, the portion of the increased benefit relating to past service by employees is recognized in profit or loss on a straight-line basis over the average period until the benefits become vested.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "565cf990-a200-4148-a44b-47a23e2126a4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Early adopted standards and interpretations",
+      "page_start": 63,
+      "page_end": 63,
+      "path": [
+        "(i) Early adopted standards and interpretations"
+      ],
+      "summary": "The company has decided to early adoption of the under listed standards and has applied them in preparing this financial statement:",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "2b42d9cb-1256-4be0-b40d-923ea34a8c85"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Interest rate risk",
+      "page_start": 71,
+      "page_end": 71,
+      "path": [
+        "(i) Interest rate risk"
+      ],
+      "summary": "The  Company's  exposure  to  interest  rate  changes  is  primarily  concentrated  in  the  actively managed fixed income portfolio, which is reported at fair  value. Changes  in  interest  rate  will have  an  immediate  impact  on  the  Company's  reported  net  income  and  consequently  the shareholders' funds.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "e0534736-c2bd-4337-bf48-0830c9626cc0"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Interest rate risk - Continued",
+      "page_start": 72,
+      "page_end": 73,
+      "path": [
+        "(i) Interest rate risk - Continued"
+      ],
+      "summary": "|                | Gen. Ins 2019   | Long Term Ins 2019   | Total 2019    |\n|----------------|-----------------|----------------------|---------------|\n| Abyssinia Bank | 1 64,808,01 5   | 27,861 ,256          | 1 92,669,271  |\n| AddisInternat  | 1 2,435,980     |                      | 1 2,435,980   |\n| Awash Internat | 1 96,240,81 3   | 1 8,1 56,1 02        | 21 4,396,91 5 |\n| Buna Internati |...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "53de83a8-b3d8-4d5b-9e05-e29ece13534c",
+        "a162bf91-7943-47db-b4fc-4d42420d47ae"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Provisions",
+      "page_start": 58,
+      "page_end": 58,
+      "path": [
+        "(i) Provisions"
+      ],
+      "summary": "A provision  is  recognized  if,  as  a  result  of  a  past  event,  the  Company  has  a  present  legal  or constructive  obligation  that  can  be  estimated  reliably,  and  it  is  probable  that  an  outflow  of economic benefits will be required to settle the obligation",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "4c1aceab-c41e-42c8-8b10-9ebf7de14ef8"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Recognition and measurement",
+      "page_start": 54,
+      "page_end": 54,
+      "path": [
+        "(i) Recognition and measurement"
+      ],
+      "summary": "Items  of  property,  plant  and  equipment  are  measured  at  cost,  which  includes  capitalized borrowing costs, less accumulated depreciation and cumulative impairment losses. If significant parts of an item of property or equipment have different useful lives, then they are accounted for as separate items (major components) of property and equipment.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "adf125d7-b23f-425c-a67b-4e31cd4061bd"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(i) Software",
+      "page_start": 57,
+      "page_end": 57,
+      "path": [
+        "(i) Software"
+      ],
+      "summary": "Software acquired by the Company is measured at cost less accumulated amortization and any accumulated impairment losses. Subsequent  expenditure  on  software  assets  is  capitalized  only  when  it  increases  the  future economic benefits embodied in the specific asset to which it relates.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "b567de63-ca53-4685-97ff-7bc7d833a2c2"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(ii) Company acting as a lessor - Finance leases",
+      "page_start": 56,
+      "page_end": 56,
+      "path": [
+        "(ii) Company acting as a lessor - Finance leases"
+      ],
+      "summary": "Where the Company is the lessor, the Company classifies each of its leases as either an operating lease or a finance lease.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "7ae571eb-5270-4bcb-901c-a2b2e984a823"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(ii) Deferred tax",
+      "page_start": 61,
+      "page_end": 61,
+      "path": [
+        "(ii) Deferred tax"
+      ],
+      "summary": "Deferred tax is measured under the asset and liability method. Deferred tax assets and liabilities are recognized for the future tax consequences attributable to temporary differences between such values.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "13ecfd7a-15c7-4292-a321-f53ba943cce1"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(ii) Defined contribution plans",
+      "page_start": 59,
+      "page_end": 59,
+      "path": [
+        "(ii) Defined contribution plans"
+      ],
+      "summary": "Obligations for contributions to defined contribution plans are expensed as the related services is provided. Prepaid contributions are regarded as an asset to the extent that a cash refund or a reduction in future payments is available.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "771f3aad-9be6-4041-91f0-67cf2bcfe102"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(ii) Equity price risk",
+      "page_start": 73,
+      "page_end": 73,
+      "path": [
+        "(ii) Equity price risk"
+      ],
+      "summary": "Equity price risk refers to the potential loss in fair value resulting from adverse changes in the fair value of stocks that the Corporation has invested in. The Company did not have investments in equity as at 30 June 2019.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "d9a95cd8-9a25-4b5d-b612-35203f988797"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(ii) New and amended standards and interpretations adopted during the year ended 30 June 2019",
+      "page_start": 63,
+      "page_end": 63,
+      "path": [
+        "(ii) New and amended standards and interpretations adopted during the year ended 30 June 2019"
+      ],
+      "summary": "IFRIC 22 Foreign currency Transaction and Advance Consideration\n\nThe interpretation, Applicable to annual periods beginning on or after 1 st  January 2018, addresses foreign currency transactions or parts of transaction where there is consideration that is dominated or priced in a foreign currency. It provides guidance for when a single payment/receipt is made as well as for situation where multi...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "9749dd79-4afb-431b-a09e-7fba11104f1e"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(ii) Recognition",
+      "page_start": 48,
+      "page_end": 48,
+      "path": [
+        "(ii) Recognition"
+      ],
+      "summary": "The  Company  recognizes  financial  instruments  when  the  Company  becomes  a  party  to  the contractual provisions of the instrument\n\nAll financial instruments are initially measured at fair value plus or minus transaction costs, in the case of a financial asset or financial liability not at fair value through profit or loss,.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "4dcd02b5-6132-4801-8b64-cc901b62a8c3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(ii) Subsequent costs",
+      "page_start": 54,
+      "page_end": 54,
+      "path": [
+        "(ii) Subsequent costs"
+      ],
+      "summary": "Subsequent expenditure is capitalized only when it is probable that the future economic benefits of the expenditure will flow to the Company. Ongoing repairs and maintenance are expensed as incurred.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "5b22b692-56ef-45b8-9284-b039a0674d73"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(iii) Currency risk",
+      "page_start": 73,
+      "page_end": 73,
+      "path": [
+        "(iii) Currency risk"
+      ],
+      "summary": "The  Company  is  exposed  to  currency  risk  to  the  extent  that  currencies  in  which  reinsurance contracts are denominated differ from functional currency of the Company. These contracts are primarily denominated in US Dollars.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "04740ca6-8297-4466-b630-13e5de4c4c9d"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(iii) Depreciation",
+      "page_start": 55,
+      "page_end": 55,
+      "path": [
+        "(iii) Depreciation"
+      ],
+      "summary": "Depreciation is  calculated  to  write  off  the  cost  of  items  of  property  and  equipment  less  their estimated residual values using the straight-line method over their estimated useful lives, and is generally recognized in profit or loss. Leased assets are depreciated over the shorter of the lease term and their useful lives unless it is reasonably certain that the Company will obtain ow...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "c17632cb-eba6-4d3f-b3cc-6a9193237571"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(iii) Short-term benefits",
+      "page_start": 59,
+      "page_end": 59,
+      "path": [
+        "(iii) Short-term benefits"
+      ],
+      "summary": "Short-term  employee  benefit  obligations  are  measured  on  an  undiscounted  basis  and  are expensed as the related services are provided, considering current wages. Liability is recognized for the amount expected to be paid under short-term cash and include mainly wages and salaries, bonuses, leave benefits and other allowances to pay this amount as a result of past services provided by the...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "66d6965a-3bbf-4622-8405-673499bda4cc"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(iv)  Other long-term benefits",
+      "page_start": 59,
+      "page_end": 59,
+      "path": [
+        "(iv)  Other long-term benefits"
+      ],
+      "summary": "Other long-term employee benefits are all employee benefits other than short-term employee benefits, post-employment benefits and termination benefits. The Company's net obligation in terms of long term benefits employee benefits is the amount of  future  benefits  that  employees  have  earned  in  return  for  their  services  in  the  current  and prior  periods.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "4fa23ed6-d3b2-47bb-8a04-50485b31b6cf"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(k)   Legal reserve",
+      "page_start": 60,
+      "page_end": 60,
+      "path": [
+        "(k)   Legal reserve"
+      ],
+      "summary": "According to the Proclamation No.746/2012, any insurer shall, at the end of the financial year, transfer to its legal reserve an amount not less than 10% of its net profit until such reserves equals it's paid up capital. The Company's policy is to transfer 10% of its net profit to the legal reserve.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "0e02ef40-e34c-4e2e-856e-42884fe3d924"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(l) Statutory deposit",
+      "page_start": 60,
+      "page_end": 60,
+      "path": [
+        "(l) Statutory deposit"
+      ],
+      "summary": "A statutory deposit amounting to 15% of the paid up capital must be maintained with the National Bank of Ethiopia. This deposit or part thereof may not be withdrawn or be used as a pledge or security for any loan except with the written permission of the National Bank of Ethiopia.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "e9d3a1f0-b35b-4e32-b58c-f4ad55e22112"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(m)   Income tax",
+      "page_start": 60,
+      "page_end": 60,
+      "path": [
+        "(m)   Income tax"
+      ],
+      "summary": "Income tax expense comprises current and deferred tax. It is recognized in profit or loss except to the extent that it relates to items recognized directly in equity or in OCI.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "bd6f534b-2721-4837-aa08-b895b5b2ebeb"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(n) Contingencies",
+      "page_start": 61,
+      "page_end": 61,
+      "path": [
+        "(n) Contingencies"
+      ],
+      "summary": "Liabilities for loss contingencies are recorded when it is probable that a liability has been incurred and the amount thereof can be reasonably estimated. When a reasonable estimation cannot be made, disclosure is provided in the notes to the financial statements.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "93aee9d3-4102-4f1f-8788-0ddce36930fc"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(o) Finance income and finance costs",
+      "page_start": 62,
+      "page_end": 62,
+      "path": [
+        "(o) Finance income and finance costs"
+      ],
+      "summary": "The  Company's  financial  income  and  finance  cost  include  interest  income,  interest  expense, dividend income, foreign exchange gains or losses and impairment losses on investments. Interest income or expense is recognised using the effective interest rate method.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "71e080f5-50eb-4016-996d-45465d6987e7"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(o) New Standards, amendments and interpretations (Continued)",
+      "page_start": 66,
+      "page_end": 67,
+      "path": [
+        "(o) New Standards, amendments and interpretations (Continued)"
+      ],
+      "summary": "- (ii) New and amended standards and interpretations adopted during the year ended 30 June 2019 - Continued\n\nThe new rules will affect the financial statements and key performance indicators of all entities that issue insurance contracts or investment contracts with discretionary participation features. The standard is effective for annual period beginning on or after 1 January 2021 with retrospe...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "ec6e3873-8fa1-43bc-ba80-028151fd7b20",
+        "034982be-61ec-4d39-bb41-69116dc7fa08"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(p) Borrowing costs",
+      "page_start": 62,
+      "page_end": 62,
+      "path": [
+        "(p) Borrowing costs"
+      ],
+      "summary": "Borrowing costs that are directly attributable to the acquisition, construction or production of a qualifying asset are capitalised as part of the cost of that asset. Capitalisation of borrowing costs ceases when substantially all activities necessary to prepare the qualifying asset for its intended use or sale are complete.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "5f6ccaff-69c6-4e3b-a2c2-4996072c3adc"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(q) Share based payments",
+      "page_start": 62,
+      "page_end": 62,
+      "path": [
+        "(q) Share based payments"
+      ],
+      "summary": "The  grant-date  fair  value  of  equity-settled  share-based  payment  arrangements  granted  to employees is generally recognised as an expense, with a corresponding increase in equity, over the vesting period of the awards. The amount recognised as an expense is adjusted to reflect the number of awards for which the related service and non-market performance conditions are expected to be met,...",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "ced837e9-9f7a-43e7-a00f-605e0ad9e5e1"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(r) New Standards, amendments and interpretations (Continued)",
+      "page_start": 64,
+      "page_end": 65,
+      "path": [
+        "(r) New Standards, amendments and interpretations (Continued)"
+      ],
+      "summary": "- (iii) New and amended standards and interpretations adopted during the year ended 30 June 2019 - Continued\n\nA number of new standards, amendments to standards and interpretations are not yet effective for the year ended 30 June 2019, and have not been applied in preparing these financial statements. These are summarized as follows:\n\n| New standards or amendments...",
+      "data_types_present": [
+        "mixed",
+        "prose"
+      ],
+      "chunk_ids": [
+        "b25d781d-3af4-481b-9ead-cc9baddf6809",
+        "ed232712-c950-4505-ac52-e89e1c5bd52d"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(untitled)",
+      "page_start": 1,
+      "page_end": 3,
+      "path": [
+        "(untitled)"
+      ],
+      "summary": "RISING WITH AFRICA! 10-67",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "5d3e3e6f-88b0-41e3-ac4a-612a30d3c819"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(v) Offsetting",
+      "page_start": 50,
+      "page_end": 50,
+      "path": [
+        "(v) Offsetting"
+      ],
+      "summary": "Financial  assets  and  liabilities  are  offset  and  the  net  amount  is  presented  in  the  statement  of financial position when, and only when, the Company has a legal right to offset the amounts and intends either to settle on a net basis or to realize the asset and settle the liability simultaneously. Income and expenses are presented on a net basis only when permitted under IFRS, or for...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "4a09440a-47c5-4761-9892-61be01dd1159"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(v) Termination benefits",
+      "page_start": 60,
+      "page_end": 60,
+      "path": [
+        "(v) Termination benefits"
+      ],
+      "summary": "Termination benefits are expensed at the earlier of when the Company can no longer withdraw the offer of those benefits and when the Company recognizes costs for a restructuring. If benefits are  not  expected  to  be  wholly  settled  within  12  months  of  the  reporting  date,  then  they  are discounted.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "784225c7-40d1-42f0-aeaf-9f3c3ea59001"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(vi)  Amortized cost measurement",
+      "page_start": 50,
+      "page_end": 50,
+      "path": [
+        "(vi)  Amortized cost measurement"
+      ],
+      "summary": "The 'amortized cost' of a financial asset or financial liability is the amount at which the financial asset or financial liability  is  measured at initial  recognition, minus principal repayments, plus or minus the cumulative amortization using the effective interest method of any difference between the initial amount recognized and the maturity amount, minus any reduction for impairment.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "0af83578-e12b-462a-87e2-29b8b4a8fec8"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(vii)  Fair value measurement",
+      "page_start": 50,
+      "page_end": 50,
+      "path": [
+        "(vii)  Fair value measurement"
+      ],
+      "summary": "'Fair value' is the price that would be received to sell an asset or paid to transfer a liability in an orderly transaction between market participants at the measurement date in the principal or, in its absence, the most advantageous market to which the Company has access at that date. The fair value of a liability reflects its non-performance risk.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "1af114f0-c4a2-414f-8151-33aca7fdb6a9"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(viii) Derecognition  - Continued",
+      "page_start": 49,
+      "page_end": 49,
+      "path": [
+        "(viii) Derecognition  - Continued"
+      ],
+      "summary": "On derecognition of a financial asset, the difference between the carrying amount of the asset (or the carrying amount allocated to the portion of the asset derecognized) and the sum of:\n\n- a) the consideration received (including any new asset obtained less any new liability assumed) and\n- b) any cumulative gain or loss that had been recognized in OCI\n\nIn transactions in which the Company neithe...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "534115d6-b07d-4822-a5c4-1171deabf1b4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "(viii) Impairment",
+      "page_start": 51,
+      "page_end": 51,
+      "path": [
+        "(viii) Impairment"
+      ],
+      "summary": "The Company recognizes loss allowances for Expected Credit Losses (ECLs) on\n\nFinancial assets measured at amortized cost;\n\nLifetime expected credit losses are the losses that result from all possible default events over the expected life of a financial instrument, whereas 12-month ECLs are the portion of ECLs that results from default events that are possible within the 12 months after the report...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "1a35ec87-c5b3-4273-a4e2-38e63011f7c0"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "1. BACKGROUND INFORMATION",
+      "page_start": 14,
+      "page_end": 14,
+      "path": [
+        "1. BACKGROUND INFORMATION"
+      ],
+      "summary": "Ethiopian  Reinsurance  Share  Company  (Ethio-Re)  is  the  first  reinsurance  company  incorporated  in accordance with the provisions of Article 5(8) of Insurance Business Proclamation No.746/2012; under license number RB/01/2016 issued by the National Bank of Ethiopia. It started operation on 1 July 2016 and engages in both life and non-life businesses.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "41d6cd79-90c4-4fdf-abe9-1a611517fc58"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "1. Reporting entity",
+      "page_start": 42,
+      "page_end": 42,
+      "path": [
+        "1. Reporting entity"
+      ],
+      "summary": "Ethiopian  Reinsurance  Share  Company  ('The  Company')  is  a  reinsurance  company established  on  7  July  2016  with  the  objective  of  engaging  in  the  business  of  rendering general and long-term re-insurance services. The Company's registered office is located in the Federal Democratic Republic of Ethiopia, Addis Ababa City, Kirkos Sub City, Woreda 9, and House No.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "5f2ac5d9-18d7-46fc-9dcb-dc6c02a88ceb"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "10. Time deposits",
+      "page_start": 83,
+      "page_end": 83,
+      "path": [
+        "10. Time deposits"
+      ],
+      "summary": "|                             | Gen.Ins        | Long Term Ins   | Total         | Total          |\n|-----------------------------|----------------|-----------------|---------------|----------------|\n| Name of Bank                | 2019           | 2019            | 2019          | 2018           |\n| Bank of Abysinia            | 1 64,808,01 5  | 27,861 ,256     | 1 92,669,271  | 1 04,529,708   |...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "d4922aeb-00e4-40f7-b321-5731db919510"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "10. Time deposits (Continued)",
+      "page_start": 84,
+      "page_end": 84,
+      "path": [
+        "10. Time deposits (Continued)"
+      ],
+      "summary": "Time deposits have been recognized as financial assets at amortized cost. The effective interest rate on time deposits ranges from 12% to 13% per annum.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "e88006b9-e2ac-40d2-bd57-d2865076d773"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "11. Grand Renaissance Dam Bonds",
+      "page_start": 84,
+      "page_end": 84,
+      "path": [
+        "11. Grand Renaissance Dam Bonds"
+      ],
+      "summary": "A statutory deposit amounting to 15% of the paid-up capital must be maintained with the National Bank of Ethiopia. This deposit or any part thereof may not be withdrawn except with the written permission of the National Bank of Ethiopia, or be used as a pledge or security for any loan.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "75ab1382-f78c-4460-879d-c113fb86e4fd"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "12. Leases",
+      "page_start": 85,
+      "page_end": 85,
+      "path": [
+        "12. Leases"
+      ],
+      "summary": "Right of use\n\n|                                  | Gen.Ins 2019   | Long Term Ins 2019   | Total 2019   | Total 2018    |\n|----------------------------------|----------------|----------------------|--------------|---------------|\n| Cost                             |                |                      |              |               |\n| Balance at beginning of the year | 8,1 1 7,946    | -...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "95b4245e-bbf3-450b-bd6e-bbfe3a9cdc7b"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "13. Property, plant and equipment",
+      "page_start": 86,
+      "page_end": 86,
+      "path": [
+        "13. Property, plant and equipment"
+      ],
+      "summary": "|                             | Balance                 |              | Balance     | Total       |\n|-----------------------------|-------------------------|--------------|-------------|-------------|\n| COST                        | 01/07/18                | Additions    | 30/06/19    | 2018        |\n| Partition work              | 2,489,846               | -            | 2,489,846   | 2,489,846...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "2a373ff5-6200-4a5e-9048-6dfdcb5abb25"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "14. Unearned premium",
+      "page_start": 86,
+      "page_end": 86,
+      "path": [
+        "14. Unearned premium"
+      ],
+      "summary": "|                                         | Gen. Ins 2019       | Long Term Ins 2019   |   Total 2019 | Total 2018   |\n|-----------------------------------------|---------------------|----------------------|--------------|--------------|\n| Provision for Unearned Premium          | 260,239,974         | 1 2,828,659          |  273,068,633 | 250,61 7,822 |\n| Less: Retrocess.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "a6d9751a-248b-43d1-9c1b-d15a45a8d1d9"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "15. Other payables",
+      "page_start": 87,
+      "page_end": 87,
+      "path": [
+        "15. Other payables"
+      ],
+      "summary": "|                              | Gen.Ins 2019   | Long Term Ins 2019   | Total 2019   | Total 2018   |\n|------------------------------|----------------|----------------------|--------------|--------------|\n| EmployeesIncome tax payable  | 206,080        | -                    | 206,080      | 1 32,944     |\n| Withholding tax payable      | 7,789          | -                    | 7,789        | 1...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "2120dac3-5824-4d38-8476-cbee4723fbba"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "16. Due to Ceding Companies",
+      "page_start": 87,
+      "page_end": 87,
+      "path": [
+        "16. Due to Ceding Companies"
+      ],
+      "summary": "|                         |     Gen.Ins | Long Term Ins   |       Total |      Total |\n|-------------------------|-------------|-----------------|-------------|------------|\n|                         |        2019 | 2019            |        2019 |       2018 |\n| Due to ceding Companies | 303,972,657 | -               | 303,972,657 | 30,278,170 |",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "844174f7-1a3f-42ca-892f-8c76595929f6"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "17.1  Defined benefit plans",
+      "page_start": 88,
+      "page_end": 88,
+      "path": [
+        "17.1  Defined benefit plans"
+      ],
+      "summary": "The Company employees are entitled to a Severance Benefit. The Severance Benefit Entitlement is provided for under the Proclamation No.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "05855790-1524-4e0c-b97c-137ab20be568"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "17.2 Defined contribution plan",
+      "page_start": 89,
+      "page_end": 89,
+      "path": [
+        "17.2 Defined contribution plan"
+      ],
+      "summary": "Pensions are provided for employees by a separate pension fund to which both the company and employees contribute in accordance with Proclamation No. 715/2011.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "0602c911-e89c-44ff-8253-3fef86931dbc"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "18. Outstanding Claims Reserve",
+      "page_start": 90,
+      "page_end": 90,
+      "path": [
+        "18. Outstanding Claims Reserve"
+      ],
+      "summary": "Outstanding claims are computed on the basis of preliminary loss advice from ceding companies and outstanding claims reports sent by cedants. They are also determined on the basis of historical expenses and actuarial analysis.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "229bb072-6ed9-4356-8b3c-9fd32b5744f0"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "2. BOARD OF DIRECTORS",
+      "page_start": 15,
+      "page_end": 16,
+      "path": [
+        "2. BOARD OF DIRECTORS"
+      ],
+      "summary": "The roles and functions of the Board of Directors and the CEO of the Company are distinct, and their respective responsibilities have been clearly definedin the Memorandum and Articles of Association of the Company. The Board comprises of nine directors appointed to serve in their individual capacity and as representatives of institutional investors.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "f170c685-8815-4558-ad26-94778e42696f"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "20. Gross premium",
+      "page_start": 91,
+      "page_end": 91,
+      "path": [
+        "20. Gross premium"
+      ],
+      "summary": "Premiums and related expenses are accounted for in profit or loss when earned or incurred. Gross earned premiums comprise gross premiums relating to risks assumed in the year after accounting for any movement in gross unearned premiums.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "2de6affc-0e2c-4fd1-9e9f-a83cf2b6329c"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "21. Claims incurred",
+      "page_start": 92,
+      "page_end": 92,
+      "path": [
+        "21. Claims incurred"
+      ],
+      "summary": "The expected loss ratio method was used to determine the provision for incurred but not reported (IBNR) claims for General business. An equivalent of one month of the annual gross premium was used to calculate the IBNR for long-term business.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "001c66b9-505b-4678-b02b-16b54a25a88e"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "22. Cedant acquisition costs",
+      "page_start": 93,
+      "page_end": 93,
+      "path": [
+        "22. Cedant acquisition costs"
+      ],
+      "summary": "| Cedant acquisition costs   | Gen. Ins       | Long Term Ins   | Total        | Total         |\n|----------------------------|----------------|-----------------|--------------|---------------|\n| Class of Business          |                |                 |              |               |\n|                            | 20 19          | 20 19           | 20 19        | 20 18         |\n| Accident...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "74c9d6eb-4ea9-4910-b603-d73e328bcfca"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "23.   Net Finance Costs",
+      "page_start": 93,
+      "page_end": 93,
+      "path": [
+        "23.   Net Finance Costs"
+      ],
+      "summary": "|                                         | Gen. Ins 20 19   | Long Term Ins 20 19   | Total 20 19    | Total 20 18    |\n|-----------------------------------------|------------------|-----------------------|----------------|----------------|\n| Investment and finance Income           | 93, 594, 827     | 9, 715, 0 19          | 10 3, 30 9,846 | 67, 472, 110   |\n| Interest on Saving Accounts...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "db96d90e-dc35-4575-a31b-eb56a5810506"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "24. Operating and other expenses",
+      "page_start": 94,
+      "page_end": 94,
+      "path": [
+        "24. Operating and other expenses"
+      ],
+      "summary": "|                            | Gen. Ins 20 19   | Long Term Ins 20 19   | Total 20 19   | Total 20 18   |\n|----------------------------|------------------|-----------------------|---------------|---------------|\n| Administrative and general | 1 8,731 ,1 72    | 572,543               | 1 9,303,71 5  | 1 2,007,077   |\n| Staff costs                | 9,261 ,1 85      | 1 53,790              | 9,41 4,...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "0147d81c-4482-46c0-96de-5a2550debbfb"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "25.  Income taxes",
+      "page_start": 94,
+      "page_end": 94,
+      "path": [
+        "25.  Income taxes"
+      ],
+      "summary": "The Company is subject to income taxes in Ethiopia. The rate of business income tax applicable to a Company is 30%.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "e779dbf0-a3c4-4431-bdc4-de051638e81a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "26. Earnings per Share (EPS)",
+      "page_start": 96,
+      "page_end": 96,
+      "path": [
+        "26. Earnings per Share (EPS)"
+      ],
+      "summary": "Earnings per share is calculated by dividing the profit/loss for the year by the weighted average number of ordinary shares in issue during the year. |                                            | 20 19 ETB    | 20 18 ETB   |\n|--------------------------------------------|--------------|-------------|\n| Profit attributable to Shareholders        | 1 20,439,673 | 78,631 ,836 |\n| Weighted average nu...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "8b4dfbb9-7190-4bf2-9be2-0a61ab806c1b"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "27. Related parties",
+      "page_start": 96,
+      "page_end": 96,
+      "path": [
+        "27. Related parties"
+      ],
+      "summary": "For the purposes of these financial statements, a party is considered to be related to the Company if:\n\n- The party has the ability, directly or indirectly through one or more intermediaries, to control the Company or exercise significant influence over the Company in making financial and operating policy decisions, or has joint control over the Company;\n- The Company and the party are subject to...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "93485be9-3668-4d59-95c9-665249ba2a23"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "27. Related parties (Continued)",
+      "page_start": 97,
+      "page_end": 97,
+      "path": [
+        "27. Related parties (Continued)"
+      ],
+      "summary": "| Shareholder Category                                                                                      | Composition   | Percentage Shareholding   |\n|-----------------------------------------------------------------------------------------------------------|---------------|---------------------------|\n| 1 7 insurance companies. Ethiopian insurance Corporation (EIC) isa major shareholder in t...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "54f9f665-e564-4d8f-85a7-3373c58b0237"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3. Significant accounting policies",
+      "page_start": 44,
+      "page_end": 44,
+      "path": [
+        "3. Significant accounting policies"
+      ],
+      "summary": "The accounting policies set out below have been applied consistently to the period presented in these financial statements.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "d9427ab0-586a-46cb-ae2c-d89ed4295ec7"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3. Significant accounting policies (Continued) (b). Reinsurance contract (Continued)",
+      "page_start": 45,
+      "page_end": 45,
+      "path": [
+        "3. Significant accounting policies (Continued) (b). Reinsurance contract (Continued)"
+      ],
+      "summary": "(ii) Long term business This is for other business not considered as non-life business. The main classes covered in long term insurance business are term, endowment, whole life, permanent health and others.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "063a8469-b4e9-41f5-be91-0a09130b2ccc"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3. Significant accounting policies (Continued) (c). Financial assets and financial liabilities (Continued)",
+      "page_start": 50,
+      "page_end": 53,
+      "path": [
+        "3. Significant accounting policies (Continued) (c). Financial assets and financial liabilities (Continued)"
+      ],
+      "summary": "(viii) Modifications of financial assets and financial liabilities  - Continued (viii) Fair value measurement  - Continued\n\nWhen available, the Company measures the fair value of an instrument using the quoted price in an active market for that instrument. A market is regarded as active if transactions for the asset or liability take place with sufficient frequency and volume to provide pricing i...",
+      "data_types_present": [
+        "para",
+        "prose"
+      ],
+      "chunk_ids": [
+        "5022da8b-1382-444a-8833-b035ca7d78ba",
+        "56e6fa06-d50c-48d1-916f-b901ad568410",
+        "9989b051-441e-4b68-9352-98691ece9ae3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3. Significant accounting policies (Continued) (c). Financial assets and financial liabilities (Continued) Ethio RE Annual Report",
+      "page_start": 52,
+      "page_end": 52,
+      "path": [
+        "3. Significant accounting policies (Continued) (c). Financial assets and financial liabilities (Continued) Ethio RE Annual Report"
+      ],
+      "summary": "(viii) Impairment - Continued",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "65ba617e-1a6a-4134-a6f4-524f55f56287"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3. Significant accounting policies (Continued) (h) Impairment of non-financial assets Ethio RE Annual Report",
+      "page_start": 58,
+      "page_end": 58,
+      "path": [
+        "3. Significant accounting policies (Continued) (h) Impairment of non-financial assets Ethio RE Annual Report"
+      ],
+      "summary": "The Company's corporate assets do not generate separate cash inflows and are used by more than one CGU. Corporate assets are allocated to CGUs on a reasonable and consistent basis and tested for impairment as part of the testing of the CGUs to which the corporate assets are allocated.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "7fff4181-c91f-4428-8d87-e3d14e549ed7"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.1   THE GLOBAL REINSURANCELANDSCAPE",
+      "page_start": 16,
+      "page_end": 17,
+      "path": [
+        "3.1   THE GLOBAL REINSURANCELANDSCAPE"
+      ],
+      "summary": "According to African Reinsurance Pulse 2019, in the year 2018, global insurance premiums reached US$ 5,193 billion, surpassing theUS$ 5 billion mark for the first time. In line with a global market share of 1.3 %,Africa's insurance premium volume increased by 4.9 % from US$ 65.2 billion in2017 to US$ 68.4 billion in 2018.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "8e8927e5-7799-4524-9aa4-317facf06681",
+        "b9214798-c790-4257-97e2-900b90028b85"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.2     ETHIOPIAN ECONOMIC PROFILE AND THE INSURANCE INDUSTRY",
+      "page_start": 17,
+      "page_end": 17,
+      "path": [
+        "3.2     ETHIOPIAN ECONOMIC PROFILE AND THE INSURANCE INDUSTRY"
+      ],
+      "summary": "The Ethiopian economy registered 7.7 percent growth in 2017/18, slower than the 10.9 percent expansion recorded in the previous year. This growth was attributed to 12.2 percent rise in industrial output, 8.8 percent expansion in service sector and 3.5 percent growth in agriculture.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "f88e8ddf-897b-4cd2-b5ae-97594d88d211"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.3     COMPULSORY POLICY CESSIONS (CPC): THE CASE FOR AND AGAINST.",
+      "page_start": 19,
+      "page_end": 19,
+      "path": [
+        "3.3     COMPULSORY POLICY CESSIONS (CPC): THE CASE FOR AND AGAINST."
+      ],
+      "summary": "Like  many  national  reinsurance  companies  in  developing  economies,  Ethio-Re  is  entitled  to  receive  5% compulsory policy and 25% treaty cessions by the virtue of the stipulation of Directive No.SIB/44/2016 of the National Bank of Ethiopia (NBE).The Directive, which governs the manner and criteria of transacting reinsurance business, requires an insurer to cede at least 25% of its treat...",
+      "data_types_present": [
+        "para",
+        "prose"
+      ],
+      "chunk_ids": [
+        "97b41ff6-da8d-4860-a2ef-1a6f20fec1d6",
+        "32d8537b-ab8c-4713-a22e-dbfff75b5ab1"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.4 MANNER OF ACCEPTING AND CEDING FACULTATIVE BUSINESS: Ethio RE Annual Report",
+      "page_start": 20,
+      "page_end": 20,
+      "path": [
+        "3.4 MANNER OF ACCEPTING AND CEDING FACULTATIVE BUSINESS: Ethio RE Annual Report"
+      ],
+      "summary": "Regarding the manner of transacting reinsurance business, Directive No.SIB/44/2016 grants Ethio-Re the right of first refusal on all facultative businesses before they are offered to overseas companies. Nevertheless, this particular provision of the Directive has not been consistently and strictly adhered toresulting in forfeiture of the income that could be generated from this source.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "645ec1c7-add4-48a0-b39d-58dea293173e"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.5 TIMELY FILING OF QUARTERLY REPORTS AND SETTLEMENT OF BALANCES:",
+      "page_start": 20,
+      "page_end": 21,
+      "path": [
+        "3.5 TIMELY FILING OF QUARTERLY REPORTS AND SETTLEMENT OF BALANCES:"
+      ],
+      "summary": "The manner of submitting the accounts in respect of compulsory policy cessionshas been agreed to operate like a quota share treaty whereby quarterly accounts on premiums and claims are submitted in a summarized form. Accordingly, insurers submit quarterly accounts by class of business after offsetting claims incurred during the period against premiums due and deducting any applicable commissions.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "6377844f-5f0c-4222-a218-5536d0cee0b1"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.6   COLLECTION OF PREMIUMS:",
+      "page_start": 21,
+      "page_end": 21,
+      "path": [
+        "3.6   COLLECTION OF PREMIUMS:"
+      ],
+      "summary": "Writing reinsurance business is worthless if the Company never receives amounts due on time. The insurance industry  is  operating  on  the  basis  of  a  'no  premium,  no  cover'  policy,  which  requires  insurers  to  collect premiums upfront for an insurance cover to be valid as per the stipulation of Insurance Business Proclamation No.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "a621f1cc-adee-45d1-9c93-e4a9dbdcdd82"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "3.7   GETTING VOLUNTARY CESSIONS FROM THE LOCAL MARKET AND INWARD FOREIGN BUSINESS:",
+      "page_start": 21,
+      "page_end": 21,
+      "path": [
+        "3.7   GETTING VOLUNTARY CESSIONS FROM THE LOCAL MARKET AND INWARD FOREIGN BUSINESS:"
+      ],
+      "summary": "Income targets from foreign business: The Company has set targets to write inward business from overseas market (5% of the total GWP). Following  successful  negotiation  with  retrocessionairs,  the  restrictions  imposed  has  been  waived,  and Management conducted a risk assessment and drawn a business plan including identification of target markets with the assistance of Afro- Asian Insuranc...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "620215ea-7ee7-4421-b514-84b91f13675d"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4.  Financial risk review - (Continued) Financial risk review - (Continued)",
+      "page_start": 68,
+      "page_end": 68,
+      "path": [
+        "4.  Financial risk review - (Continued) Financial risk review - (Continued)"
+      ],
+      "summary": "This note presents information about the Company's risk exposure, and the Company's objectives, policies and processes for measuring and managing risk and managing capital.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "da26b7a8-a225-4071-b46c-c93b3f5b20f4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4. Financial risk review",
+      "page_start": 67,
+      "page_end": 68,
+      "path": [
+        "4. Financial risk review"
+      ],
+      "summary": "Reinsurance contracts expose the Company to underwriting risk, which comprises insurance risk, policyholder behavior risk and expense risk. In  addition,  the  Company  is  exposed  to  financial  and  operational  risks  from  insurance  and reinsurance contracts and financial instruments.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "6a2d47be-b355-42ea-976a-6287d4e10484"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4. Financial risk review (Continued) (c) Credit risk (Continued) Ethio RE Annual Report",
+      "page_start": 78,
+      "page_end": 78,
+      "path": [
+        "4. Financial risk review (Continued) (c) Credit risk (Continued) Ethio RE Annual Report"
+      ],
+      "summary": "The Company assumed a zero percent rate of default on its time deposit and cash at bank. This was based on the following factors and circumstances:\n\n- The Company considers time deposits to be in default when a financial asset is more than 90 days past due; all its time deposits were paid on the date of maturity.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "bae57615-b70f-42c1-9753-f16d716da1f9"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4. Financial risk review (Continued) (d) Liquidity risk (Continued) Ethio RE Annual Report",
+      "page_start": 80,
+      "page_end": 80,
+      "path": [
+        "4. Financial risk review (Continued) (d) Liquidity risk (Continued) Ethio RE Annual Report"
+      ],
+      "summary": "Liquidity  risk  is  the  risk  that  the  Company  will  encounter  difficulty  in  raising  funds  to  meet  commitments associated with reinsurance contracts and other obligations as and when due. Cash instruments include cash in chequing accounts, saving accounts and time deposits.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "199d5498-71a6-4617-bfdc-267512875e60"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "5. Cash and cash equivalents",
+      "page_start": 81,
+      "page_end": 82,
+      "path": [
+        "5. Cash and cash equivalents"
+      ],
+      "summary": "|                           | Gen. Ins 2019   | Long Term Ins 2019   | Total 2019   | Total 2018   |\n|---------------------------|-----------------|----------------------|--------------|--------------|\n| Saving a ccounts          |                 |                      |              |              |\n| Commercial Bank of Eth.",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "9d26bebf-e20c-4276-a2a5-800d5453c1e3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "5. FUTURE PLAN",
+      "page_start": 29,
+      "page_end": 30,
+      "path": [
+        "5. FUTURE PLAN"
+      ],
+      "summary": "Ethio-Re has developed and approved its first strategic plan covering the years 2016/17-2021/22. Accordingly, the Board of Directors and Senior Management have reviewed and approved the strategic plan which was later presented to the National Bank of Ethiopia.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "5f9fbc85-cf24-416f-bb06-93b510e47a4e"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "6. Other receivables",
+      "page_start": 82,
+      "page_end": 82,
+      "path": [
+        "6. Other receivables"
+      ],
+      "summary": "|             |   Gen.Ins 2019 | Long Term Ins 2019   | Total 2019   | Total 2018   |\n|-------------|----------------|----------------------|--------------|--------------|\n| Staff loans |        469,543 | -                    | 469,543      | 556,523      |\n| Prepayment  |      3,077,245 | -                    | 3,077,245    | 21 ,1 50     |\n| Advance tax |      2,967,495 | 64,1 39              |...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "b5070e4d-8143-43a5-ba75-4cbfd96bd97f"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "6. RECOMMENDATION ON THE APPROPRIATION OF PROFIT",
+      "page_start": 30,
+      "page_end": 30,
+      "path": [
+        "6. RECOMMENDATION ON THE APPROPRIATION OF PROFIT"
+      ],
+      "summary": "During the financial year 2018/19, the Company has obtained an after tax profit of Birr 133.8million. - The Board of Directors, therefore, recommends to the General Assembly of shareholders that Birr 119 million  be  distributed  to  shareholders  in  proportion  to  their  respective  shares  after  deducting  legal reserve and the remuneration of the Board of Directors.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "3ed9719a-4206-4fc7-b18e-931184d39cac"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "7. AUDITORS",
+      "page_start": 30,
+      "page_end": 30,
+      "path": [
+        "7. AUDITORS"
+      ],
+      "summary": "The  Audit  Services  Corporation  is  responsible  for  auditing  the  Company's  books  of  accounts  in accordance with the resolution of the Founder's Meeting that sanctioned the Corporation as External Auditors for the year ended 30 June 2019.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "f23a32c7-6977-4d7b-8823-5223896b8dc6"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "7. Due from Retrocessionaires",
+      "page_start": 82,
+      "page_end": 82,
+      "path": [
+        "7. Due from Retrocessionaires"
+      ],
+      "summary": "|                             | Gen.Ins 2019   | Long Term Ins 2019   | Total 2019   | Total 2018   |\n|-----------------------------|----------------|----------------------|--------------|--------------|\n| Due from retrocessiona ires | 21 5,302,382   | -                    | 21 5,302,382 |              |\n| Due from retrocessiona ires | 215,302,382    | -                    | 215,302,382  | -...",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "7a3dca77-9606-4c16-83a2-37009a8ba2f2"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "8. Due from ceding companies",
+      "page_start": 82,
+      "page_end": 82,
+      "path": [
+        "8. Due from ceding companies"
+      ],
+      "summary": "|                 | Gen.Ins      | Long Term Ins   | Total        | Total         |\n|-----------------|--------------|-----------------|--------------|---------------|\n| Due from ceding | 1 20,520,675 | 1 4,961 ,395    | 1 35,482,070 | 1 23,803,1 01 |\n| Due from ceding | 120,520,675  | 14,961,395      | 135,482,070  | 123,803,101   |",
+      "data_types_present": [
+        "table"
+      ],
+      "chunk_ids": [
+        "72d9f850-aa82-416e-ad34-d8de180f1bea"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "8. VOTE OF THANKS",
+      "page_start": 31,
+      "page_end": 31,
+      "path": [
+        "8. VOTE OF THANKS"
+      ],
+      "summary": "The Board of Directors, the Executive Management and employees would like to express their deepest gratitude  to  all  insurers  carrying  on  insurance  business  in  Ethiopia  and  other  stakeholders  for  their unreserved support and willingness to continue to do business with the Company. ---------------------------------\n\nYewendwossen Eteffa Kumssa Chief Executive Officer\n\n-----------------...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "c135de70-bfb4-457a-9f3c-946228f467a9"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "9. Deferred acquisition costs",
+      "page_start": 83,
+      "page_end": 83,
+      "path": [
+        "9. Deferred acquisition costs"
+      ],
+      "summary": "|                    | Gen.Ins     | Long Term Ins   | Total       | Total         |\n|--------------------|-------------|-----------------|-------------|---------------|\n| Cla ss of Business | 2019        | 2019            | 2019        | 2018          |\n| Accident           | 2,028,953   |                 | 2,028,953   | 2,089,687     |\n| Aviation           | 46          |                 | 46...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "f8503c75-17ca-4617-bf26-b9c6d8375ecb"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "APPOINTMENT OF ACTUARY AND CONTACTING RATING AGENCIES",
+      "page_start": 29,
+      "page_end": 29,
+      "path": [
+        "APPOINTMENT OF ACTUARY AND CONTACTING RATING AGENCIES"
+      ],
+      "summary": "Credit rating: The Company has communicatedselected rating agencies, AM BEST and Global Credit Rating (GCR) as per the decision of the Board of Directors. Accordingly,information regarding rating time table(schedule), rating fees, and rating criteria were obtained.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "6253a1d0-b3ec-40bd-a8a3-41301642a8a2"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "APPROVAL OF STRATEGIES, WORKING MANUALS, PROCEDURES AND GUIDELINES",
+      "page_start": 25,
+      "page_end": 25,
+      "path": [
+        "APPROVAL OF STRATEGIES, WORKING MANUALS, PROCEDURES AND GUIDELINES"
+      ],
+      "summary": "The  Board  has  approved  the  working  manuals,  procedures  and  guidelines  of  the  Company  and implementation of same commenced. These includes the Hunan Resources Strategy and related documents, Internal Audit Policy and Procedure Manual, Risk Management Policy and Procedure, Customer Social Responsibility (CSR) Policy, Marketing and Customer Relationship Management (CRM) strategy, revise...",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "69630339-6e90-42e4-b86d-fba29c920b27"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Amortized cost",
+      "page_start": 47,
+      "page_end": 47,
+      "path": [
+        "Amortized cost"
+      ],
+      "summary": "A financial asset is classified as subsequently measured at amortized cost if it:\n\n- meets the SPPI criterion (whether the contractual terms of the financial assets give rise, on specified dates, to cash flows that are Solely for Payment of Principal and Interest); and\n- is held within a business model whose objective is to hold assets in order to collect contractual cash flows.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "33916b9c-11df-4362-8ad3-2e1ebd7613c3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Amount arising from Expected Credit Losses (ECL)",
+      "page_start": 77,
+      "page_end": 77,
+      "path": [
+        "Amount arising from Expected Credit Losses (ECL)"
+      ],
+      "summary": "For  inputs,  assumptions  and  techniques  used  for  estimating  impairment  see  accounting  note 3c(viii). The following amounts were subject to ECL as they were classified at amortised cost:\n\n|                 |      2019 ETB |\n|-----------------|---------------|\n| Staff loans     |     469,542.5 |\n| Cash at bank    |   109,122,501 |\n| Time deposits   |   969,930,431 |\n| Government Bond |...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "75147e6b-4e91-497f-adc1-05a9fecec387"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Applying IFRS 9 Financial Instruments with IFRS 4 Insurance Contracts (Amendments to IFRS 4)",
+      "page_start": 66,
+      "page_end": 66,
+      "path": [
+        "Applying IFRS 9 Financial Instruments with IFRS 4 Insurance Contracts (Amendments to IFRS 4)"
+      ],
+      "summary": "The  amendments  in  Applying  IFRS  9  'Financial  Instruments'  with  IFRS  4  'Insurance  Contracts' (Amendments to IFRS 4) provide two options for entities that issue insurance contracts within the scope of IFRS 4:\n\n- an option that permits entities to reclassify, from profit or loss to other comprehensive income, some of the income or expenses arising from designated financial assets; this i...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "7cd28830-7cd8-4c96-ab2c-8b42718fd4e7"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Assumptions and estimation uncertainties",
+      "page_start": 43,
+      "page_end": 43,
+      "path": [
+        "Assumptions and estimation uncertainties"
+      ],
+      "summary": "Information on assumptions and uncertainty of estimates posing a significant risk of resulting in a material adjustment to the carrying amount of assets and liabilities within the year ending 30 June 2019 is included in the following notes\n\nNote 3 (b) - measurement of insurance liabilities: Key actuarial assumptions\n\nNote 17 (c) - measurement of employee benefits liability: Key actuarial assumpti...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "48a6bc7f-f6f6-40f1-9cd1-97487fc612e3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "BUSINESS DEVELOPMENT, PROMOTION AND COMMUNICATION",
+      "page_start": 25,
+      "page_end": 27,
+      "path": [
+        "BUSINESS DEVELOPMENT, PROMOTION AND COMMUNICATION"
+      ],
+      "summary": "Participation in the African Insurance Organization (AIO) Annual Conference and General Assembly, Federation  of  Afro-Asian  Insurers  and  Reinsurers  (FAIR),  and  Organization  of  African  Insurers  and Reinsurers(OESAI). These  conferences  and  general  assemblies  are  annual  events  which  bring together insurance professionals from all over the continent and beyond to discuss insurance...",
+      "data_types_present": [
+        "para",
+        "prose"
+      ],
+      "chunk_ids": [
+        "3bffa438-084e-487e-881e-d241d594bbef",
+        "4d3f2ca6-e8a4-4ed8-a4c8-618e18b7485a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Basic and diluted earnings per share",
+      "page_start": 96,
+      "page_end": 96,
+      "path": [
+        "Basic and diluted earnings per share"
+      ],
+      "summary": "There were no potentially dilutive shares outstanding at 30 June 2019. The diluted earnings per share is therefore the same as the basic earnings per share.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "b980d173-80ce-4b1b-927a-471af3446b86"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "CAPITAL",
+      "page_start": 22,
+      "page_end": 22,
+      "path": [
+        "CAPITAL"
+      ],
+      "summary": "During the period under review, the total capital of the Company reached Birr758.8million, showing an increase of 23%  when comparisons are made with last year's similar period.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "6ad6fe90-b9b6-4563-8298-ecd8523fef63"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "CEDANT ACQUISITION COST",
+      "page_start": 23,
+      "page_end": 23,
+      "path": [
+        "CEDANT ACQUISITION COST"
+      ],
+      "summary": "The Company has outlaid Birr 176.9 million for acquisition cost, which is higher than last year's similar period by Birr 26million or 17%. The increment in cedant acquisition cost was mainly due to increase in written premium during the year.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "5bab7d40-bdcb-4215-91b3-e36d4d9907c8"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "CLAIMS PAID",
+      "page_start": 23,
+      "page_end": 23,
+      "path": [
+        "CLAIMS PAID"
+      ],
+      "summary": "The Company has settled gross claims amounting to Birr 521million. Out of the total claims paid, Birr 466million and Birr 54.7 million were paid under policy and treaty cessions, respectively.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "46d10611-5791-4473-a1e5-4c5ebb149fbb"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "COMMISSION INCOME",
+      "page_start": 23,
+      "page_end": 23,
+      "path": [
+        "COMMISSION INCOME"
+      ],
+      "summary": "The company earned Birr 22.2 million as commission income which is higher than last year by Birr 17.5 million. The increase in commission income was registered mainly due to change in retrocession arrangement from non-proportional to proportional treaty.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "4789f26d-3cee-4e12-96d8-c105654f96fd"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Capital structure",
+      "page_start": 15,
+      "page_end": 15,
+      "path": [
+        "Capital structure"
+      ],
+      "summary": "The subscribed share capital of the Company is Birr 997.3 million. The Company's paid up capital has reached Birr 607.2million as of June 30, 2019.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "bde8c2d0-dae7-4782-b8cb-bd661e3f36c1"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Cedant acquisition costs and deferred acquisition costs",
+      "page_start": 45,
+      "page_end": 45,
+      "path": [
+        "Cedant acquisition costs and deferred acquisition costs"
+      ],
+      "summary": "A proportion of cedant acquisition costs is deferred and amortized over the period in which the related premium is earned. Deferred acquisition costs represent the proportion of cedant acquisition costs and other acquisition costs that relate to the unexpired term of the policies that are in force at the year end.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "b5c1dc55-143c-4bae-91e4-95cc788ff604"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Claims incurred",
+      "page_start": 45,
+      "page_end": 45,
+      "path": [
+        "Claims incurred"
+      ],
+      "summary": "Claims incurred comprise claims paid in the period and changes in the provision for outstanding claims. Claims paid represent all payments made during the period.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "2d81db48-f32e-46af-b740-ea54aec07fee"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Closing rate",
+      "page_start": 74,
+      "page_end": 74,
+      "path": [
+        "Closing rate"
+      ],
+      "summary": "USD 1 = Buying Br 28.6805\n\nSelling     29.3795",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "2a1f987d-8ecc-46c9-a024-2c218a35597e"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Concentration of underwriting risk",
+      "page_start": 70,
+      "page_end": 70,
+      "path": [
+        "Concentration of underwriting risk"
+      ],
+      "summary": "The Company's concentration of reinsurance risk is determined by class of business. The shared characteristic that identifies each concentration is the insured event and the key indicator which is the gross premium as disclosed in note 20.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "4bf6482e-422e-4950-b164-0ac48f48f54c"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Core Values",
+      "page_start": 6,
+      "page_end": 6,
+      "path": [
+        "Core Values"
+      ],
+      "summary": "To  apprehend  our  corporate  mission  and  vision,  Management  and  staff  of  Ethiopian  Re    stand  for  the mnemonic 'ETHIOPIAN':",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "097e38cb-39cf-4dc0-9f6b-1d5cb835ea17"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Credit-impaired financial assets",
+      "page_start": 52,
+      "page_end": 52,
+      "path": [
+        "Credit-impaired financial assets"
+      ],
+      "summary": "At each reporting date, the Company assesses whether financial assets measured at amortized cost and debt investments at FVOCI are credit-impaired. A financial asset is credit-impaired when one or more events that have a detrimental impact on the estimated future cash flows of the financial asset have occurred.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "95e8ac5e-2ba8-4b92-b702-6447c47730f4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Dear Shareholders and esteemed partners!",
+      "page_start": 10,
+      "page_end": 13,
+      "path": [
+        "Dear Shareholders and esteemed partners!"
+      ],
+      "summary": "It  is  with  great  pride  and  pleasure  I  present  the  annual report  for  the  financial  year  ending  30  June  2019  to  the Fourth Annual General Meeting of the Shareholders of the Ethiopian Reinsurance Share Company. The Company  has continued its remarkable journey towards the summit envisioned by its founders with superior confidence.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "a4ab9b27-f64c-4608-8225-925fd4bcb68e",
+        "6a4bce29-2252-493a-afc3-0b5d56125c15",
+        "f4667a21-0932-4137-b641-6b48011281f5"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Dear Shareholders:",
+      "page_start": 8,
+      "page_end": 9,
+      "path": [
+        "Dear Shareholders:"
+      ],
+      "summary": "The financial year 2018/19 has been a great year, in which we  have  successfully  achieved  the  targets  planned.The Company registered 6% increase in Gross Written Premium compared againstpreceding year's results and registered Birr 144.5 million profit before tax in the reporting year. This  is  my  first  Annual  Shareholder  Meeting  as  Chairman  of the Board of Directors of Ethio-Re and I...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "62195bd4-8aaf-4bb9-a109-b5e5a17b8592",
+        "40f690b0-bd5c-4053-9f51-07cdcffbb347"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "ETHIO RE IN FIGURES Ethio RE Annual Report",
+      "page_start": 4,
+      "page_end": 5,
+      "path": [
+        "ETHIO RE IN FIGURES Ethio RE Annual Report"
+      ],
+      "summary": "(FINANCIAL HIGHLIGHTS)\n\nII\n\nEarnings Per Share (EPS)\n\nPaid Up Capital",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "597228da-4b13-4874-8744-fc3356554b56"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "EXECUTIVE MANAGEMENT 2018/19",
+      "page_start": 13,
+      "page_end": 13,
+      "path": [
+        "EXECUTIVE MANAGEMENT 2018/19"
+      ],
+      "summary": "Mrs. Azeb Wogayehu Manager, Finance &amp; Administration Department\n\nMr.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "1e8628ef-49de-4e4e-af6b-615f4997b2ad"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Exposure to credit risk",
+      "page_start": 75,
+      "page_end": 75,
+      "path": [
+        "Exposure to credit risk"
+      ],
+      "summary": "The carrying amount of financial assets and insurance contracts represents the maximum credit exposure. The maximum exposure to credit risk at the reporting date was:\n\n| Carrying amount                           | 2019          |\n|-------------------------------------------|---------------|\n|                                           | ETB           |\n| Time deposits                             |...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "8ea84ff6-5b7c-4c19-a3c4-cc899496932a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Fair value through Other Comprehensive Income (FVOCI)",
+      "page_start": 47,
+      "page_end": 47,
+      "path": [
+        "Fair value through Other Comprehensive Income (FVOCI)"
+      ],
+      "summary": "A financial asset is classified as subsequently measured at FVOCI if it:\n\n- meets the SPPI criterion (whether the contractual terms of the financial assets give rise, on specified dates, to cash flows that are Solely for Payment of Principal and Interest); and\n- is  held  within  a  business  model  in  which  assets  are  managed  both  in  order  to  collect contractual cash flows and for sale.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "37659f53-ce45-4ca3-a8f1-30214152f012"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Fair value through profit or loss",
+      "page_start": 48,
+      "page_end": 48,
+      "path": [
+        "Fair value through profit or loss"
+      ],
+      "summary": "All  other  financial  assets  i.e. financial  assets  that  do  not  meet  the  criteria  for  classification  as subsequently  measured  at  amortized  cost  or  FVOCI  are  subsequently  measured  at  fair  value through profit or loss, with changes in fair value recognized in profit or loss.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "e219b0a7-56ee-482c-adb1-d4a9ba450d45"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Finance lease",
+      "page_start": 56,
+      "page_end": 56,
+      "path": [
+        "Finance lease"
+      ],
+      "summary": "If a lease agreement transfers substantially all of the risks and rewards incidental to ownership of the asset to the lessee, then the arrangement is classified as a finance lease and a receivable equal to the net investment in the lease is recognized and presented within receivable. At the commencement date, the Company recognizes assets held under a finance lease in its statement of financial p...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "80bcd061-d693-4da2-adc1-b92e300baad0"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Financial assets",
+      "page_start": 47,
+      "page_end": 50,
+      "path": [
+        "Financial assets"
+      ],
+      "summary": "The Company classifies its financial assets into one of the following categories:\n\n- Amortized cost;\n- Fair value through comprehensive income; and\n- At fair value through profit or loss. The  Company  derecognizes  a  financial  asset  when  the  contractual  rights  to  the  cash  flows from the financial asset expire, or it transfers the rights to receive the contractual cash flows in a transa...",
+      "data_types_present": [
+        "para",
+        "prose"
+      ],
+      "chunk_ids": [
+        "d689f76d-7a34-432f-a046-6952cd263644",
+        "949d622e-124b-41fd-b8d1-17c5cfcc3be5",
+        "4579453f-1409-45c0-83be-e03f6e91aa89"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Financial liabilities",
+      "page_start": 48,
+      "page_end": 50,
+      "path": [
+        "Financial liabilities"
+      ],
+      "summary": "The Company classifies its financial liabilities as measured at amortized cost or fair value through profit or loss. Financial liabilities can be designated at FVTPL if managed on a fair value basis or it is eliminated or reduced if an accounting mismatch.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "a1a93935-0c57-44b2-8339-e3bc00471e96",
+        "3fcf9154-54e7-446e-901b-8459553af490",
+        "6b75db37-6f7c-44d8-8252-24e2a0e28277"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Foreign currency transactions",
+      "page_start": 44,
+      "page_end": 44,
+      "path": [
+        "Foreign currency transactions"
+      ],
+      "summary": "Transactions in foreign currencies are translated into the respective functional currency of the Company at the exchange rates at the date of the transaction. Monetary assets and liabilities denominated in foreign currencies are translated into the functional currency at the exchange rate at the reporting date.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "0b2e447d-f0c4-4225-afd8-ed10784eea43"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "GROSS WRITTEN PREMIUM",
+      "page_start": 22,
+      "page_end": 22,
+      "path": [
+        "GROSS WRITTEN PREMIUM"
+      ],
+      "summary": "During  the  period  under  review,  the  Company  has  generated  a  gross  premium  income  of  Birr 698.7million. The total premium generated was higher than last year's similar period by Birr 37.2million or 6%.Figures indicate that the difference in registered growth with the industry's performance were observed mainly due to increase of retention level of local ceding companies to align with...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "42cee4db-1e7c-4145-9b5e-2c4105ba8637"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Governance structure",
+      "page_start": 15,
+      "page_end": 15,
+      "path": [
+        "Governance structure"
+      ],
+      "summary": "The Company's Board of Directors comprise of nine members representing individual shareholders and institutional investors appointed by the Annual General Meeting of the Shareholders of the Company. The Board is responsible to provide strategic leadership and direction regarding the overall affairs of the Company.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "e8f61cf7-44e2-490d-ab3a-18a086c1580e"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "HUMAN RESOURCE STRATEGY AND PROFILE",
+      "page_start": 24,
+      "page_end": 25,
+      "path": [
+        "HUMAN RESOURCE STRATEGY AND PROFILE"
+      ],
+      "summary": "Management has duly recognized the importance of building the capacity of staff in order to be able to deliver competitive reinsurance service. Accordingly, the Company has engaged consultants to conduct comprehensive review of the Company's Human Resource (HR)strategy aimed at developing a blueprint on how to build a competent and highly motivated workforce.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "9555d59f-d611-4290-bee4-af081917a4e3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "INVESTMENT",
+      "page_start": 24,
+      "page_end": 24,
+      "path": [
+        "INVESTMENT"
+      ],
+      "summary": "Within the limits set by the National Bank of Ethiopia (NBE) directives, Ethio Re needs to look at how to get high return by investing its excess funds in other areas of investment other than fixed time deposits. Accordingly, investment plan has been prepared and approved by the board of Directors to diversity investment options.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "1315dedf-848c-4403-8a2c-932af93301c6"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "IT PROJECT",
+      "page_start": 24,
+      "page_end": 24,
+      "path": [
+        "IT PROJECT"
+      ],
+      "summary": "As part of its strategy, the Company has paid special attention to acquiring state of the arttechnology in order to enhance its competitiveness and improve the quality of products and services it delivers. To this end, it has started implementation of the reinsurance and accounting software with SAP East Africa Limited and msg Global Solutions.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "c96bcb35-54ae-4859-8eb1-817b1450a8b2"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Impairment losses",
+      "page_start": 76,
+      "page_end": 76,
+      "path": [
+        "Impairment losses"
+      ],
+      "summary": "The ageing of insurance debtors at the reporting date was as follows:\n\n|                             | Gross Amount   | Impairment   |\n|-----------------------------|----------------|--------------|\n|                             | ETB            | ETB          |\n| Not past due (0-29 days)    | 71,479,660     | -            |\n| Past due (30-90 days)       | 28,918,611     | -            |\n| Past d...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "d58edf57-9f14-4e9d-83c9-5d1cfe042d10"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Insurance Contracts (IFRS 17)",
+      "page_start": 65,
+      "page_end": 65,
+      "path": [
+        "Insurance Contracts (IFRS 17)"
+      ],
+      "summary": "IFRS 17 was issued in May 2017 as replacement for IFRS 4 Insurance Contracts. It requires a current measurement model where estimates are  re-measured  each  reporting  period.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "a91db300-f075-4fd3-bfbb-683fbce7446e"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Judgments",
+      "page_start": 43,
+      "page_end": 43,
+      "path": [
+        "Judgments"
+      ],
+      "summary": "Information about judgments made in applying accounting policies that have the most significant effects on the amounts recognized in the financial statements is included in the following note. Note 3 (f) - Leases: whether an arrangement contains a lease",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "664b7089-0273-4c9d-a914-150cd7516d19"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Liability adequacy test",
+      "page_start": 46,
+      "page_end": 46,
+      "path": [
+        "Liability adequacy test"
+      ],
+      "summary": "At each reporting date, liability adequacy tests are performed to ensure the adequacy of the contract liabilities. In  performing  these  tests,  current  best  estimates  of  future  contractual  cash flows  and  claims  handling  and  administration  expenses,  as  well  as  investment  income  from the assets backing such liabilities, are used.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "a81ec89c-1109-4489-9701-ef2ace75ac7e"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "MARKET VISITS",
+      "page_start": 27,
+      "page_end": 29,
+      "path": [
+        "MARKET VISITS"
+      ],
+      "summary": "Domestic: A  senior  management  team  led  by  the  CEO  has  visited  all  local  insurance  companies with the purpose of establishing smooth business relationships and to explore ways on how to boost business opportunities. Moreover, Finance and Admin manager together with Financial Accounting Unit Head has visited all insurance companies to expedite collection performance and create smooth b...",
+      "data_types_present": [
+        "para",
+        "prose"
+      ],
+      "chunk_ids": [
+        "ecca0a6f-a36a-4447-befa-242b3eb7e66c",
+        "86631640-d43a-4361-a3bd-b1ba6f02361a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Management of Liquidity risk",
+      "page_start": 80,
+      "page_end": 80,
+      "path": [
+        "Management of Liquidity risk"
+      ],
+      "summary": "The  Company  manages  its  liquidity  risk  by  holding  an  adequate  liquidity  buffer  to  pay  out unexpected claims. Investment in short term securities, like Treasury Bills, and Certificates of Deposit, shall be evenly distributed over 12 months to enable the Company to meet its unexpected liquidity problem without forfeiting interest accrued on Certificate of Deposits.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "f6ddca05-b765-4183-b834-fad73e415ed5"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Management of credit risk",
+      "page_start": 75,
+      "page_end": 75,
+      "path": [
+        "Management of credit risk"
+      ],
+      "summary": "Ethiopian-Re's  credit  risk  philosophy  considers  ceding  companies  adhere  to  the  reinsurance terms and conditions and submit statements of account and settle premiums due on time. Any investment undertaken by Ethiopian-Re shall be undertaken in a manner that seeks to ensure the preservation of the principal investment.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "e17f0e2c-25c5-43d2-a27c-1def7de29611"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Management of market risk",
+      "page_start": 71,
+      "page_end": 71,
+      "path": [
+        "Management of market risk"
+      ],
+      "summary": "Ethiopian Re manages market risk based on the diversification of investments within the framework of Proclamation No. 746/2012 article 25 and subject to the future issuance of directives, prescribing investments of insurers, by National Bank of Ethiopia.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "09a4ceac-0745-49b6-b763-864faa84dce7"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Management of underwriting risk",
+      "page_start": 69,
+      "page_end": 69,
+      "path": [
+        "Management of underwriting risk"
+      ],
+      "summary": "The  Company  reinsures  all  classes  of  insurance  business  including:  Accident  and  Health, Engineering, Guarantee, Liability, Motor, Fire, Marine, Energy, Aviation, Disability and Life. The bulk of the business written is short term in nature.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "63e001c4-f4b8-4beb-8507-6504d1e50b7b"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Measurement of expected credit losses",
+      "page_start": 51,
+      "page_end": 51,
+      "path": [
+        "Measurement of expected credit losses"
+      ],
+      "summary": "Expected credit losses are a probability-weighed estimate of credit losses and are measures as follows:\n\n- Financial assets that are not credit-impaired at the reporting date: the present value of all cash shortfalls- i.e. the difference between the cash flows due to the entity in accordance with the contract and the cash flows that the Company expects to receive; and\n- Financial assets that are...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "30ab0711-f0eb-45e0-bce2-7e89a4ea9c00"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Mission",
+      "page_start": 6,
+      "page_end": 6,
+      "path": [
+        "Mission"
+      ],
+      "summary": "Provide dependable reinsurance services both locally and internationally through nurturing adequate risk capacity and using highly trained professionals and modern Information and Communication Technology system. The Company endeavours to foster market stability, high professionalism and advancing the business of insurance paying special attention to discharging its corporate social responsibilit...",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "6b41bda7-dd57-4763-b512-a45ea80a2415"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "NET CLAIMS INCURRED",
+      "page_start": 23,
+      "page_end": 23,
+      "path": [
+        "NET CLAIMS INCURRED"
+      ],
+      "summary": "The Company's net claims incurred reached Birr 328.8million. The amount has shown a decrease by Birr 6million or 2% as compared to last year's similar period.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "6e4837c8-e03c-4926-87ca-32e7e124b3c4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "NET INVESTMENT INCOME",
+      "page_start": 23,
+      "page_end": 23,
+      "path": [
+        "NET INVESTMENT INCOME"
+      ],
+      "summary": "During the period under review, the Company has earned Birr 102.7 million from investment which is  higher than last year's similar period income by Birr 35.8 million or 54%. The registered increase in investment income was mainly due to interest income growth from fixed time deposit.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "4b73bf58-6e33-4024-9bb7-e16a5a8457f4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "New standard or amendments",
+      "page_start": 63,
+      "page_end": 63,
+      "path": [
+        "New standard or amendments"
+      ],
+      "summary": "IFRS 9 - Financial Instruments\n\nIFRS 16 - Leases\n\nIAS 7- Disclosure Initiative (Amendments to IAS 7)\n\nIAS 12- Recognition of Deferred Tax Assets for unrealized losses (Amendments to IAS 12)",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "cb8add6a-add2-44ce-ab7c-8f2da20d6ad5"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Notes to Financial Statements For the year ended 30 June 2019",
+      "page_start": 42,
+      "page_end": 42,
+      "path": [
+        "Notes to Financial Statements For the year ended 30 June 2019"
+      ],
+      "summary": "Ethio RE\n\nAnnual\n\nReport",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "20da8a5e-c5ba-4f78-8bc1-9127769c0c45"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "OPERATING AND OTHER EXPENSES",
+      "page_start": 23,
+      "page_end": 23,
+      "path": [
+        "OPERATING AND OTHER EXPENSES"
+      ],
+      "summary": "The  Company  has  outlaid  Birr  32.8million  as  operating  and  other  expenses  which  is  higher  than last  year's  similar  period  by  Birr  10.7million. The  registered  increase  was  mainly  due  to  recruitment of additional work force to strengthen the manpower of the company, increase in promotion and advertisement expenses as well as training and development expenses.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "45d9a8db-3e9d-40a7-a36b-cb9516d2b6c6"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "OUR MOTTO 'RISING WITH AFRICA!'",
+      "page_start": 7,
+      "page_end": 7,
+      "path": [
+        "OUR MOTTO 'RISING WITH AFRICA!'"
+      ],
+      "summary": "Africa  Rising  is  a  term  coined  to  describe  the  rapid  economic  growth  in  Sub-Saharan Africa  since  2000  and  the  belief  in  the  inevitability  of  further,  rapid  development  of  the continent. The continent is almost predestined to enjoy a long period of mid-to-high economic growth, rising incomes and an emerging middle class.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "ea6b6acc-ddea-4366-94ab-a00d24fcc0e8"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Operating lease",
+      "page_start": 56,
+      "page_end": 56,
+      "path": [
+        "Operating lease"
+      ],
+      "summary": "The Company recognizes lease payments from operating leases as income on either a straight-line basis or another systematic basis. The Company applies another systematic basis if that basis is more representative of the pattern in which benefit from the use of the underlying asset is diminished.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "537214b9-09f0-4358-b58d-c90d56bfdb05"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "PRODUCING REPORTS IN LINE WITH INTERNATIONAL REPORTING STANDARDS (IFRS)",
+      "page_start": 25,
+      "page_end": 25,
+      "path": [
+        "PRODUCING REPORTS IN LINE WITH INTERNATIONAL REPORTING STANDARDS (IFRS)"
+      ],
+      "summary": "IFRS, constitutes standards issued by the IFRS Foundation and the International Accounting Standards Board (IASB) to provide a common global language for business affairs so that a company's accounts are transparent and comparable across international boundaries. The government of Ethiopia also enacted the IFRS proclamation and regulation in 2014.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "69a1602c-59e3-463e-8ad7-689bbda19f20"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "PROFIT",
+      "page_start": 23,
+      "page_end": 24,
+      "path": [
+        "PROFIT"
+      ],
+      "summary": "During the period under review, the Company has registered Birr 144.5million profit before tax, which is higher than last year's similar period performance by Birr 65 million, or 83.7%. The share of general insurance  stood  at  Birr  126.9million,  whereas  the  life  insurance  business  contributed  Birr  17.6million towards the total generated.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "6fdb030b-7bce-4dff-856b-94fd248e72ff"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Premium income",
+      "page_start": 45,
+      "page_end": 45,
+      "path": [
+        "Premium income"
+      ],
+      "summary": "Premiums and related expenses are accounted for in profit or loss when earned or incurred. Gross earned premiums comprise gross premiums relating to risks assumed in the year after accounting for  any movement in gross unearned premiums.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "154f3a4b-bd2f-46ef-a6c8-e183df6ac299"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Presentation of loss allowances in the statement of financial position",
+      "page_start": 53,
+      "page_end": 53,
+      "path": [
+        "Presentation of loss allowances in the statement of financial position"
+      ],
+      "summary": "Loss allowances for expected credit losses are presented as follows:\n\nFinancial assets measured at amortized cost: the loss allowance is deducted from the gross\n\n- carrying amount of the assets; and\n\nDebt investments measured at FVOCI: the loss allowance is recognized in OCI.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "c3bab8a9-1bbb-4a14-8a15-e40adbf5e8db"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "REPORT OF THE BOARD OF DIRECTORS FOR THE YEAR ENDED 3O JUNE 2019",
+      "page_start": 14,
+      "page_end": 14,
+      "path": [
+        "REPORT OF THE BOARD OF DIRECTORS FOR THE YEAR ENDED 3O JUNE 2019"
+      ],
+      "summary": "The Directors of Ethiopian Reinsurance Share Company herebypresenttheir report together with the Audited Financial  Statements  for  the  year  ended  30  June  2019  in  accordance  with  Article  418  and  419  of  the Commercial Code of Ethiopia and Article 9 and 10 of the Company's Articles of Association as well asthe relevant Directives of the National Bank of Ethiopia.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "0486860e-6fe8-4062-97d6-7f187a76d9b0"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "RETRO- PROGRAM ARRANGEMENT",
+      "page_start": 25,
+      "page_end": 25,
+      "path": [
+        "RETRO- PROGRAM ARRANGEMENT"
+      ],
+      "summary": "Retro  program  arrangement  for  the  year  2019/20has  been  finalized  during  the  reporting  period. Comprehensive  retro  program  with  wider  geographical  coverage,  including  sub-Saharan  African markets has been concluded.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "9361490f-945c-44ec-9dc3-67f0b55dbac3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Receivable and payables related to reinsurance contracts",
+      "page_start": 46,
+      "page_end": 46,
+      "path": [
+        "Receivable and payables related to reinsurance contracts"
+      ],
+      "summary": "Receivables and payables are recognized when due. These include amounts due to and from cedants and brokers.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "922746e8-ca12-4e84-8b6f-b6b5a8459bed"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Receivable and payables related to reinsurance contracts - Continued",
+      "page_start": 47,
+      "page_end": 47,
+      "path": [
+        "Receivable and payables related to reinsurance contracts - Continued"
+      ],
+      "summary": "If there is objective evidence that the reinsurance receivable is impaired, Ethiopian Re reduces the carrying amount of the reinsurance receivable accordingly and recognizes the impairment loss in profit or loss. An asset is deemed impaired if there is objective evidence, as a result of an event that occurred after its initial recognition, that the Company may not recover all amounts due.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "d977315b-016a-48c2-99a2-00e293152171"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Receivables from Retrocesionnaires",
+      "page_start": 76,
+      "page_end": 76,
+      "path": [
+        "Receivables from Retrocesionnaires"
+      ],
+      "summary": "| Description                 | Gross Amount ETB   |\n|-----------------------------|--------------------|\n| Current (0-29 days)         | 267,615,325        |\n| Past due (30-90 days)       | -                  |\n| Past due (91 - 180 days)    | 194,743            |\n| Past due 181 - 360 days     | -                  |\n| Past due more than 360 days | 332,456            |\n| Total...",
+      "data_types_present": [
+        "mixed"
+      ],
+      "chunk_ids": [
+        "1230594b-52bb-4a84-a8a4-960944997092"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Recognition and measurement",
+      "page_start": 45,
+      "page_end": 45,
+      "path": [
+        "Recognition and measurement"
+      ],
+      "summary": "The results of the reinsurance business are determined on an annual basis as follows:",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "b7bd4fa4-2be1-4fd7-8926-e8bca23adcbd"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Regulatory Capital",
+      "page_start": 81,
+      "page_end": 81,
+      "path": [
+        "Regulatory Capital"
+      ],
+      "summary": "The  Company  currently  has  Birr  607,168,354  paid  up  capital  which  is  above  the  statutory requirement of Birr 500,000,000 set by the National Bank of Ethiopia.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "ee5b805a-e7f0-4dd5-8ece-170d856cd866"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Retrocession contracts held",
+      "page_start": 46,
+      "page_end": 46,
+      "path": [
+        "Retrocession contracts held"
+      ],
+      "summary": "Contracts entered into by the Company with retrocessionaires under which it is compensated for  losses  on  one  or  more  contracts  issued  by  it  and  that  meet  the  classification  requirements for  retrocession  contracts  are  classified  as  retrocession  contracts  held. Retrocession  premiums payable  are  recognized  in  the  period  in  which  the  related  premium  income  and  cla...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "8c8c5b3d-f8d6-42fa-9884-3312d1e37e43"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Risk management framework",
+      "page_start": 68,
+      "page_end": 68,
+      "path": [
+        "Risk management framework"
+      ],
+      "summary": "The Company's board of directors has overall responsibility for the establishment and oversight of  the  Company's  risk  management  framework. The  Board  of  Directors  oversees  that  the  risk management  process  is  designed  and  implemented  in  line  with  the  Company's  corporate strategy.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "83cc2308-11bc-4ee9-b031-63dccc18dac0"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Shareholding Structure",
+      "page_start": 14,
+      "page_end": 14,
+      "path": [
+        "Shareholding Structure"
+      ],
+      "summary": "Ethio-Re's capital structure is composed of private and public financial  institutions as well as individual investors. The  Company's  current  shareholderscompriseof  seven  banks,  seventeen  insurance companies, seventy-eightindividual shareholders coming from different walks of life and one labor\n\n- union.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "09975847-3dcf-4466-a1b9-c08828849b9d"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Summary of Financial Information of Insurers as at June 30, 2019",
+      "page_start": 18,
+      "page_end": 18,
+      "path": [
+        "Summary of Financial Information of Insurers as at June 30, 2019"
+      ],
+      "summary": "Table1: performance of the Ethiopian insurance industry\n\nSource: NBE: June 30, 2019",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "4cef8978-f374-4e97-b7ed-6c1edb5bb8ce"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "THE INSURANCE INDUSTRY: Ethio RE Annual Report",
+      "page_start": 18,
+      "page_end": 18,
+      "path": [
+        "THE INSURANCE INDUSTRY: Ethio RE Annual Report"
+      ],
+      "summary": "Of the 17 insurance companies operating in Ethiopia 16 were private and the total capital of all insurance companies reached Birr 8.2 billion at the end of the period under review. The industry registered a gross written premium of Birr 9.1 billionwitnessing almost 8.3% growth compared against the previous year result.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "7b673d68-e91a-48cc-8be5-a72fa32f0bd3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "TOTAL ASSET",
+      "page_start": 22,
+      "page_end": 22,
+      "path": [
+        "TOTAL ASSET"
+      ],
+      "summary": "During the period under review, the total asset of the Company stood at Birr 1.6 billion, showing an increase of42% than last year's similar period.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "e82cdf02-a6df-4858-ba8a-eb1a25f3ef4c"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Ultimate parent company",
+      "page_start": 96,
+      "page_end": 96,
+      "path": [
+        "Ultimate parent company"
+      ],
+      "summary": "The  entity  has  no  ultimate  parent  company. The  Company's  shareholdings  comprise  various insurance companies, banking institutions and individuals in Ethiopia.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "4b857236-aa15-4e4e-b9bd-802daf5a86c0"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Underwriting risk",
+      "page_start": 69,
+      "page_end": 69,
+      "path": [
+        "Underwriting risk"
+      ],
+      "summary": "Underwriting risk comprises; insurance risk, retro-cession risk and technical reserve risk. Insurance risk is the risk of loss on underwriting activities that may arise from acceptance of business that is not in the scope of Ethiopian-Re acceptable business.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "7ba9bd67-cc4d-47c7-9cd8-6be4f30c1afb"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Vision",
+      "page_start": 6,
+      "page_end": 6,
+      "path": [
+        "Vision"
+      ],
+      "summary": "'To become one of the leading reinsurance companies in Africa by 2027'",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "d0dbab4a-0fe4-4775-aeb9-4750483209cd"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Write-off",
+      "page_start": 53,
+      "page_end": 54,
+      "path": [
+        "Write-off"
+      ],
+      "summary": "The gross carrying amount of a financial asset is written off (either partially or in full) to the extent that there is no realistic prospect of recovery. This is generally the case when the Company determines that the borrower does not have assets or sources of income that could generate sufficient cash flows to repay the amounts subject to the write-off.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "68a399eb-61a5-4b91-ab06-53a4bd3fe9aa"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "የኢትዮጵያ ጠለፋ መድን ኩባንያ አ . ማ .",
+      "page_start": 104,
+      "page_end": 104,
+      "path": [
+        "የኢትዮጵያ ጠለፋ መድን ኩባንያ አ . ማ ."
+      ],
+      "summary": "Ethiopian Reinsurance Company S.C. Africa Avenue | Kirkos Subcity | Woreda 9 Tel: +251-115-575757 | 115-582790 | 92 | 93 Fax:+251 115 575758\n\nP.O.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "fe2f76cf-577f-4e31-9fd9-323834b9e367"
+      ],
+      "key_entities": [],
+      "children": []
+    }
+  ],
+  "created_at": "2026-07-23T12:19:50.280956Z"
+}

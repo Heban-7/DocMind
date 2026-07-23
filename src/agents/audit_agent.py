@@ -155,6 +155,11 @@ class AuditAgent:
                     )
                 hits.extend(result.hits)
                 traces.append(result.trace)
+            from src.query.page_map import enrich_hit_printed_page
+
+            hits = [
+                enrich_hit_printed_page(h, pdf_path=deps.pdf_path) for h in hits
+            ]
             return {
                 "hits": [h.model_dump(mode="json") for h in hits],
                 "tool_trace": [t.model_dump(mode="json") for t in traces],

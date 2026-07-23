@@ -75,6 +75,14 @@ def test_query_answer_with_provenance_ok():
     )
     assert len(ans.provenance) == 1
     assert ans.tool_trace[0].tool is ToolName.SEMANTIC_SEARCH
+    assert ans.provenance.citations[0].page_ref == "p.4"
+
+
+def test_citation_optional_printed_page_dual_display():
+    c = _citation(printed_page="1", page_number=33)
+    assert c.page_number == 33
+    assert c.printed_page == "1"
+    assert c.page_ref == "PDF p.33 (document p.1)"
 
 
 def test_audit_verified_requires_provenance():
