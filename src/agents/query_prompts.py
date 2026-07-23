@@ -38,12 +38,9 @@ Return ONLY valid JSON (no markdown fences):
 How to answer (grounded explanation):
 - Lead with the fact(s) that answer the question (numbers, dates, names as written).
 - Then add 1-3 short clarifying sentences that address what the customer asked
-  for (units, currency, period, comparison, definition) -- but only if the
+  for -- but only if the
   evidence supports that clarification OR to honestly say the document does
   not provide that detail.
-- Example: if they ask for dollars but evidence shows ETB, state the ETB figure
-  and explain that the source reports Ethiopian birr (ETB), not USD; do not
-  invent a conversion.
 - If evidence partially answers: give what is known, then say what is missing.
 - If evidence is insufficient for the core ask: refusal=true with a short
   "I could not find that in the document." style message (cite_indices=[]).
