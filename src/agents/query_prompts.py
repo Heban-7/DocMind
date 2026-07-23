@@ -44,20 +44,35 @@ Rules:
 """
 
 
-def planner_user_prompt(question: str, doc_id: str) -> str:
+def planner_user_prompt(
+    question: str,
+    doc_id: str,
+    *,
+    history: str = "",
+) -> str:
+    hist = f"\nrecent_conversation:\n{history}\n" if history.strip() else ""
     return (
         f"doc_id: {doc_id}\n"
         f"question: {question}\n"
+        f"{hist}"
         "Choose tools now."
     )
 
 
-def synthesizer_user_prompt(question: str, evidence_blocks: list[str]) -> str:
+def synthesizer_user_prompt(
+    question: str,
+    evidence_blocks: list[str],
+    *,
+    history: str = "",
+) -> str:
     numbered = "\n\n".join(
         f"[{i}] {block}" for i, block in enumerate(evidence_blocks)
     )
+    hist = f"\nrecent_conversation:\n{history}\n" if history.strip() else ""
     return (
-        f"question: {question}\n\n"
+        f"question: {question}\n"
+        f"{hist}\n"
         f"evidence:\n{numbered if numbered else '(no evidence retrieved)'}\n\n"
-        "Write the JSON answer now."
+        "Write the JSON answer now. Use conversation history only to resolve "
+        "pronouns / follow-ups; every fact must still come from evidence."
     )

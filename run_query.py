@@ -98,12 +98,27 @@ def cmd_index(doc_id: str, *, embed: bool, document_name: str) -> int:
     return 0
 
 
-def cmd_ask(question: str, *, doc_id: str, pdf: Path | None, as_json: bool) -> int:
+def cmd_ask(
+    question: str,
+    *,
+    doc_id: str,
+    pdf: Path | None,
+    as_json: bool,
+    thread_id: str | None = None,
+    enable_memory: bool = False,
+) -> int:
     from src.agents.query_agent import build_query_agent
 
-    agent = build_query_agent(doc_id, pdf_path=pdf)
-    answer = agent.ask(question)
+    agent = build_query_agent(
+        doc_id,
+        pdf_path=pdf,
+        enable_memory=enable_memory or bool(thread_id),
+    )
+    answer = agent.ask(question, thread_id=thread_id)
     _print_answer(answer, as_json=as_json)
+    if (enable_memory or thread_id) and not as_json:
+        tid = thread_id or "default"
+        print(f"Thread   : {tid} (resume with --thread {tid})")
     return 0
 
 
@@ -161,6 +176,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Print the typed result as JSON.",
     )
+    parser.add_argument(
+        "--memory",
+        action="store_true",
+        help="Persist conversation via SqliteSaver (.refinery/checkpoints.sqlite).",
+    )
+    parser.add_argument(
+        "--thread",
+        default=None,
+        help="Conversation thread_id (implies --memory). Same id resumes history.",
+    )
     args = parser.parse_args(argv)
 
     doc_id = args.doc.strip()
@@ -182,7 +207,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.audit:
         return cmd_audit(args.text.strip(), doc_id=doc_id, pdf=pdf, as_json=args.json)
-    return cmd_ask(args.text.strip(), doc_id=doc_id, pdf=pdf, as_json=args.json)
+    return cmd_ask(
+        args.text.strip(),
+        doc_id=doc_id,
+        pdf=pdf,
+        as_json=args.json,
+        thread_id=args.thread,
+        enable_memory=args.memory,
+    )
 
 
 if __name__ == "__main__":

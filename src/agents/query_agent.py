@@ -1,14 +1,14 @@
 """
-LangGraph Query Agent (Phase 4 Step 7).
+LangGraph Query Agent (Phase 4).
 
 Analogy: a research supervisor who (1) decides which assistants to send,
 (2) collects their sticky notes, (3) writes a short answer with footnotes.
 
 Graph (one pass, cost-conscious):
-    plan  ?  execute_tools  ?  synthesize  ?  finalize  ?  END
+    plan -> execute_tools -> synthesize -> finalize -> END
 
-Uses DocMind's existing ``LLMClient`` (not a separate LangChain chat model),
-so provider/key wiring stays identical to the rest of the refinery.
+STEP 1 adds a Patient File: conversation ``messages`` persisted via a LangGraph
+SqliteSaver checkpointer keyed by ``thread_id``.
 """
 
 from __future__ import annotations
@@ -18,9 +18,12 @@ import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Annotated, Any, TypedDict
 
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
+from langgraph.graph.message import add_messages
 
 from src.agents.query_prompts import (
     PLANNER_SYSTEM,
@@ -32,6 +35,7 @@ from src.config import DEFAULT_SAMPLE_PDF, PAGEINDEX_DIR
 from src.facts.store import FactStore
 from src.llm.base import LLMClient
 from src.llm.factory import get_text_client
+from src.models.conversation import ConversationMessage, MessageRole, SessionConfig
 from src.models.provenance import ProvenanceChain
 from src.models.query import QueryAnswer, ToolName, ToolTrace
 from src.query.evidence import EvidenceHit, ToolResult
@@ -46,6 +50,9 @@ _JSON_OBJECT_RE = re.compile(r"\{[\s\S]*\}")
 
 
 class QueryState(TypedDict, total=False):
+    """LangGraph state. ``messages`` accumulate across turns when checkpointed."""
+
+    messages: Annotated[list[BaseMessage], add_messages]
     question: str
     doc_id: str
     pdf_path: str | None
@@ -70,9 +77,11 @@ class QueryAgentDeps:
     chroma_store: ChromaLDUStore | None = None
     embedder: EmbeddingClient | None = None
     fact_store: FactStore | None = None
+    checkpointer: BaseCheckpointSaver | None = None
     max_tool_calls: int = 3
     semantic_top_k: int = 5
     pageindex_top_k: int = 3
+    history_max_messages: int = 12
 
 
 def _extract_json(text: str) -> dict[str, Any]:
@@ -105,7 +114,6 @@ def _default_plan(question: str) -> list[dict[str, Any]]:
             "billion", "million", "percent", "%", "fy ", "20",
         )
     ):
-        # Pull a coarse metric keyword (first 4 content words).
         tokens = [t for t in re.findall(r"[A-Za-z]{3,}", q) if t.lower() not in {
             "what", "was", "were", "how", "much", "many", "the", "and", "for",
             "in", "of", "to", "a", "an",
@@ -134,6 +142,24 @@ def _format_hit(hit: EvidenceHit, index: int) -> str:
         f"excerpt={hit.excerpt!r}",
     ]
     return " | ".join(b for b in bits if b)
+
+
+def _format_history(messages: list[BaseMessage], *, max_messages: int) -> str:
+    """Render prior turns for planner/synthesizer (excludes the latest human)."""
+    if not messages:
+        return ""
+    prior = list(messages[:-1]) if messages else []
+    window = prior[-max_messages:] if max_messages > 0 else prior
+    lines: list[str] = []
+    for msg in window:
+        role = getattr(msg, "type", "unknown")
+        content = str(getattr(msg, "content", "") or "").strip()
+        if not content:
+            continue
+        if len(content) > 400:
+            content = content[:400] + "..."
+        lines.append(f"{role}: {content}")
+    return "\n".join(lines)
 
 
 def _run_one_tool(
@@ -170,7 +196,6 @@ def _run_one_tool(
             store=deps.chroma_store,
             embedder=deps.embedder,
         )
-    # structured_query
     return structured_query(
         doc_id=deps.doc_id,
         metric_contains=args.get("metric_contains"),
@@ -196,9 +221,13 @@ class QueryAgent:
 
         def plan_node(state: QueryState) -> QueryState:
             question = state["question"]
+            history = _format_history(
+                list(state.get("messages") or []),
+                max_messages=deps.history_max_messages,
+            )
             try:
                 result = deps.llm.complete(
-                    planner_user_prompt(question, deps.doc_id),
+                    planner_user_prompt(question, deps.doc_id, history=history),
                     system=PLANNER_SYSTEM,
                     response_format="json",
                     temperature=0.0,
@@ -212,7 +241,6 @@ class QueryAgent:
                 logger.warning("Planner failed (%s); using heuristic plan", exc)
                 calls = _default_plan(question)
 
-            # Cap cost: hard limit on tool fan-out.
             normalized: list[dict[str, Any]] = []
             for raw in calls[: deps.max_tool_calls]:
                 if not isinstance(raw, dict):
@@ -260,9 +288,13 @@ class QueryAgent:
             hits = [EvidenceHit.model_validate(h) for h in (state.get("hits") or [])]
             blocks = [_format_hit(h, i) for i, h in enumerate(hits)]
             question = state["question"]
+            history = _format_history(
+                list(state.get("messages") or []),
+                max_messages=deps.history_max_messages,
+            )
             try:
                 result = deps.llm.complete(
-                    synthesizer_user_prompt(question, blocks),
+                    synthesizer_user_prompt(question, blocks, history=history),
                     system=SYNTHESIZER_SYSTEM,
                     response_format="json",
                     temperature=0.0,
@@ -296,7 +328,6 @@ class QueryAgent:
                     answer = "I could not find that in the document."
                 cite_indices = []
             elif not refusal and not cite_indices:
-                # Force citations when the model forgot: use top evidence.
                 cite_indices = list(range(min(3, len(hits))))
 
             return {
@@ -317,8 +348,6 @@ class QueryAgent:
                     pdf_path=deps.pdf_path,
                     max_citations=8,
                 )
-                # If assembly skipped empty excerpts, fall back to all selected
-                # with any text so QueryAnswer validation can pass.
                 if provenance.is_empty and selected:
                     provenance = assemble_provenance(
                         [h for h in selected if h.excerpt or h.content_hash],
@@ -331,7 +360,6 @@ class QueryAgent:
             answer_text = state.get("draft_answer") or (
                 "I could not find that in the document."
             )
-            # Guarantee validator-safe refusal wording when we have no cites.
             if provenance.is_empty:
                 lowered = answer_text.lower()
                 if not any(
@@ -354,7 +382,11 @@ class QueryAgent:
                 tool_trace=traces,
                 doc_id=deps.doc_id,
             )
-            return {"answer": qa.model_dump(mode="json")}
+            # Persist assistant turn onto the Patient File (messages channel).
+            return {
+                "answer": qa.model_dump(mode="json"),
+                "messages": [AIMessage(content=answer_text)],
+            }
 
         graph = StateGraph(QueryState)
         graph.add_node("plan", plan_node)
@@ -366,10 +398,21 @@ class QueryAgent:
         graph.add_edge("execute_tools", "synthesize")
         graph.add_edge("synthesize", "finalize")
         graph.add_edge("finalize", END)
+        if deps.checkpointer is not None:
+            return graph.compile(checkpointer=deps.checkpointer)
         return graph.compile()
 
-    def ask(self, question: str) -> QueryAnswer:
-        """Run the graph and return a typed QueryAnswer."""
+    def ask(
+        self,
+        question: str,
+        *,
+        thread_id: str | None = None,
+    ) -> QueryAnswer:
+        """Run the graph and return a typed QueryAnswer.
+
+        Pass the same ``thread_id`` on later calls to resume conversation memory
+        (requires a checkpointer on ``QueryAgentDeps``).
+        """
         question = (question or "").strip()
         if not question:
             return QueryAnswer(
@@ -378,23 +421,57 @@ class QueryAgent:
                 provenance=ProvenanceChain(),
                 doc_id=self.deps.doc_id,
             )
-        final = self._graph.invoke(
-            {
-                "question": question,
-                "doc_id": self.deps.doc_id,
-                "pdf_path": str(self.deps.pdf_path) if self.deps.pdf_path else None,
-                "plan_calls": [],
-                "hits": [],
-                "tool_trace": [],
-                "draft_answer": "",
-                "cite_indices": [],
-                "refusal": False,
-                "answer": None,
-                "error": None,
-            }
-        )
+
+        payload_in: dict[str, Any] = {
+            "messages": [HumanMessage(content=question)],
+            "question": question,
+            "doc_id": self.deps.doc_id,
+            "pdf_path": str(self.deps.pdf_path) if self.deps.pdf_path else None,
+            "plan_calls": [],
+            "hits": [],
+            "tool_trace": [],
+            "draft_answer": "",
+            "cite_indices": [],
+            "refusal": False,
+            "answer": None,
+            "error": None,
+        }
+
+        if self.deps.checkpointer is not None:
+            tid = (thread_id or "default").strip() or "default"
+            config = SessionConfig(thread_id=tid).to_runnable_config()
+            final = self._graph.invoke(payload_in, config=config)
+        else:
+            final = self._graph.invoke(payload_in)
+
         payload = final.get("answer") or {}
         return QueryAnswer.model_validate(payload)
+
+    def get_messages(
+        self,
+        thread_id: str,
+    ) -> list[ConversationMessage]:
+        """Read persisted turns for a thread (empty if no checkpointer)."""
+        if self.deps.checkpointer is None:
+            return []
+        config = SessionConfig(thread_id=thread_id).to_runnable_config()
+        snap = self._graph.get_state(config)
+        values = snap.values if snap else {}
+        raw = list(values.get("messages") or [])
+        out: list[ConversationMessage] = []
+        for msg in raw:
+            content = str(getattr(msg, "content", "") or "").strip()
+            if not content:
+                continue
+            mtype = getattr(msg, "type", "")
+            if mtype == "human":
+                role = MessageRole.USER
+            elif mtype == "ai":
+                role = MessageRole.ASSISTANT
+            else:
+                role = MessageRole.SYSTEM
+            out.append(ConversationMessage(role=role, content=content))
+        return out
 
 
 def build_query_agent(
@@ -406,15 +483,28 @@ def build_query_agent(
     chroma_store: ChromaLDUStore | None = None,
     embedder: EmbeddingClient | None = None,
     fact_store: FactStore | None = None,
+    checkpointer: BaseCheckpointSaver | None = None,
+    enable_memory: bool = False,
+    checkpoints_db: str | Path | None = None,
     max_tool_calls: int = 3,
 ) -> QueryAgent:
-    """Factory: uses ``get_text_client()`` when ``llm`` is omitted."""
+    """Factory: uses ``get_text_client()`` when ``llm`` is omitted.
+
+    Set ``enable_memory=True`` (or pass ``checkpointer=``) to persist sessions
+    under ``.refinery/checkpoints.sqlite`` (override with ``checkpoints_db``).
+    """
+    from src.agents.memory import build_sqlite_checkpointer
+
     client = llm if llm is not None else get_text_client()
     if client is None:
         raise RuntimeError(
             "No LLM client available. Set OPENAI_API_KEY (or another provider "
             "key) in .env, or pass llm= explicitly."
         )
+    saver = checkpointer
+    if saver is None and enable_memory:
+        saver = build_sqlite_checkpointer(checkpoints_db)
+
     return QueryAgent(
         QueryAgentDeps(
             llm=client,
@@ -424,6 +514,7 @@ def build_query_agent(
             chroma_store=chroma_store,
             embedder=embedder,
             fact_store=fact_store,
+            checkpointer=saver,
             max_tool_calls=max_tool_calls,
         )
     )
