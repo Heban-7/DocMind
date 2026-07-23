@@ -14,7 +14,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "49e67f7d-3441-4346-a144-340c25f74d85"
+        "6092c111-58e8-4aeb-b93e-7f820380daba"
       ],
       "key_entities": [],
       "children": []
@@ -31,7 +31,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "92c48162-03b4-44e2-b20b-35084e680b0b"
+        "016dadae-49ec-409a-89e6-175ca0158179"
       ],
       "key_entities": [],
       "children": []
@@ -48,8 +48,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "6eb3885a-4556-40cb-9c5b-7b9e1a73319b",
-        "2d2207ec-c932-42c8-81a7-81da189f399d"
+        "61266f01-138c-4b39-a2b5-b9e18f9a47ec",
+        "1bbd197f-b375-4040-babf-9d0677437a9f"
       ],
       "key_entities": [],
       "children": []
@@ -66,8 +66,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "b7523f6f-2913-493e-a6b3-5b4d16357807",
-        "1bbed871-f66a-45b1-a8b0-9743cd2af1aa"
+        "78ba7e26-c166-40c5-9d34-7578d4a16a8f",
+        "8f974b4a-a305-41e2-a471-9fe5a092e472"
       ],
       "key_entities": [],
       "children": []
@@ -84,7 +84,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "6af3f91b-d9ab-484d-b79b-f43ce12b9e26"
+        "bddc3368-782c-4f0c-9ce3-5e4fdceb5572"
       ],
       "key_entities": [],
       "children": []
@@ -102,10 +102,10 @@
         "prose"
       ],
       "chunk_ids": [
-        "9c65c884-18fb-4ffc-9a74-4ec29cd71fe1",
-        "68104987-651c-4e82-a0c4-2ef91073b0a9",
-        "ca853f0d-7a53-409c-a5f9-4c5e74d85c6b",
-        "d895edbf-991b-4637-a39d-3d1378b6cfe4"
+        "116f7a7d-3f46-4e0b-a5fc-a96173e56501",
+        "06c1d090-5152-43b5-af71-41f9b3a8ab4f",
+        "81297b2c-a884-43ee-a3f0-e79a5cc4d9c7",
+        "f8132475-28e6-4aa5-88ec-0291cb1690ca"
       ],
       "key_entities": [],
       "children": []
@@ -123,11 +123,11 @@
         "prose"
       ],
       "chunk_ids": [
-        "d16c21b9-9cd5-491d-be4d-035a9c6ed7f7",
-        "7f8fc9b0-9e4c-40c4-807d-f1f2b5c1d033",
-        "f2f5991c-e79e-4c87-82b7-3df71f239ea0",
-        "32f981e3-b345-4a62-a215-88ad5bb77a05",
-        "d330bb0e-fe88-44ff-aaa9-41ee2d3c7d9d"
+        "6fc408b8-02ad-40ab-aa69-f67e58f80b8a",
+        "9dd0a149-3435-4903-ba59-20c31e577029",
+        "a8fb5185-a839-4be9-bff5-d3922496fbfe",
+        "734a7716-a877-46e7-9bcd-a6f0ecb748bd",
+        "3110e1ee-e95f-49a3-90d2-d2de94da9723"
       ],
       "key_entities": [],
       "children": []
@@ -145,9 +145,9 @@
         "prose"
       ],
       "chunk_ids": [
-        "b08fde29-a6a9-4904-8d56-f84eb89c74f9",
-        "da7583e8-6b4b-4103-9da6-446725728215",
-        "aa1afb12-fdd1-4bc9-ac39-6e495d95b6a4"
+        "25bf9e08-05e9-46d4-8af8-484a2e25553c",
+        "5c6c4aba-9a54-4dc0-a8e1-e74f1f8a0b4f",
+        "57acf5a1-c781-4b51-b4e8-88b9b2576e3f"
       ],
       "key_entities": [],
       "children": []
@@ -165,9 +165,9 @@
         "prose"
       ],
       "chunk_ids": [
-        "c6451412-3162-4be1-b50c-7d6f74f369c9",
-        "e98e53d6-4775-4d30-b453-904872fd88ac",
-        "ba29fcc1-0748-4cec-ae85-fb2e64f7d60f"
+        "e9c14abd-bcdf-474e-907c-9b81e089b7d4",
+        "21b9dc1c-8a2a-4a47-b6d9-9ca50115e02b",
+        "22d7c887-308d-4085-8d2b-ec5067b0766d"
       ],
       "key_entities": [],
       "children": []
@@ -175,17 +175,16 @@
     {
       "title": "4.5  Surtax",
       "page_start": 36,
-      "page_end": 40,
+      "page_end": 39,
       "path": [
         "4.5  Surtax"
       ],
-      "summary": "Tax expenditures on forgone surtax were ETB 18.4 billion in FY 2020/21. This represents a 68% increase in nominal terms relative to FY 2019/20 when surtax expenditures were around ETB 11 billion.",
+      "summary": "Tax expenditures on forgone surtax were ETB 18.4 billion in FY 2020/21. This represents a 68% increase in nominal terms relative to FY 2019/20 when surtax expenditures were around Note: Assumes no duplicate reporting of transactions across customs IT systems (see Appendix D).",
       "data_types_present": [
         "mixed"
       ],
       "chunk_ids": [
-        "494f25c1-ffc3-4fde-9f86-943fa488a208",
-        "a33fe3a8-dd40-4f9c-a8b7-7cc2ea422bd4"
+        "2a4af037-5270-42cb-8135-5fd2ec1f1fb9"
       ],
       "key_entities": [],
       "children": []
@@ -202,7 +201,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "e4ea1cf2-ec19-493a-8e02-b28005b5b6a5"
+        "8284142e-4186-484e-b2fc-9c532488d300"
       ],
       "key_entities": [],
       "children": []
@@ -219,7 +218,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "f4d46970-0f4d-45c6-aca1-7e095c40b9f1"
+        "a892f876-7993-4c89-9d08-35fddba5cf2d"
       ],
       "key_entities": [],
       "children": []
@@ -227,7 +226,7 @@
     {
       "title": "B. Details on the calculation of indirect effects of tax expenditures",
       "page_start": 44,
-      "page_end": 45,
+      "page_end": 46,
       "path": [
         "B. Details on the calculation of indirect effects of tax expenditures"
       ],
@@ -236,7 +235,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "6ab4dffb-d328-4793-8674-41638f807633"
+        "b5d261e3-472a-4ad1-97eb-2ae7ece83da0"
       ],
       "key_entities": [],
       "children": []
@@ -254,8 +253,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "5274b0de-fc1a-4e7b-9170-aa73031f6e56",
-        "b57f9c08-c2ac-4e36-a9f4-4b3b1aba79c9"
+        "b9c74726-c692-42c3-b69d-2a88d37745b7",
+        "f2a4f738-08db-4a3d-8743-e8b1f5238eba"
       ],
       "key_entities": [],
       "children": []
@@ -273,25 +272,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "73ded4f5-1a40-412d-8819-b46d82e3a33b",
-        "1acbd0f5-bb0a-4788-98aa-4c179a506535"
-      ],
-      "key_entities": [],
-      "children": []
-    },
-    {
-      "title": "C. Alternative measures of tax expenditures",
-      "page_start": 45,
-      "page_end": 46,
-      "path": [
-        "C. Alternative measures of tax expenditures"
-      ],
-      "summary": "In the main text, we present tax expenditure estimates as the sum of the direct and indirect effects, where the indirect effects of import taxes through the reduction in tax base on the subsequent taxes are counted as tax expenditure for the original tax. For example, the indirect effect of customs duty expenditure through excise, VAT and/or surtax are considered customs duty expenditures.",
-      "data_types_present": [
-        "prose"
-      ],
-      "chunk_ids": [
-        "a2308c20-fec9-483e-811e-8ff29b04bd0f"
+        "f2ce7bc9-8c4a-4b60-81d1-8052fff136d1",
+        "d8dc25bb-d615-49f1-883f-f46a3dfeb13c"
       ],
       "key_entities": [],
       "children": []
@@ -308,7 +290,7 @@
         "table"
       ],
       "chunk_ids": [
-        "f77d412c-c623-4ac5-91df-0436cf238d23"
+        "4f969f6d-9b5b-47d7-8087-548c62e101d0"
       ],
       "key_entities": [],
       "children": []
@@ -325,7 +307,7 @@
         "para"
       ],
       "chunk_ids": [
-        "76bddb21-cd13-43df-b4b3-0486d7a6a763"
+        "bb7455bc-a620-4074-aa3f-e56225714d3b"
       ],
       "key_entities": [],
       "children": []
@@ -342,7 +324,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "c40b3ea8-bd39-494a-9ede-4b57108cde0f"
+        "32ae7350-4869-4904-a797-ce55b89e328e"
       ],
       "key_entities": [],
       "children": []
@@ -359,7 +341,7 @@
         "mixed"
       ],
       "chunk_ids": [
-        "3cb577aa-6fe8-4312-ac5a-bde1b503381e"
+        "917a3158-199b-46e4-a746-fad5376720e8"
       ],
       "key_entities": [],
       "children": []
@@ -376,7 +358,7 @@
         "para"
       ],
       "chunk_ids": [
-        "1fc7eb41-0b25-49c4-a2f8-9541bb56e9a5"
+        "62ceb55b-02fa-4b9c-bf2b-67417561a4c9"
       ],
       "key_entities": [],
       "children": []
@@ -393,8 +375,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "d2934c43-7e69-48fe-84ea-cc8c683de1ec",
-        "9d829617-2dfb-4dc2-a49a-c831a458db27"
+        "8974e6da-90b6-405e-9d2f-ab089d4e4427",
+        "2f180991-2119-429c-af98-149ab771a683"
       ],
       "key_entities": [],
       "children": []
@@ -412,18 +394,18 @@
         "table"
       ],
       "chunk_ids": [
-        "6d990412-f2b7-414c-b435-f300e4e4abdf",
-        "a74b5ca8-add5-418f-b0f3-3f4a1aae4c2a",
-        "f754c5c3-c79d-4232-8368-c82ce0f7a68a",
-        "3ef89141-c40d-4d03-bab1-21885252d78c",
-        "fa506eba-da1e-44f2-8d16-3586aa5258c9",
-        "cc33a45e-1985-4408-bee4-f417850d8313",
-        "2b55ff42-eee2-4c3d-9620-05cc61b762a8",
-        "70f8d1ab-854f-4034-ac75-b2e46df87af2",
-        "c39deb58-4ad3-4c94-9b34-88feb51d126e",
-        "cb4651cd-0999-4e06-9771-649ee3ebf02f",
-        "283bf413-faba-4f3c-8d1b-e89c7ba7ec0a",
-        "934d016a-3706-4387-8baf-a8a0aca07c7a"
+        "137a15f6-8603-45bf-b7af-2ce3ebb74376",
+        "9782e70f-0c70-4c10-92df-46e09085f83f",
+        "a004461b-824b-47b0-a72d-13607da9b1ed",
+        "7b0dc6f1-de8c-46d9-ba63-1f8021846108",
+        "e7721aa8-eced-435b-a5d6-674b5d350363",
+        "137d520b-5572-486b-a7ab-630ade1e6f8b",
+        "c691fd36-4afe-4411-9224-493238750d2f",
+        "3a5f9019-d595-4a5e-a414-e1124300ea93",
+        "b18e3522-e759-40cc-90aa-a18b2a5d14e6",
+        "cb84f09d-0013-4116-b081-e0628649940a",
+        "8d716f55-cb5f-411b-a855-5a3504f03dad",
+        "21543fcb-8d22-4d28-945a-5f8706d4c7d4"
       ],
       "key_entities": [],
       "children": []
@@ -440,7 +422,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "0186d46a-767a-4b9e-9979-395f2bc49bb4"
+        "5e9ea7aa-fa53-4088-a280-bfd408c98503"
       ],
       "key_entities": [],
       "children": []
@@ -457,7 +439,7 @@
         "para"
       ],
       "chunk_ids": [
-        "ae97878e-428b-4cf5-886b-61bf6e9be61a"
+        "c2ef404f-c1a2-4443-bfa3-bc5d4f17ffe7"
       ],
       "key_entities": [],
       "children": []
@@ -474,7 +456,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "8a4bcd7b-58c0-478a-afd1-7b0cd60c535a"
+        "69fe5148-d981-4134-9cac-31e6a0171345"
       ],
       "key_entities": [],
       "children": []
@@ -491,7 +473,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "bd9189e3-20f3-4c8d-8101-dca52347c21f"
+        "0948b95c-7e83-48d7-a275-cf259a931b8e"
       ],
       "key_entities": [],
       "children": []
@@ -508,7 +490,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "fc118031-7a14-4e1c-b86b-f87526584605"
+        "cfb6465e-9832-4921-b6f7-67b635e24602"
       ],
       "key_entities": [],
       "children": []
@@ -525,7 +507,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "7112cd83-9f51-4a31-b785-153c94b97d73"
+        "732f908c-ea4a-4d91-9630-43c260f99355"
       ],
       "key_entities": [],
       "children": []
@@ -542,7 +524,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "185c7375-aaeb-452a-b541-faf1ce2b55e2"
+        "69ead816-a8b3-45b0-a4d8-3b9c3bf43c19"
       ],
       "key_entities": [],
       "children": []
@@ -559,7 +541,7 @@
         "list"
       ],
       "chunk_ids": [
-        "a356e3a0-6b45-40af-86ea-6148b6db19f1"
+        "c39d7830-2e19-43c6-97bd-a501bf8a56e9"
       ],
       "key_entities": [],
       "children": []
@@ -576,7 +558,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "3e1a1889-be19-4a12-8541-1a14dca4b639"
+        "73feb841-e5ca-4cf9-8976-b2fc002784d7"
       ],
       "key_entities": [],
       "children": []
@@ -593,7 +575,7 @@
         "list"
       ],
       "chunk_ids": [
-        "fbb86c2c-7710-4fbf-9d05-5f3deb4a1295"
+        "81094348-d3ae-4707-a649-072c4609a2a3"
       ],
       "key_entities": [],
       "children": []
@@ -610,11 +592,11 @@
         "prose"
       ],
       "chunk_ids": [
-        "66bd7198-b71b-4f2c-9676-b793e2fa989f"
+        "40ad4e97-1f63-4063-b3ea-babdd67aab39"
       ],
       "key_entities": [],
       "children": []
     }
   ],
-  "created_at": "2026-07-22T15:25:41.673002Z"
+  "created_at": "2026-07-23T09:06:58.020676Z"
 }

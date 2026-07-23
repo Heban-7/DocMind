@@ -1,7 +1,7 @@
 {
   "doc_id": "212dc42370e2",
   "source_filename": "sample.pdf",
-  "source_path": "data\\data\\sample.pdf",
+  "source_path": "C:\\Users\\liulj\\Desktop\\AI_Engineer\\The_Document_Intelligence_Refinery_Project\\DocMind\\data\\data\\sample.pdf",
   "page_count": 60,
   "origin_type": "native_digital",
   "layout_complexity": "table_heavy",
@@ -10,7 +10,7 @@
     "confidence": 1.0
   },
   "domain_hint": "financial",
-  "domain_confidence": 0.8988095238095238,
+  "domain_confidence": 0.95,
   "estimated_cost": "needs_layout_model",
   "signals": {
     "page_count": 60,
@@ -225,9 +225,9 @@
     "origin=native_digital: text_pages=100%, scanned_pages=0%, avg_char_density=18.5/in^2",
     "layout=table_heavy: table_pages=67%, avg_image_area=0%, multi_col_pages=0%",
     "language=en (confidence=100%)",
-    "domain=financial (confidence=90%)",
+    "domain=financial (confidence=95%)",
     "cost=needs_layout_model: derived from origin 'native_digital' and layout 'table_heavy'"
   ],
   "triage_version": "1.1.0",
-  "created_at": "2026-07-04T12:59:25.226850Z"
+  "created_at": "2026-07-23T09:04:55.182093Z"
 }

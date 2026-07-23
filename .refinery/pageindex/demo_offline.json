@@ -1,0 +1,41 @@
+{
+  "doc_id": "demo_offline",
+  "source_filename": "demo.pdf",
+  "roots": [
+    {
+      "title": "Executive summary",
+      "page_start": 4,
+      "page_end": 4,
+      "path": [
+        "Executive summary"
+      ],
+      "summary": "Import tax expenditures were ETB 120.7 billion in FY 2020/21.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "cbaa8e26-cf78-4c99-9f29-de05846a2ad8"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Revenue",
+      "page_start": 12,
+      "page_end": 12,
+      "path": [
+        "Revenue"
+      ],
+      "summary": "Domestic revenue mobilization remained a policy priority.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "87a8b045-0318-47ef-be4e-7049e1074cdf"
+      ],
+      "key_entities": [],
+      "children": []
+    }
+  ],
+  "created_at": "2026-07-22T19:14:04.654522Z"
+}

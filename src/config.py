@@ -36,6 +36,9 @@ CHUNKS_DIR = REFINERY_DIR / "chunks"
 PAGEINDEX_DIR = REFINERY_DIR / "pageindex"
 CHROMA_DIR = Path(os.getenv("DOCMIND_CHROMA_DIR", str(REFINERY_DIR / "chroma")))
 FACTS_DB_PATH = Path(os.getenv("DOCMIND_FACTS_DB", str(REFINERY_DIR / "facts.db")))
+CHECKPOINTS_DB_PATH = Path(
+    os.getenv("DOCMIND_CHECKPOINTS_DB", str(REFINERY_DIR / "checkpoints.sqlite"))
+)
 
 # --- Chunking (Phase 3) -----------------------------------------------------
 # Soft target and hard ceiling (in words) for a Logical Document Unit. The
