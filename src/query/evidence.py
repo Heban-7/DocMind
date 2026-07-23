@@ -21,6 +21,10 @@ class EvidenceHit(BaseModel):
     document_name: str = ""
     doc_id: str = ""
     page_number: int = Field(ge=1, default=1)
+    printed_page: str | None = Field(
+        default=None,
+        description="optional document/printed page label when known",
+    )
     content_hash: str = ""
     chunk_id: str | None = None
     excerpt: str = ""

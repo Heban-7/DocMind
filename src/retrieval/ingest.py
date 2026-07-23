@@ -95,7 +95,7 @@ def semantic_search(
     query: str,
     *,
     doc_id: str | None = None,
-    top_k: int = 5,
+    top_k: int = 7,
     store: ChromaLDUStore | None = None,
     embedder: EmbeddingClient | None = None,
 ):

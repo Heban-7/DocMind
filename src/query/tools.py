@@ -30,7 +30,7 @@ def pageindex_navigate(
     topic: str,
     *,
     doc_id: str,
-    top_k: int = 3,
+    top_k: int = 5,
     index: PageIndex | None = None,
     pageindex_dir: Path | None = None,
 ) -> ToolResult:
@@ -85,7 +85,10 @@ def pageindex_navigate(
 
 
 def _hit_from_retrieved(chunk: RetrievedChunk) -> EvidenceHit:
+    from src.config import EVIDENCE_EXCERPT_CHARS
+
     page = chunk.page_numbers[0] if chunk.page_numbers else 1
+    excerpt_n = max(200, int(EVIDENCE_EXCERPT_CHARS))
     return EvidenceHit(
         tool=ToolName.SEMANTIC_SEARCH,
         document_name=chunk.document_name,
@@ -93,7 +96,7 @@ def _hit_from_retrieved(chunk: RetrievedChunk) -> EvidenceHit:
         page_number=page,
         content_hash=chunk.content_hash,
         chunk_id=chunk.chunk_id,
-        excerpt=chunk.text[:400],
+        excerpt=chunk.text[:excerpt_n],
         title=" > ".join(chunk.parent_hierarchy) if chunk.parent_hierarchy else "",
         score=float(chunk.score),
         extra={
@@ -109,7 +112,7 @@ def tool_semantic_search(
     query: str,
     *,
     doc_id: str | None = None,
-    top_k: int = 5,
+    top_k: int = 7,
     store: ChromaLDUStore | None = None,
     embedder: EmbeddingClient | None = None,
 ) -> ToolResult:

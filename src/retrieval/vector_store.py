@@ -136,7 +136,7 @@ class ChromaLDUStore:
         query_embedding: list[float],
         *,
         doc_id: str | None = None,
-        top_k: int = 5,
+        top_k: int = 7,
     ) -> list[RetrievedChunk]:
         """Nearest-neighbor search; optionally scoped to one document."""
         kwargs: dict = {

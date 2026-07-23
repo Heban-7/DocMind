@@ -6,6 +6,12 @@
 
 from src.query.bbox import clear_page_size_cache, resolve_page_bbox
 from src.query.evidence import EvidenceHit, ToolResult
+from src.query.page_map import (
+    clear_page_map_cache,
+    format_page_reference,
+    load_page_map,
+    resolve_printed_page,
+)
 from src.query.provenance import assemble_provenance, citation_from_hit
 from src.query.tools import (
     pageindex_navigate,
@@ -25,4 +31,8 @@ __all__ = [
     "citation_from_hit",
     "resolve_page_bbox",
     "clear_page_size_cache",
+    "clear_page_map_cache",
+    "format_page_reference",
+    "load_page_map",
+    "resolve_printed_page",
 ]

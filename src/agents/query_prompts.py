@@ -22,6 +22,7 @@ Allowed tools:
 
 Rules:
 - Prefer 1-3 calls total. Prefer semantic_search for open questions.
+- Default semantic_search top_k to 7 (use 5-8). Use pageindex top_k 5 when useful.
 - Add structured_query when the question asks for a number, amount, rate, or year.
 - Add pageindex_navigate when the question names a section/chapter topic.
 - Never invent document facts here - only choose tools.
@@ -48,8 +49,13 @@ How to answer (grounded explanation):
 Hard rules:
 - cite_indices are 0-based indexes into the evidence list.
 - Every substantive claim must be backed by at least one cite_index.
+- For list / multi-part questions (policies, factors, findings), cite 5-7
+  distinct evidence items when that many related snippets are available.
 - Do not invent numbers, FX rates, dates, or names absent from the evidence.
 - Prefer clear prose over dumping raw snippets. Target ~80-160 words.
+- Evidence page refs may look like "p.8" or "PDF p.33 (document p.1)". The
+  document/printed page is what readers see in the PDF; physical is the file
+  sheet index. Prefer mentioning the document page when both are given.
 """
 
 

@@ -13,6 +13,7 @@ from pathlib import Path
 from src.models.provenance import Citation, ProvenanceChain
 from src.query.bbox import resolve_page_bbox
 from src.query.evidence import EvidenceHit, ToolResult
+from src.query.page_map import resolve_printed_page
 
 
 def citation_from_hit(
@@ -20,15 +21,23 @@ def citation_from_hit(
     *,
     pdf_path: str | Path | None = None,
 ) -> Citation:
-    """Convert one EvidenceHit into a Citation with a resolved page bbox."""
+    """Convert one EvidenceHit into a Citation with a resolved page bbox.
+
+    ``page_number`` stays physical. ``printed_page`` is taken from the hit when
+    already set, otherwise resolved from the PDF ``/PageLabels`` map (optional).
+    """
     bbox = resolve_page_bbox(pdf_path, hit.page_number)
+    printed = hit.printed_page
+    if printed is None and pdf_path is not None:
+        printed = resolve_printed_page(pdf_path, hit.page_number)
     return Citation(
         document_name=hit.document_name or hit.doc_id or "unknown",
         page_number=hit.page_number,
         bbox=bbox,
         content_hash=hit.content_hash or "",
         chunk_id=hit.chunk_id,
-        excerpt=(hit.excerpt or hit.title or "")[:500],
+        excerpt=(hit.excerpt or hit.title or "")[:700],
+        printed_page=printed,
     )
 
 

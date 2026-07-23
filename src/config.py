@@ -40,6 +40,15 @@ CHECKPOINTS_DB_PATH = Path(
     os.getenv("DOCMIND_CHECKPOINTS_DB", str(REFINERY_DIR / "checkpoints.sqlite"))
 )
 
+# --- Phase 4 retrieval depth (how many LDUs / citations reach the answer) ---
+# Semantic search previously defaulted to 5 and the synthesizer often kept only
+# 3 citations -- too thin for "list the policies"-style questions. Raise floor.
+SEMANTIC_TOP_K: int = int(os.getenv("DOCMIND_SEMANTIC_TOP_K", "7"))
+PAGEINDEX_TOP_K: int = int(os.getenv("DOCMIND_PAGEINDEX_TOP_K", "5"))
+MAX_CITATIONS: int = int(os.getenv("DOCMIND_MAX_CITATIONS", "8"))
+MIN_CITATIONS: int = int(os.getenv("DOCMIND_MIN_CITATIONS", "5"))
+EVIDENCE_EXCERPT_CHARS: int = int(os.getenv("DOCMIND_EVIDENCE_EXCERPT_CHARS", "700"))
+
 # --- Chunking (Phase 3) -----------------------------------------------------
 # Soft target and hard ceiling (in words) for a Logical Document Unit. The
 # chunker aims for ~target and never splits atomic structures (tables/code);

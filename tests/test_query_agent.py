@@ -4,14 +4,21 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.agents.query_agent import QueryAgent, QueryAgentDeps, _default_plan, _extract_json
+from src.agents.query_agent import (
+    QueryAgent,
+    QueryAgentDeps,
+    _default_plan,
+    _expand_cite_indices,
+    _extract_json,
+)
 from src.chunking.models import DocumentChunk
 from src.facts.extractor import extract_and_store
 from src.facts.store import FactStore
 from src.llm.base import LLMClient, LLMResult
 from src.models.provenance import ProvenanceChain
-from src.models.query import QueryAnswer
+from src.models.query import QueryAnswer, ToolName
 from src.pageindex.builder import build_page_index, save_page_index
+from src.query.evidence import EvidenceHit
 from src.retrieval.ingest import ingest_chunks
 from src.retrieval.vector_store import ChromaLDUStore
 
@@ -64,6 +71,35 @@ def test_extract_json_and_default_plan():
     tools = [c["tool"] for c in plan]
     assert "semantic_search" in tools
     assert "structured_query" in tools
+    semantic = next(c for c in plan if c["tool"] == "semantic_search")
+    assert semantic["args"]["top_k"] == 7
+
+
+def test_expand_cite_indices_pads_to_min_and_max():
+    hits = [
+        EvidenceHit(
+            tool=ToolName.SEMANTIC_SEARCH,
+            page_number=i + 1,
+            excerpt=f"e{i}",
+            content_hash=f"h{i}",
+            score=float(10 - i),
+        )
+        for i in range(7)
+    ]
+    # Synthesizer only cited the first item -> pad with next-best by score.
+    expanded = _expand_cite_indices(
+        [0], hits, min_citations=5, max_citations=7
+    )
+    assert expanded[0] == 0
+    assert len(expanded) == 7
+    assert set(expanded) == set(range(7))
+
+    # Cap at max_citations even when more hits exist.
+    capped = _expand_cite_indices(
+        [2], hits, min_citations=5, max_citations=5
+    )
+    assert len(capped) == 5
+    assert capped[0] == 2
 
 
 def test_query_agent_offline_end_to_end(tmp_path: Path):
