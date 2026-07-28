@@ -24,6 +24,7 @@ except Exception:  # pragma: no cover
 # --- Paths (resolved from this file, so they work from any working dir) -----
 # src/config.py -> parents[1] is the project root.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+RAW_DIR = Path(os.getenv("DOCMIND_RAW_DIR", str(PROJECT_ROOT / "data" / "raw")))
 DATA_DIR = PROJECT_ROOT / "data" / "data"
 DEFAULT_SAMPLE_PDF = DATA_DIR / "sample.pdf"
 
