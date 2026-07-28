@@ -18,12 +18,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from src.agents.triage import TriageAgent
-from src.chunking.engine import ContextAwareChunker
-from src.config import CHUNKS_DIR, DEFAULT_SAMPLE_PDF, EXTRACTIONS_DIR
-from src.extraction.router import ExtractionRouter
+from src.config import DEFAULT_SAMPLE_PDF
 from src.models.document_profile import DocumentProfile
-from src.pipeline.phase4 import build_query_indexes
+from src.pipeline.ingest import ingest_pdf
 
 
 def run(
@@ -33,10 +30,12 @@ def run(
     skip_embed: bool = False,
 ) -> tuple[DocumentProfile, Path]:
     """Triage one PDF, extract, chunk, and optionally build query indexes."""
-
-    # --- Phase 1: Triage --------------------------------------------------
-    triage = TriageAgent()
-    profile, profile_path = triage.profile_and_save(pdf_path)
+    result = ingest_pdf(
+        pdf_path,
+        skip_phase4=skip_phase4,
+        skip_embed=skip_embed,
+    )
+    profile = result.profile
 
     print("=" * 72)
     print("DocMind | Full Pipeline (Triage -> Extract -> Chunk -> Index)")
@@ -46,69 +45,33 @@ def run(
     print(f"Origin / Layout: {profile.origin_type.value} / "
           f"{profile.layout_complexity.value}")
     print(f"Strategy tier  : {profile.strategy_tier.value}")
-    print(f"Profile saved  : {profile_path}")
     print("-" * 72)
-
-    # --- Phase 2: Route + Extract ----------------------------------------
-    router = ExtractionRouter()
-    engine = router.get_engine(profile)
-    print(f"Routed to      : {type(engine).__name__} (name='{engine.name}')")
-    print("Extracting...")
-
-    markdown = engine.extract(profile.source_path)
-
-    EXTRACTIONS_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = EXTRACTIONS_DIR / f"{profile.doc_id}.md"
-    out_path.write_text(markdown, encoding="utf-8")
-
+    print(f"Extracted chars: {result.extraction_path.stat().st_size:,} (file bytes)")
+    print(f"Markdown saved : {result.extraction_path}")
     print("-" * 72)
-    print(f"Extracted chars: {len(markdown):,}")
-    print(f"Markdown saved : {out_path}")
+    print(f"Chunks created : {result.chunk_count}")
+    print(f"Chunks saved   : {result.chunks_path}")
 
-    # --- Phase 3: Chunk into RAG-ready LDUs -------------------------------
-    print("-" * 72)
-    print("Chunking into Logical Document Units...")
-    chunker = ContextAwareChunker()
-    chunks = chunker.chunk(markdown)
-
-    CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
-    chunks_path = CHUNKS_DIR / f"{profile.doc_id}.jsonl"
-    with open(chunks_path, "w", encoding="utf-8") as handle:
-        for chunk in chunks:
-            handle.write(chunk.model_dump_json() + "\n")
-
-    avg_words = (
-        sum(c.metadata.word_count for c in chunks) / len(chunks) if chunks else 0
-    )
-    print(f"Chunks created : {len(chunks)} (avg {avg_words:.0f} words/chunk)")
-    print(f"Chunks saved   : {chunks_path}")
-
-    # --- Phase 4: Query indexes ------------------------------------------
-    if skip_phase4:
+    if skip_phase4 or result.phase4 is None:
         print("-" * 72)
         print("Phase 4 skipped (--skip-phase4).")
     else:
+        phase4 = result.phase4
         print("-" * 72)
         print("Building Phase 4 query indexes (PageIndex + FactTable"
               + (" + Chroma" if not skip_embed else ", Chroma skipped")
               + ")...")
-        result = build_query_indexes(
-            profile.doc_id,
-            document_name=profile.source_filename,
-            embed=not skip_embed,
-            pageindex_llm_client=None,  # extractive summaries = free
-        )
-        print(f"PageIndex      : {result.pageindex_path} "
-              f"({result.pageindex_sections} sections)")
-        print(f"Facts written  : {result.facts_written}")
-        if result.embedded:
-            print(f"Chroma upsert  : {result.chunks_embedded} chunks "
-                  f"(collection total={result.chroma_total})")
+        print(f"PageIndex      : {phase4.pageindex_path} "
+              f"({phase4.pageindex_sections} sections)")
+        print(f"Facts written  : {phase4.facts_written}")
+        if phase4.embedded:
+            print(f"Chroma upsert  : {phase4.chunks_embedded} chunks "
+                  f"(collection total={phase4.chroma_total})")
         else:
             print("Chroma         : skipped (--skip-embed)")
 
     print("=" * 72)
-    return profile, out_path
+    return profile, result.extraction_path
 
 
 def main() -> None:

@@ -1,6 +1,6 @@
 {
   "doc_id": "212dc42370e2",
-  "source_filename": "sample.pdf",
+  "source_filename": "9f832fb12a_sample.pdf",
   "roots": [
     {
       "title": "1.  Introduction",
@@ -14,7 +14,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "a7965f63-5d19-4d02-bbe1-9be7a1ddb34a"
+        "15c84ccc-d11d-4041-ad02-b73320cfd035"
       ],
       "key_entities": [],
       "children": []
@@ -31,7 +31,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "87ffcaf7-c46b-4c6f-8a16-c78776459106"
+        "0fd8b7f5-a3d4-4eba-acc1-b878c03c1627"
       ],
       "key_entities": [],
       "children": []
@@ -48,8 +48,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "41b4ccc0-9842-4641-8174-43c48de7bed3",
-        "91a0d97f-0d43-4442-9b9c-e88991c9649f"
+        "42821ae4-13e7-495c-b65a-6d5e0537f45d",
+        "3260f8d6-54ce-4e55-bafd-e3237638fd19"
       ],
       "key_entities": [],
       "children": []
@@ -66,8 +66,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "ca913091-02e1-4ff8-91cd-41b42c61e214",
-        "c728e04b-616d-4cca-ba01-7bbc117267ab"
+        "b0665cf9-3d37-4e1d-89f7-88b56be606df",
+        "57f567f0-e0a5-4047-8b3b-8fab985f47da"
       ],
       "key_entities": [],
       "children": []
@@ -75,38 +75,20 @@
     {
       "title": "3.3 Data",
       "page_start": 15,
-      "page_end": 15,
+      "page_end": 21,
       "path": [
         "3.3 Data"
       ],
       "summary": "This report uses shipment-level microdata from the Ethiopian Customs Commission at the eight-digit HS level from FY 2018/19 to FY 2020/21. During this period, the Ethiopian Customs Commission transitioned from the Automated System for Customs Data (ASYCUDA++) to the electronic Customs Management System (eCMS).",
       "data_types_present": [
-        "prose"
-      ],
-      "chunk_ids": [
-        "562c292d-b9a7-45f5-83cc-18d2ec9c8158"
-      ],
-      "key_entities": [],
-      "children": []
-    },
-    {
-      "title": "4.1  Overall tax expenditures",
-      "page_start": 16,
-      "page_end": 22,
-      "path": [
-        "4.1  Overall tax expenditures"
-      ],
-      "summary": "Overall tax expenditures were ETB 120.7 billion in FY 2020/21. The overall tax expenditure estimate includes ETB 38.9 billion in forgone customs duty, ETB 18.8 billion in forgone excise duty, ETB 44.6 billion in forgone VAT on imports and ETB 18.4 billion in forgone surtax.",
-      "data_types_present": [
         "mixed",
         "prose"
       ],
       "chunk_ids": [
-        "0baf1f5a-2c7a-4ab6-91f5-ff6067c0a0f1",
-        "6f84f02e-030f-4de9-a668-3e004d4c2718",
-        "7792bd49-3774-49ed-ad0b-e7dde1842ad7",
-        "3ce4f9cc-5655-441a-ab2c-63ab96c156d7",
-        "060a8fde-d74a-4ac7-80e2-71b18f7143a5"
+        "77f9fecd-2f41-478a-ace5-ab075de06092",
+        "8d6189da-0675-41dd-b349-95c936fb65f7",
+        "f8ab5427-256e-45cd-a2b4-08e58e328aab",
+        "0053171f-19d7-413d-8af0-f3355605b75f"
       ],
       "key_entities": [],
       "children": []
@@ -118,17 +100,17 @@
       "path": [
         "4.2  Customs duty"
       ],
-      "summary": "Tax expenditures in the form of forgone customs duties were ETB 38.9 billion in FY 2020/21. This represents a 67% increase in nominal terms relative to FY 2019/20 when customs\n\nTable 4.5.",
+      "summary": "Tax expenditures in the form of forgone customs duties were ETB 38.9 billion in FY 2020/21. This represents a 67% increase in nominal terms relative to FY 2019/20 when customs duty expenditures were around ETB 23 billion.",
       "data_types_present": [
         "mixed",
-        "para",
         "prose"
       ],
       "chunk_ids": [
-        "d7949053-2460-4372-b0a1-2fc7a8a466d2",
-        "484383e4-ed36-4166-867c-f87c1d0eea1b",
-        "9a8f9421-ba2e-4bc5-8bc3-ff3e97f08df0",
-        "afeea8a2-30f4-4937-9cbe-8358b45bdbe9"
+        "94fbedaa-b168-455c-955a-8e4a0019ddb4",
+        "e9dd0c30-d459-4589-b7fd-048f544e7f2a",
+        "53d051d0-491e-43b4-a561-38a9a4fd1049",
+        "53e41a0b-e478-4276-b0a4-9220971b718e",
+        "c1037459-e947-48e5-860d-c7fcfbd594ea"
       ],
       "key_entities": [],
       "children": []
@@ -146,9 +128,9 @@
         "prose"
       ],
       "chunk_ids": [
-        "27c97dc5-9461-4230-9071-a383620d9d22",
-        "dd20090e-1df4-4ec6-ab13-9389b69cafdd",
-        "e36529f2-5c21-4c82-9942-42fa0e836c36"
+        "b6e4b4fa-eedc-44a7-bea9-c711048557ce",
+        "caa5dfa8-00b1-4e54-aa4a-e346d5c420a7",
+        "7bda4871-7eec-4a32-bab0-2237b766c6f0"
       ],
       "key_entities": [],
       "children": []
@@ -166,9 +148,9 @@
         "prose"
       ],
       "chunk_ids": [
-        "ae6df054-8715-429a-a356-d7c5df55ffde",
-        "9a47298b-8d26-4da3-8ec0-4b57965c0247",
-        "70bc6099-8c08-4686-b659-3b612665449b"
+        "0737a275-5c30-416a-8f56-6b6085e8be90",
+        "0e48f15a-3544-4782-856b-47cbe2a2beb7",
+        "dfaef53d-d074-4c7b-b6ad-d249719e61c4"
       ],
       "key_entities": [],
       "children": []
@@ -185,8 +167,8 @@
         "mixed"
       ],
       "chunk_ids": [
-        "e20690ce-ba06-4263-a67b-5e69d24b8be7",
-        "dc7b14f1-7def-43a5-9a47-ba75f4500834"
+        "bb28c4de-775b-48e9-a9d5-3801c2fbfcb0",
+        "55901a8c-c868-4cc9-8577-9f5163aa17be"
       ],
       "key_entities": [],
       "children": []
@@ -203,7 +185,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "239ab80a-6e4c-4880-8137-18a5b2cb74c6"
+        "d1e5137a-f7ab-45cb-839e-b36593e412c6"
       ],
       "key_entities": [],
       "children": []
@@ -220,7 +202,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "968ff68a-62c2-4c2f-97f5-3a20bd971fe0"
+        "27456fd8-d0ba-4e33-8fbb-e2ca18893834"
       ],
       "key_entities": [],
       "children": []
@@ -237,7 +219,26 @@
         "prose"
       ],
       "chunk_ids": [
-        "3d877bc1-fe57-445a-a0fc-8c35cacb9ecd"
+        "c6564c5d-2647-4b0b-9473-13476498e804"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Box 4.1. Tax expenditures estimated using other methods",
+      "page_start": 21,
+      "page_end": 22,
+      "path": [
+        "Box 4.1. Tax expenditures estimated using other methods"
+      ],
+      "summary": "Alternative methods of estimating tax expenditures differ primarily in the definition of the benchmark tax system. In the context of Ethiopian import tax expenditures, two alternatives to our approach are worth discussing.",
+      "data_types_present": [
+        "mixed",
+        "prose"
+      ],
+      "chunk_ids": [
+        "967ed26f-d94d-4bb3-b0e3-d82887bdd201",
+        "7469ce29-3af8-478d-a252-aad25715f2b9"
       ],
       "key_entities": [],
       "children": []
@@ -255,8 +256,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "789b6fe7-807b-46b4-98b1-17389b24db39",
-        "238075ee-31d1-4a9f-be3a-fed03cfc925c"
+        "b1869604-7f5a-4b42-b259-97a35ec938b4",
+        "b1b4a953-543f-4902-b47c-8162f44756f3"
       ],
       "key_entities": [],
       "children": []
@@ -273,7 +274,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "68ea2852-a200-4b3e-b962-c1886aac4cfa"
+        "5c8bcee0-0561-4d2f-9a4c-b9e955cbfc1f"
       ],
       "key_entities": [],
       "children": []
@@ -290,7 +291,7 @@
         "table"
       ],
       "chunk_ids": [
-        "5f148ad7-f8f9-4c56-b962-9dc8593987f8"
+        "3f4df3c6-48f2-4210-ac6d-b9905d95b0f8"
       ],
       "key_entities": [],
       "children": []
@@ -307,7 +308,7 @@
         "para"
       ],
       "chunk_ids": [
-        "46c510cf-82de-46d7-9a82-48a1b790b70a"
+        "43b92f67-bdec-4df8-8775-aa4f5adbfd64"
       ],
       "key_entities": [],
       "children": []
@@ -324,7 +325,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "1de9fbdb-6a46-4d0b-950e-2e6f4499dc29"
+        "2d41d66c-a44c-471f-b3e5-2b8500eb6655"
       ],
       "key_entities": [],
       "children": []
@@ -341,7 +342,7 @@
         "mixed"
       ],
       "chunk_ids": [
-        "9a27f5cb-1e52-455a-9944-c65f66a29b04"
+        "b59455ca-c1f6-4500-97fa-db7e90698c44"
       ],
       "key_entities": [],
       "children": []
@@ -358,7 +359,7 @@
         "para"
       ],
       "chunk_ids": [
-        "166ffde2-2f53-4d17-9b25-33480b2d8084"
+        "4025494e-d91f-4728-b6ad-9d64f52762ac"
       ],
       "key_entities": [],
       "children": []
@@ -375,8 +376,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "85f4c948-babb-4709-baf4-50b9ea8dcb17",
-        "92f22ff6-ae36-417c-88ff-8ef65a6133e0"
+        "710c505b-99a3-469b-8410-7f123a80c215",
+        "9191a5d7-2d5e-465c-8850-16b53f201644"
       ],
       "key_entities": [],
       "children": []
@@ -394,18 +395,18 @@
         "table"
       ],
       "chunk_ids": [
-        "9b4f070c-64d2-4123-9373-b27ef6688dcf",
-        "988b34bf-32a1-466e-b556-7652d3943331",
-        "cc9de6d7-d214-4c4a-a198-e32d05d7398e",
-        "6ea7b6ca-38c1-455e-b58f-e54e9190c5f4",
-        "900675c8-75e4-4141-8c9c-300baa0b722c",
-        "5aabad8a-60af-4803-916e-97cdbbdc1d20",
-        "b2697c8e-12b8-4db4-add8-0239ff8ae3f1",
-        "c42dd3f4-da4a-4f18-b06c-be2ec4667ab2",
-        "4e9c5ebf-12c8-4f36-9c25-35ba90b12f7c",
-        "49620b58-f365-439f-abda-6906b32ea5d8",
-        "94b077b9-0ccf-48f2-b645-7da0dbd8467f",
-        "46d58ab9-0347-4770-b070-afeabee3ea83"
+        "2757a7f9-3a69-4ee0-b8c1-b4d729f29a09",
+        "6b08aef0-a294-4c21-9f9d-a17bcb1fd4b9",
+        "78a9a9f8-5187-48f6-816d-b89cb910f7de",
+        "624a4806-5246-4544-81a2-896abfb17de9",
+        "c991cd2b-4d9f-4870-94bc-a1bd1051aa34",
+        "0190d04b-48b1-45b8-b403-9526549f3ef3",
+        "4b90b1f7-7b3a-424f-bf6a-94b527c875ed",
+        "2f956736-e049-4c1e-bd99-e3b721f0921e",
+        "34586942-6049-4fa7-932d-95278719877d",
+        "db98c40f-1b2a-4341-9432-53e33eb1cbe3",
+        "041a72ee-03da-4f40-9a1c-31fc5dd4a537",
+        "323bceb2-504f-43fb-917d-aa6ab822edda"
       ],
       "key_entities": [],
       "children": []
@@ -422,7 +423,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "6926012a-73e6-4bdb-9358-6ddc5696b1b6"
+        "339197ba-2bbf-4a2b-9548-5886d260bc4e"
       ],
       "key_entities": [],
       "children": []
@@ -439,7 +440,7 @@
         "para"
       ],
       "chunk_ids": [
-        "9849dd00-3e61-42bf-93da-f9032d49c57b"
+        "74a48f65-95d8-4f80-b383-4a004d84065d"
       ],
       "key_entities": [],
       "children": []
@@ -456,7 +457,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "fe5088e4-0945-412e-a5c8-bc320a1abac0"
+        "891e6880-881d-43b5-a848-99aeb5be1f25"
       ],
       "key_entities": [],
       "children": []
@@ -473,7 +474,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "6072f6ae-33ad-4afa-ac31-6071e470f6cc"
+        "ea68c008-12f1-4783-a53e-e63fd35dddc8"
       ],
       "key_entities": [],
       "children": []
@@ -490,7 +491,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "fbec0fd2-446f-454a-a617-63e806db40c7"
+        "23b25bbd-027e-49e6-8d29-49b7eccc6420"
       ],
       "key_entities": [],
       "children": []
@@ -507,7 +508,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "597826d3-1d7a-4ffa-8300-f678ed0d10c0"
+        "25b3669a-5c09-4e30-9b26-b21275b4d0ea"
       ],
       "key_entities": [],
       "children": []
@@ -524,7 +525,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "4c8624ac-1a02-4943-bd03-9ab82b9874d9"
+        "5a9d3b03-6f49-4179-9bbe-91bb1ae7c8ea"
       ],
       "key_entities": [],
       "children": []
@@ -541,7 +542,7 @@
         "list"
       ],
       "chunk_ids": [
-        "c4aec0c1-b659-4671-adec-ce84ddaf3c25"
+        "e2a61ee2-f7e3-4e60-bfef-25fde8c18d8e"
       ],
       "key_entities": [],
       "children": []
@@ -558,7 +559,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "5860a74f-fb96-4ac7-b8df-429bcec4ad9f"
+        "bdb4f1a5-5765-4451-b4b8-2e8e665bfa62"
       ],
       "key_entities": [],
       "children": []
@@ -575,7 +576,7 @@
         "list"
       ],
       "chunk_ids": [
-        "c3ff3ca5-e926-4c7e-9634-ae8940ac7d1e"
+        "19695d30-bbf5-4c50-9027-bed81bae7044"
       ],
       "key_entities": [],
       "children": []
@@ -592,11 +593,11 @@
         "prose"
       ],
       "chunk_ids": [
-        "8af0d560-5ae2-4035-af22-20b378ab915b"
+        "f2f3337d-a222-48a5-afc6-80649ff07143"
       ],
       "key_entities": [],
       "children": []
     }
   ],
-  "created_at": "2026-07-23T10:50:22.533163Z"
+  "created_at": "2026-07-24T13:19:59.696401Z"
 }
