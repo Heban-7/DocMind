@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { sendChatMessage } from "@/lib/api";
+import { fetchHistory, sendChatMessage } from "@/lib/api";
 import type { ChatMessageUI } from "@/lib/types";
 
 export function useChat() {
@@ -50,11 +50,32 @@ export function useChat() {
     []
   );
 
+  const loadThread = useCallback(async (targetThreadId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      threadIdRef.current = targetThreadId;
+      const res = await fetchHistory(targetThreadId);
+      const uiMsgs: ChatMessageUI[] = res.messages.map((m) => ({
+        id: crypto.randomUUID(),
+        role: m.role === "human" || m.role === "user" ? "user" : "ai",
+        content: m.content,
+        timestamp: Date.now(),
+      }));
+      setMessages(uiMsgs);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load thread history");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const newChat = useCallback(() => {
     threadIdRef.current = crypto.randomUUID();
     setMessages([]);
     setError(null);
   }, []);
 
-  return { messages, isLoading, error, threadId, send, newChat };
+  return { messages, isLoading, error, threadId, send, loadThread, newChat };
 }
+

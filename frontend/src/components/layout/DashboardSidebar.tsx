@@ -4,9 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import FileDropzone from "@/components/upload/FileDropzone";
 
+import type { ThreadSummary } from "@/lib/types";
+
 interface SidebarProps {
   onNewChat: () => void;
-  chatSessions?: { id: string; title: string }[];
+  threads?: ThreadSummary[];
+  activeThreadId?: string;
+  onSelectThread?: (threadId: string) => void;
   onUpload: (file: File) => void;
   uploadState: string;
   uploadedFileName?: string;
@@ -15,7 +19,9 @@ interface SidebarProps {
 
 export default function DashboardSidebar({
   onNewChat,
-  chatSessions = [],
+  threads = [],
+  activeThreadId,
+  onSelectThread,
   onUpload,
   uploadState,
   uploadedFileName,
@@ -26,12 +32,6 @@ export default function DashboardSidebar({
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
     { href: "/", label: "Home", icon: "home" },
-  ];
-
-  const defaultSessions = chatSessions.length > 0 ? chatSessions : [
-    { id: "1", title: "Q3 Financial Review" },
-    { id: "2", title: "Compliance Audit 2024" },
-    { id: "3", title: "Strategic Ops Analysis" },
   ];
 
   return (
@@ -78,15 +78,26 @@ export default function DashboardSidebar({
           </span>
         </div>
         <div className="space-y-xs">
-          {defaultSessions.map((session) => (
-            <button
-              key={session.id}
-              className="w-full text-left flex items-center gap-sm text-on-surface-variant px-4 py-2 hover:bg-surface-container-high rounded-lg transition-all text-ellipsis overflow-hidden whitespace-nowrap"
-            >
-              <span className="material-symbols-outlined text-sm">chat_bubble</span>
-              <span className="font-body-sm text-body-sm">{session.title}</span>
-            </button>
-          ))}
+          {threads.length === 0 ? (
+            <p className="px-4 py-2 text-xs text-on-surface-variant/50 italic">
+              No previous threads
+            </p>
+          ) : (
+            threads.map((thread) => (
+              <button
+                key={thread.thread_id}
+                onClick={() => onSelectThread?.(thread.thread_id)}
+                className={`w-full text-left flex items-center gap-sm px-4 py-2 rounded-lg transition-all text-ellipsis overflow-hidden whitespace-nowrap ${
+                  activeThreadId === thread.thread_id
+                    ? "bg-surface-container-highest text-primary font-bold"
+                    : "text-on-surface-variant hover:bg-surface-container-high"
+                }`}
+              >
+                <span className="material-symbols-outlined text-sm">chat_bubble</span>
+                <span className="font-body-sm text-body-sm truncate">{thread.title}</span>
+              </button>
+            ))
+          )}
         </div>
 
         {/* Collections */}

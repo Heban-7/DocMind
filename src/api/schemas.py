@@ -45,3 +45,26 @@ class HistoryMessage(BaseModel):
 class HistoryResponse(BaseModel):
     thread_id: str
     messages: list[HistoryMessage] = Field(default_factory=list)
+
+
+class ThreadSummary(BaseModel):
+    thread_id: str
+    title: str
+    message_count: int
+
+
+class ThreadListResponse(BaseModel):
+    threads: list[ThreadSummary] = Field(default_factory=list)
+
+
+class DocumentInfo(BaseModel):
+    document_id: str
+    file_name: str
+    page_count: int
+    strategy_tier: str
+    status: str
+
+
+class DocumentListResponse(BaseModel):
+    documents: list[DocumentInfo] = Field(default_factory=list)
+

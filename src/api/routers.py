@@ -5,15 +5,25 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 
 from src.api.schemas import (
     ChatRequest,
     ChatResponse,
+    DocumentListResponse,
     HealthResponse,
     HistoryResponse,
+    ThreadListResponse,
     UploadResponse,
 )
-from src.api.services import fetch_history, process_upload, run_chat
+from src.api.services import (
+    fetch_history,
+    get_pdf_file_path,
+    list_documents,
+    list_threads,
+    process_upload,
+    run_chat,
+)
 
 logger = logging.getLogger("docmind.api")
 
@@ -36,7 +46,7 @@ def health() -> HealthResponse:
     status_code=status.HTTP_201_CREATED,
 )
 async def upload_pdf(file: UploadFile = File(...)) -> UploadResponse:
-    """Accept a PDF, run Triage ? Extract ? Chunk ? Index, return the profile."""
+    """Accept a PDF, run Triage -> Extract -> Chunk -> Index, return the profile."""
     try:
         return process_upload(file)
     except ValueError as exc:
@@ -54,6 +64,42 @@ async def upload_pdf(file: UploadFile = File(...)) -> UploadResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Document processing failed: {exc}",
+        ) from exc
+
+
+@upload_router.get("/documents", response_model=DocumentListResponse)
+def get_documents() -> DocumentListResponse:
+    """List all ingested document profiles."""
+    try:
+        return list_documents()
+    except Exception as exc:
+        logger.exception("list documents failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list documents: {exc}",
+        ) from exc
+
+
+@upload_router.get("/documents/{doc_id}/pdf")
+def get_pdf(doc_id: str):
+    """Serve raw PDF file for document_id."""
+    try:
+        pdf_path = get_pdf_file_path(doc_id)
+        return FileResponse(
+            path=str(pdf_path),
+            media_type="application/pdf",
+            filename=pdf_path.name,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except Exception as exc:
+        logger.exception("pdf fetch failed doc_id=%s", doc_id)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve PDF: {exc}",
         ) from exc
 
 
@@ -97,3 +143,17 @@ def history(thread_id: str) -> HistoryResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"History lookup failed: {exc}",
         ) from exc
+
+
+@chat_router.get("/threads", response_model=ThreadListResponse)
+def get_threads() -> ThreadListResponse:
+    """List active thread IDs and summary titles from SQLite checkpointer."""
+    try:
+        return list_threads()
+    except Exception as exc:
+        logger.exception("list threads failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list threads: {exc}",
+        ) from exc
+

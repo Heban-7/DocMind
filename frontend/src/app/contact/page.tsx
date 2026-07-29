@@ -1,18 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
-
-const sidebarNav = [
-  { href: "/", label: "Home", icon: "home" },
-  { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
-  { href: "/about", label: "About", icon: "info" },
-  { href: "/contact", label: "Contact", icon: "mail" },
-];
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 export default function ContactPage() {
-  const pathname = usePathname();
   const [formStatus, setFormStatus] = useState<"idle" | "sending" | "sent">("idle");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -26,70 +19,11 @@ export default function ContactPage() {
 
   return (
     <>
-      {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30">
-        <div className="flex items-center gap-md">
-          <Link href="/" className="font-headline-lg text-headline-lg font-bold text-on-surface">
-            DocMind
-          </Link>
-          <nav className="hidden md:flex items-center gap-lg ml-xl">
-            <Link className="font-label-md text-label-md text-secondary transition-colors hover:text-primary-container" href="/about">
-              About
-            </Link>
-            <Link className="font-label-md text-label-md text-primary border-b-2 border-primary pb-1" href="/contact">
-              Contact
-            </Link>
-          </nav>
-        </div>
-        <div className="flex items-center gap-md">
-          <button className="font-label-md text-label-md px-md py-sm rounded-lg text-on-surface-variant/70 hover:text-primary transition-colors">
-            Sign In
-          </button>
-          <Link
-            href="/dashboard"
-            className="bg-primary text-on-primary font-label-md text-label-md px-lg py-sm rounded-lg transition-transform active:scale-95 duration-150"
-          >
-            Get Started
-          </Link>
-        </div>
-      </header>
-
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen hidden md:flex flex-col py-lg w-[280px] bg-surface-container-low border-r border-outline-variant/30 z-40 pt-20">
-        <div className="px-lg mb-xl">
-          <h2 className="font-headline-md text-headline-md font-bold text-on-surface">DocMind AI</h2>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">Enterprise Intelligence</p>
-        </div>
-        <nav className="flex-1 px-md space-y-base">
-          {sidebarNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-md px-4 py-2 rounded-lg transition-all ${
-                pathname === item.href
-                  ? "bg-secondary-container text-on-secondary-container font-bold translate-x-1 duration-200"
-                  : "text-on-surface-variant hover:bg-surface-container-high"
-              }`}
-            >
-              <span className="material-symbols-outlined">{item.icon}</span>
-              <span className="font-label-md text-label-md">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        <div className="px-md mt-auto pt-lg space-y-base">
-          <Link href="#" className="flex items-center gap-md text-on-surface-variant px-4 py-2 hover:bg-surface-container-high transition-all rounded-lg">
-            <span className="material-symbols-outlined">settings</span>
-            <span className="font-label-md text-label-md">Settings</span>
-          </Link>
-          <Link href="#" className="flex items-center gap-md text-on-surface-variant px-4 py-2 hover:bg-surface-container-high transition-all rounded-lg">
-            <span className="material-symbols-outlined">help</span>
-            <span className="font-label-md text-label-md">Support</span>
-          </Link>
-        </div>
-      </aside>
+      <Navbar />
 
       {/* Main Content Canvas */}
-      <main className="md:ml-[280px] pt-24 px-gutter pb-xl min-h-screen flex flex-col items-center">
+      <main className="pt-24 px-gutter pb-xl min-h-screen flex flex-col items-center">
+
         {/* View Switcher Tab Bar */}
         <div className="w-full max-w-[800px] mb-xl">
           <div className="flex items-center gap-sm bg-surface-container-low p-1 rounded-xl w-fit">
@@ -196,18 +130,8 @@ export default function ContactPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="md:ml-[280px] w-auto py-xl px-lg flex flex-col md:flex-row justify-between items-center gap-md border-t border-outline-variant/20 bg-surface">
-        <div className="flex flex-col items-center md:items-start gap-xs">
-          <span className="font-headline-md text-headline-md font-bold text-on-surface">DocMind</span>
-          <p className="font-body-sm text-body-sm text-on-surface-variant/70">© 2024 DocMind Enterprise. All rights reserved.</p>
-        </div>
-        <div className="flex gap-lg">
-          <Link className="font-label-md text-label-md text-on-surface-variant/70 hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</Link>
-          <Link className="font-label-md text-label-md text-on-surface-variant/70 hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</Link>
-          <Link className="font-label-md text-label-md text-on-surface-variant/70 hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Security</Link>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }
+

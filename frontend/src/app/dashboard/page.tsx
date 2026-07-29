@@ -8,13 +8,22 @@ import ChatInput from "@/components/chat/ChatInput";
 import WelcomeState from "@/components/chat/WelcomeState";
 import { useChat } from "@/hooks/useChat";
 import { useUpload } from "@/hooks/useUpload";
+import { useThreads } from "@/hooks/useThreads";
 
 export default function DashboardPage() {
-  const { messages, isLoading, send, newChat } = useChat();
-  const { uploadState, document: uploadedDoc, upload } = useUpload();
+  const { messages, isLoading, error: chatError, threadId, send, loadThread, newChat } = useChat();
+  const { uploadState, document: uploadedDoc, error: uploadError, upload } = useUpload();
+  const { threads, refresh: refreshThreads } = useThreads();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [federatedSearch, setFederatedSearch] = useState(false);
   const [auditMode, setAuditMode] = useState(false);
+  const [activeError, setActiveError] = useState<string | null>(null);
+
+  // Sync errors to banner state
+  useEffect(() => {
+    if (chatError) setActiveError(chatError);
+    else if (uploadError) setActiveError(uploadError);
+  }, [chatError, uploadError]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -23,8 +32,14 @@ export default function DashboardPage() {
     }
   }, [messages]);
 
-  const handleSend = (text: string) => {
-    send(text, uploadedDoc?.document_id);
+  const handleSend = async (text: string) => {
+    await send(text, uploadedDoc?.document_id);
+    refreshThreads();
+  };
+
+  const handleUpload = async (file: File) => {
+    await upload(file);
+    refreshThreads();
   };
 
   return (
@@ -32,7 +47,10 @@ export default function DashboardPage() {
       {/* Sidebar */}
       <DashboardSidebar
         onNewChat={newChat}
-        onUpload={upload}
+        threads={threads}
+        activeThreadId={threadId}
+        onSelectThread={loadThread}
+        onUpload={handleUpload}
         uploadState={uploadState}
         uploadedFileName={uploadedDoc?.file_name}
         strategyTier={uploadedDoc?.strategy_tier}
@@ -47,6 +65,22 @@ export default function DashboardPage() {
           auditMode={auditMode}
           onToggleAudit={() => setAuditMode((v) => !v)}
         />
+
+        {/* Error Alert Banner */}
+        {activeError && (
+          <div className="bg-red-500/10 border-b border-red-500/30 text-red-700 px-lg py-sm flex items-center justify-between z-20 text-body-sm">
+            <div className="flex items-center gap-sm">
+              <span className="material-symbols-outlined text-[18px]">error</span>
+              <span>{activeError}</span>
+            </div>
+            <button
+              onClick={() => setActiveError(null)}
+              className="hover:bg-red-500/20 p-1 rounded transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
+        )}
 
         {/* Chat Workspace Area */}
         <section ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col items-center">
@@ -90,7 +124,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Input Bar */}
-        <ChatInput onSend={handleSend} isLoading={isLoading} />
+        <ChatInput onSend={handleSend} isLoading={isLoading} onAttachFile={handleUpload} />
 
         {/* Decorative Background Element */}
         <div className="fixed top-0 right-0 -z-10 w-1/3 h-1/3 opacity-20 pointer-events-none blur-[100px] bg-gradient-to-br from-primary to-secondary" />
@@ -98,3 +132,4 @@ export default function DashboardPage() {
     </>
   );
 }
+

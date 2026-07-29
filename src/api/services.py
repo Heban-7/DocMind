@@ -6,6 +6,7 @@ import logging
 import os
 import re
 import shutil
+import sqlite3
 from pathlib import Path
 from uuid import uuid4
 
@@ -15,11 +16,15 @@ from src.agents.query_agent import QueryAgent, build_query_agent
 from src.api.schemas import (
     ChatRequest,
     ChatResponse,
+    DocumentInfo,
+    DocumentListResponse,
     HistoryMessage,
     HistoryResponse,
+    ThreadListResponse,
+    ThreadSummary,
     UploadResponse,
 )
-from src.config import RAW_DIR
+from src.config import CHECKPOINTS_DB_PATH, PROFILES_DIR, RAW_DIR
 from src.pipeline.ingest import ingest_pdf
 from src.pipeline.phase4 import resolve_pdf_path
 
@@ -130,3 +135,70 @@ def fetch_history(thread_id: str) -> HistoryResponse:
         for m in agent.get_messages(tid)
     ]
     return HistoryResponse(thread_id=tid, messages=messages)
+
+
+def list_threads() -> ThreadListResponse:
+    """Return all active thread_ids with their titles and message counts."""
+    if not CHECKPOINTS_DB_PATH.exists():
+        return ThreadListResponse(threads=[])
+
+    try:
+        conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
+        cursor = conn.execute("SELECT DISTINCT thread_id FROM checkpoints")
+        thread_ids = [row[0] for row in cursor.fetchall() if row[0]]
+        conn.close()
+    except Exception:
+        logger.exception("Failed to query checkpoints DB")
+        return ThreadListResponse(threads=[])
+
+    agent = build_query_agent(None, enable_memory=True)
+    summaries: list[ThreadSummary] = []
+    for tid in thread_ids:
+        msgs = agent.get_messages(tid)
+        if not msgs:
+            continue
+        user_msgs = [m for m in msgs if m.role.value == "user"]
+        first_text = user_msgs[0].content if user_msgs else "Conversation"
+        title = first_text[:60] + ("..." if len(first_text) > 60 else "")
+        summaries.append(
+            ThreadSummary(
+                thread_id=tid,
+                title=title,
+                message_count=len(msgs),
+            )
+        )
+    return ThreadListResponse(threads=summaries)
+
+
+def list_documents() -> DocumentListResponse:
+    """Return all ingested document profiles from PROFILES_DIR."""
+    if not PROFILES_DIR.exists():
+        return DocumentListResponse(documents=[])
+
+    docs: list[DocumentInfo] = []
+    for p in PROFILES_DIR.glob("*.json"):
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            docs.append(
+                DocumentInfo(
+                    document_id=data.get("doc_id", p.stem),
+                    file_name=data.get("source_filename", p.name),
+                    page_count=data.get("page_count", 0),
+                    strategy_tier=data.get("estimated_cost", {}).get("value", "standard")
+                    if isinstance(data.get("estimated_cost"), dict)
+                    else str(data.get("estimated_cost", "standard")),
+                    status="indexed",
+                )
+            )
+        except Exception:
+            continue
+
+    return DocumentListResponse(documents=docs)
+
+
+def get_pdf_file_path(doc_id: str) -> Path:
+    """Resolve PDF file path for a document_id or raise FileNotFoundError."""
+    path = resolve_pdf_path(doc_id)
+    if path is None or not path.exists():
+        raise FileNotFoundError(f"PDF for document_id={doc_id} not found.")
+    return path
