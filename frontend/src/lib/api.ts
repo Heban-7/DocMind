@@ -5,6 +5,8 @@ import type {
   ChatResponse,
   UploadResponse,
   HistoryResponse,
+  ThreadListResponse,
+  DocumentListResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -65,3 +67,34 @@ export async function fetchHistory(threadId: string): Promise<HistoryResponse> {
   }
   return res.json();
 }
+
+/* ─── Threads ─── */
+export async function fetchThreads(): Promise<ThreadListResponse> {
+  const res = await fetch(`${API_BASE}/threads`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(detail.detail || `Threads fetch failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+/* ─── Documents ─── */
+export async function fetchDocuments(): Promise<DocumentListResponse> {
+  const res = await fetch(`${API_BASE}/documents`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(detail.detail || `Documents fetch failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export function getDocumentPdfUrl(docId: string): string {
+  return `${API_BASE}/documents/${encodeURIComponent(docId)}/pdf`;
+}
+

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "DocMind | Founder & Systems Architect",
@@ -17,27 +19,8 @@ const techStack = [
 export default function AboutPage() {
   return (
     <>
-      {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30">
-        <div className="flex items-center gap-md">
-          <Link href="/" className="font-headline-lg text-headline-lg font-bold text-on-surface">
-            DocMind
-          </Link>
-        </div>
-        <nav className="hidden md:flex items-center gap-xl">
-          <Link className="font-label-md text-label-md text-primary border-b-2 border-primary pb-1" href="/about">
-            About
-          </Link>
-          <Link className="font-label-md text-label-md text-secondary hover:text-primary-container transition-colors" href="/contact">
-            Contact
-          </Link>
-        </nav>
-        <div className="flex items-center gap-md">
-          <Link href="/dashboard" className="bg-on-surface text-surface px-lg py-sm rounded-lg font-label-md text-label-md hover:opacity-90 transition-all">
-            Sign In
-          </Link>
-        </div>
-      </header>
+      <Navbar />
+
 
       <main className="pt-24 pb-xl px-margin-mobile md:px-lg max-w-[1200px] mx-auto min-h-screen">
         {/* View Switcher */}
@@ -204,18 +187,8 @@ export default function AboutPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full py-xl px-lg flex flex-col md:flex-row justify-between items-center gap-md bg-surface border-t border-outline-variant/20">
-        <div className="flex flex-col items-center md:items-start">
-          <span className="font-headline-md text-headline-md font-bold text-on-surface mb-xs">DocMind</span>
-          <p className="font-body-sm text-body-sm text-on-surface-variant/70">© 2024 DocMind Enterprise. All rights reserved.</p>
-        </div>
-        <div className="flex gap-lg">
-          <Link className="font-label-md text-label-md text-on-surface-variant/70 hover:text-primary transition-colors" href="#">Privacy Policy</Link>
-          <Link className="font-label-md text-label-md text-on-surface-variant/70 hover:text-primary transition-colors" href="#">Terms of Service</Link>
-          <Link className="font-label-md text-label-md text-on-surface-variant/70 hover:text-primary transition-colors" href="#">Security</Link>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }
+

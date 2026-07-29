@@ -1,36 +1,57 @@
 "use client";
 
+import { useState } from "react";
 import type { ProvenanceCitation } from "@/lib/types";
+import PDFViewerModal from "./PDFViewerModal";
 
 interface ProvenanceBadgeProps {
   citation: ProvenanceCitation;
 }
 
 export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const fileName = citation.source_file || "Document.pdf";
-  const page = citation.page_number;
+  const docId = (citation as any).doc_id || (citation as any).document_id;
+  const page = citation.page_number ?? 1;
   const hash = citation.content_hash;
+  const bbox = citation.bbox as number[] | undefined;
+  const chunkText = citation.chunk_text as string | undefined;
 
   return (
-    <button
-      className="inline-flex items-center gap-xs bg-surface-container-lowest border border-outline-variant/30 hover:border-primary px-3 py-1.5 rounded-lg transition-all group"
-      title={
-        hash
-          ? `Content hash: ${hash}${citation.bbox ? `\nBBox: [${citation.bbox.join(", ")}]` : ""}`
-          : undefined
-      }
-    >
-      <span className="material-symbols-outlined text-primary text-sm">
-        description
-      </span>
-      <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-primary">
-        📄 {fileName}
-        {page != null && ` — Page ${page}`}{" "}
-        <span className="font-bold text-green-600 ml-1">[Verified]</span>
-      </span>
-      <span className="material-symbols-outlined text-xs text-on-surface-variant/40">
-        open_in_new
-      </span>
-    </button>
+    <>
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="inline-flex items-center gap-xs bg-surface-container-lowest border border-outline-variant/30 hover:border-primary px-3 py-1.5 rounded-lg transition-all group"
+        title={
+          hash
+            ? `Click to view source PDF evidence.\nContent hash: ${hash}${bbox ? `\nBBox: [${bbox.join(", ")}]` : ""}`
+            : "Click to view source PDF evidence"
+        }
+      >
+        <span className="material-symbols-outlined text-primary text-sm">
+          description
+        </span>
+        <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-primary">
+          📄 {fileName}
+          {page != null && ` — Page ${page}`}{" "}
+          <span className="font-bold text-green-600 ml-1">[Verified]</span>
+        </span>
+        <span className="material-symbols-outlined text-xs text-on-surface-variant/40 group-hover:text-primary">
+          visibility
+        </span>
+      </button>
+
+      <PDFViewerModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        docId={docId}
+        fileName={fileName}
+        pageNumber={page}
+        bbox={bbox}
+        chunkText={chunkText}
+      />
+    </>
   );
 }
+

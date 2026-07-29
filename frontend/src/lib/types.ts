@@ -44,6 +44,29 @@ export interface HistoryResponse {
   messages: HistoryMessage[];
 }
 
+export interface ThreadSummary {
+  thread_id: string;
+  title: string;
+  message_count: number;
+}
+
+export interface ThreadListResponse {
+  threads: ThreadSummary[];
+}
+
+export interface DocumentInfo {
+  document_id: string;
+  file_name: string;
+  page_count: number;
+  strategy_tier: string;
+  status: string;
+}
+
+export interface DocumentListResponse {
+  documents: DocumentInfo[];
+}
+
+
 /* ─── Frontend-only UI types ─── */
 
 export interface ChatMessageUI {

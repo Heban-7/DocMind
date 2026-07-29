@@ -5,11 +5,20 @@ import { useState, useRef, useCallback } from "react";
 interface ChatInputProps {
   onSend: (text: string) => void;
   isLoading: boolean;
+  onAttachFile?: (file: File) => void;
 }
 
-export default function ChatInput({ onSend, isLoading }: ChatInputProps) {
+export default function ChatInput({ onSend, isLoading, onAttachFile }: ChatInputProps) {
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onAttachFile) {
+      onAttachFile(file);
+    }
+  };
 
   const handleSubmit = useCallback(() => {
     const trimmed = text.trim();
@@ -40,8 +49,21 @@ export default function ChatInput({ onSend, isLoading }: ChatInputProps) {
     <footer className="absolute bottom-0 left-0 w-full p-lg flex justify-center pointer-events-none">
       <div className="w-full max-w-[800px] pointer-events-auto">
         <div className="relative bg-surface-container-lowest shadow-lg border border-outline-variant/30 rounded-[2rem] p-sm pr-2 flex items-end gap-sm focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
           {/* Attach File */}
-          <button className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container"
+            title="Attach & index PDF document"
+          >
             <span className="material-symbols-outlined">attach_file</span>
           </button>
 
