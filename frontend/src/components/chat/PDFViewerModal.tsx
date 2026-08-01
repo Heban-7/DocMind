@@ -28,6 +28,11 @@ export default function PDFViewerModal({
 
   const pdfBaseUrl = docId ? getDocumentPdfUrl(docId) : null;
   const pdfUrlWithPage = pdfBaseUrl ? `${pdfBaseUrl}#page=${currentPage}` : null;
+  const formattedBbox = Array.isArray(bbox)
+    ? bbox.join(", ")
+    : typeof bbox === "string"
+    ? bbox
+    : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-md bg-black/60 backdrop-blur-sm fade-in">
@@ -43,10 +48,11 @@ export default function PDFViewerModal({
                 {fileName}
               </h3>
               <p className="font-body-sm text-[12px] text-on-surface-variant">
-                Page {currentPage} {bbox ? `• BBox [${bbox.join(", ")}]` : ""}
+                Page {currentPage} {formattedBbox ? `• BBox [${formattedBbox}]` : ""}
               </p>
             </div>
           </div>
+
 
           <div className="flex items-center gap-md">
             {/* Page navigation */}

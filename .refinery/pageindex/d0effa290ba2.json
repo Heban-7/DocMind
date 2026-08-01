@@ -1,0 +1,299 @@
+{
+  "doc_id": "d0effa290ba2",
+  "source_filename": "b223656f70_20191010_Pharmaceutical-Manufacturing-Opportunites-in-Ethiopia_VF.pdf",
+  "roots": [
+    {
+      "title": "10 minutes drive from Addis Ababa International Airport.",
+      "page_start": 15,
+      "page_end": 15,
+      "path": [
+        "10 minutes drive from Addis Ababa International Airport."
+      ],
+      "summary": "35 minutes drive to Modjo dry port through expressway.",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "97e8736e-83a4-4708-925f-d59efb585525"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Ethiopia has a clear vision for industrialization that builds off of its rapid growth",
+      "page_start": 4,
+      "page_end": 4,
+      "path": [
+        "Ethiopia has a clear vision for industrialization that builds off of its rapid growth"
+      ],
+      "summary": "One of the fastest growing economies with 9.68% average growth over the past 10 years. One of the top destinations for foreign direct investment standing 5 th in Africa.",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "bca3655c-e6ce-4f4a-9b6e-c0133ddfc73a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Ethiopia's textile and garment industry presents unique opportunities to investors",
+      "page_start": 10,
+      "page_end": 10,
+      "path": [
+        "Ethiopia's textile and garment industry presents unique opportunities to investors"
+      ],
+      "summary": "- -Booming industry which has grown 7 fold since 2008\n- -Emerging as a regional hub for sourcing /contract manufacturers\n- -Managed to attract leading global brands such as PVH, H&amp;M, Wuxi and Sunshine,\n- -More than 2.7 million hectare of suitable land availability for cotton cultivation\n- -Reliable green energy supply with an estimated cost of 0.04 USD/kWh. - -Market access to USA and EU thro...",
+      "data_types_present": [
+        "list"
+      ],
+      "chunk_ids": [
+        "2c5789ee-bdcf-4e31-aec0-4f8275c055ea"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Ethiopian pharmaceutical market has been growing at 15% per year and is predicted to reach $905 million by 2020",
+      "page_start": 8,
+      "page_end": 8,
+      "path": [
+        "Ethiopian pharmaceutical market has been growing at 15% per year and is predicted to reach $905 million by 2020"
+      ],
+      "summary": "Note:\n\n*Forecast\n\nSource\n\n: Frost &amp; Sullivan, World Bank, National Strategy and Plan of Action for Pharmaceutical Manufacturing\n\n- Local market has been growing steadily at an average of 15% per year\n- With growing population, increased access to health services and a growing middle-class , demand is projected to grow exponentially &amp; reach &gt;3.6 billion by 2030\n- Ethiopia currently impo...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "b96238f7-383c-442c-8e05-022543b7d94b"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Fiscal Incentives tailored to investment",
+      "page_start": 14,
+      "page_end": 14,
+      "path": [
+        "Fiscal Incentives tailored to investment"
+      ],
+      "summary": "Exemption from income tax up to 15 years for Industry Park Developer,\n\nExemption from income tax up to 8 - 10 years for enterprises inside IPs,\n\nExemption from duties and other taxes on imports of machinery, equipment, construction materials, spare parts, raw materials and vehicles\n\nLoss carry forward\n\nFull export duty exemption",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "959f0f26-80b4-4212-b75d-bd02ca9631bc"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Industrial park area",
+      "page_start": 12,
+      "page_end": 12,
+      "path": [
+        "Industrial park area"
+      ],
+      "summary": "- Established on 279 ha of land\n- 177 ha service land for manufacturing\n- Land is available at reasonable lease prices",
+      "data_types_present": [
+        "list"
+      ],
+      "chunk_ids": [
+        "c5a180d5-9094-44c6-a002-6cd8ed4f57f3"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Industrial park facilities",
+      "page_start": 12,
+      "page_end": 12,
+      "path": [
+        "Industrial park facilities"
+      ],
+      "summary": "- Health Center\n- Police Station\n- One-Stop Shop Services\n- Commercial Building\n- Fire Brigade &amp; 24/7 Security Services\n- Waste Treatment Facilities",
+      "data_types_present": [
+        "list"
+      ],
+      "chunk_ids": [
+        "bf0b6cc0-c6e8-4cfb-b556-73a07865cf6a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Industrial park key characteristics",
+      "page_start": 13,
+      "page_end": 13,
+      "path": [
+        "Industrial park key characteristics"
+      ],
+      "summary": "SECTOR SPECIALIZATION\n\nEXPORT ORINTED\n\nVERTICALY INTEGERATED\n\nSUSTAINABILITY\n\nSKILL DEVELOPMENT\n\n……. Located along strategic economic corridors, connected to ports by electric driven railway lines and asphalt roads with Close proximity to abundant labor force\n\nReady for plug-and-play , equipped with all the necessary infrastructure including waste water treatment plants with joint calibration\n\nDe...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "f632a833-4818-4d3f-a0c1-ddfc1012c316"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Industry support targeting manufacturers",
+      "page_start": 14,
+      "page_end": 14,
+      "path": [
+        "Industry support targeting manufacturers"
+      ],
+      "summary": "Public procurement: 25% price preference and 30% prepayment for firms manufacturing in Ethiopia,\n\nPotential for long term procurement guarantee. Fast-track medicine registration\n\nRegional regulatory harmonization underway to catalyze regional trade Miscellaneous Expedited visa procedure expedited procedure of securing entry, work permit and certificate of residency Multiple entry visas for share...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "4e37a3a1-b3c9-4c48-bba2-e193665650ea"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Investment - Why do business in Ethiopia?",
+      "page_start": 3,
+      "page_end": 11,
+      "path": [
+        "Investment - Why do business in Ethiopia?"
+      ],
+      "summary": "Opportunities to invest in high value pharmaceutical sector Benefit based on tailored enabling environment including specialized parks\n\n3 Growing Economy, dynamic market with access to East African market Opportunities to invest in high value pharmaceutical sector Benefit based on tailored enabling environment including specialized parks Growing Economy, dynamic market with access to East African...",
+      "data_types_present": [
+        "para",
+        "prose"
+      ],
+      "chunk_ids": [
+        "dc06a13c-0499-45fe-8c5a-d52db3cad8bb",
+        "7c2b1eb3-84a2-47a8-9a07-675cbc357c0d",
+        "af97db5c-7dc4-4759-aa56-ae63488789e4"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Key drivers of pharmaceutical demand in Ethiopia",
+      "page_start": 9,
+      "page_end": 9,
+      "path": [
+        "Key drivers of pharmaceutical demand in Ethiopia"
+      ],
+      "summary": "- Second-largest population in Africa (&gt;100M, ~8.5% of Africa's population ); growth of 2.3% per year is expected\n- With average economic growth of &gt;10% per year, increase in disposable income will influence spending on pharmaceutical products\n- Increasing healthcare coverage by government to the large rural population creates growing demand for pharmaceutical products. - Primary health car...",
+      "data_types_present": [
+        "list"
+      ],
+      "chunk_ids": [
+        "184c847c-b55e-4f73-b57c-a0e23f2ed882"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Location",
+      "page_start": 12,
+      "page_end": 12,
+      "path": [
+        "Location"
+      ],
+      "summary": "- Addis Ababa; 25 km from city center, 863 Km from Djibouti port and 10 minutes drive from Bole International Airport",
+      "data_types_present": [
+        "list"
+      ],
+      "chunk_ids": [
+        "b1c9025c-5c39-4baf-a1a8-0f278a4540bb"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Mainly driven by:",
+      "page_start": 7,
+      "page_end": 7,
+      "path": [
+        "Mainly driven by:"
+      ],
+      "summary": "Import\n\n12% of GDP to health (75% on essential medicines &amp; services)\n\nOut of pocket expenditure (46% of total expenditure)\n\nGovernment 10 years expenditure for the sector (15B USD )\n\n- One of the first African countries to develop a national strategy for pharmaceutical manufacturing\n- Strong investment policy focused on pharmaceuticals including tax exemptions, one-stop-shop services and pric...",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "a18c74ff-6dbd-497e-8099-35b15bd2279b"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Non-fiscal Incentives tailored to investment",
+      "page_start": 14,
+      "page_end": 14,
+      "path": [
+        "Non-fiscal Incentives tailored to investment"
+      ],
+      "summary": "Customs facilitation through bonded export factory and similar other schemes\n\nGuarantee against expropriation\n\nGuarantee for repatriation of funds\n\nRelaxed Industrial park land regime - 60-80 years charge-free lease for IP Developers, discounted lease rate for IP Enterprises",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "ad2d4e80-faea-4e34-9b49-5cdfe31fa207"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Our Investment Promotion Objectives are:",
+      "page_start": 2,
+      "page_end": 2,
+      "path": [
+        "Our Investment Promotion Objectives are:"
+      ],
+      "summary": "Coordination and collaboration to attract FDIs  to Ethiopia\n\nLink up and network with the international community for soliciting support\n\nPitch potential manufacturing opportunities in Ethiopia &amp; enablers\n\nLearn Ethiopia's effort in developing the manufacturing sector in general",
+      "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "1fe1068b-7078-4747-ad81-902db660172f"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Pharmaceutical manufacturing sectors is nascent with a potential for growth",
+      "page_start": 7,
+      "page_end": 7,
+      "path": [
+        "Pharmaceutical manufacturing sectors is nascent with a potential for growth"
+      ],
+      "summary": "Ethiopia's pharmaceutical sector market size",
+      "data_types_present": [
+        "para"
+      ],
+      "chunk_ids": [
+        "3ad40149-1e15-47b4-aeef-1ceef4ca2ec2"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "Population and employment",
+      "page_start": 12,
+      "page_end": 12,
+      "path": [
+        "Population and employment"
+      ],
+      "summary": "- +4 million people live in the city\n- Accessible to skilled labour",
+      "data_types_present": [
+        "list"
+      ],
+      "chunk_ids": [
+        "7c53769d-59a9-4bdb-b4aa-cdf6648e7550"
+      ],
+      "key_entities": [],
+      "children": []
+    }
+  ],
+  "created_at": "2026-08-01T11:52:17.987979Z"
+}

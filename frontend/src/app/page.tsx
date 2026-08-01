@@ -10,52 +10,53 @@ const capabilities = [
   {
     title: "Automated Document Triage & Cost-Optimized Routing",
     desc: "Intelligently categorize incoming documents and route them through optimized processing pipelines to balance precision and operational costs at scale.",
-    img: "https://lh3.googleusercontent.com/aida/AP1WRLsgm6enLiSMuKDDs1xM7HqFgYuiJeW8o0QKw-MCdxchiV9CerPgFoCg6YgNVXj4-I5RxuBUMITE6GUuNIqCcXV9JFtrJm1IMxJSTcXXmBZlsYD7vtkX1m250fCAksEhvUSkdwFp0T7oy5ck4rK-XyeUs-iE6mcSikCnu4yKLD03x1Exd-N8OuxSwp8gtIdLrwWaghamfq0Ivs7JHowB38gZkiEwAIvWXcRtFqA6wf-Wao3cOk5Byli7L58",
+    img: "/AutomatedDocumentTriageAndCost-Optimized Routing.png",
     alt: "Automated Document Triage",
   },
   {
     title: "Layout-Aware Table & Multi-Column Extraction",
     desc: "Precision extraction of complex tabular data and multi-column layouts, preserving structural integrity and cell-level relationships.",
-    img: "https://lh3.googleusercontent.com/aida/AP1WRLt5TelhKWVo_T3yPW3nnGi_ILICx7lcXSV-LPmgpmtm5lDdw_9Xfa74TzWOnxWNyMe120mz7nRhn4MPB9jvEbh_vjgyTv1cETNaLQGdwUuABTj9Oxjv-M4pJtxhkFhVrt4CBwx0Y_ORCqPvtDUIe7_k0yp9Fs7IRNZXs7zX6Sv13QWXcJKv4uVF-ABnORmBhvSh5Rptkmj5FGpj0F1Z3Tap4Qj_t4si-TborWePtJI24PlZ7nwyQPY_C5iL",
+    img: "/Layout-AwareTableAndMulti-ColumnExtraction.png",
     alt: "Table Extraction",
   },
   {
     title: "Context-Aware Semantic Chunking (Logical Units)",
     desc: "Moving beyond simple character counts. We fragment documents into semantically coherent units to ensure RAG pipelines maintain perfect context.",
-    img: "https://lh3.googleusercontent.com/aida/AP1WRLsVIp4iRpsu0rtD3UfVac20cQ2VY9sPohJ9q5wgvpV1gxkch-gQViA21hhmHSvH8I7y5LGz1T0O5VzrKzHYuyKlttV4n4DezVrsaGgdKkz6Rs8FJfB58N7zcOHK2FJNNnul43xqnWHQISdA5PProIMmDGRqENucGg5W-XkUR_tg-kwIpqOrGJJlVxmEcSPlAIwKOs9Kk6ymv3gROiJZbFI8gy1XspqEoESa_pysDp7nluQovXWqsG9JLQA9",
+    img: "/Context-AwareSemanticChunking(LogicalDocumentUnits).png",
     alt: "Semantic Chunking",
   },
   {
     title: "Hierarchical PageIndex Tree Traversal",
     desc: "Navigate massive documents via a structured index tree, enabling rapid discovery of nested sections and cross-referenced appendices.",
-    img: "https://lh3.googleusercontent.com/aida/AP1WRLvtb-0qCrzQBzRkDsyC0_3oofSkd9FvL2bLapk-g_qZrZI7-K2h6EiL7K3eK4LvHJ0QL3lmgNWOUeL2AlWa_XHVMjvdPmzpRulAbYBAubxeDd-234zHPGRL-dNa2lOTO0Wmbi4d1Ptc7Kc3HrDg4JJCDrLjYmtyGYlQnuAAkcIg_OFT1E95zJWzgUmm1Xdn0Zn72AIyrt0ZD8zhhcqdL1xWfAlMjUfrvD0r1O_gCF1IC8T8qHCAJ2xhOag",
+    img: "/HierarchicalPageIndexTreeTraversal.png",
     alt: "PageIndex Tree",
   },
   {
     title: "Structured FactTable & SQL Query Execution",
     desc: "Convert unstructured paragraphs into rigid FactTables, allowing you to run complex SQL queries directly against your document set.",
-    img: "https://lh3.googleusercontent.com/aida/AP1WRLvC4Hh1ATxZnVpeeDHAqR0JcI0PECDFYnxaCAId6EjK0GZeP5DuUT7AUJmvaPgfVNO1RcZ8Glqkw_r2QICHFQS4zGyPz1lvdkXnmVAm4KArl1bIWMnSwPhMXM3nJHMGNf9zQSCRx6_x-Q0Y8R984xXzYXKTh0PN243kFvdtLFxa4-fJZBNxQH_8jdd-J9bT6gXmJu_qmd4gkunyKwg98JGRfcVzoKcXSvtr4NSuz_dzR9G9RGP_2VmFKvjj",
+    img: "/Structured_FactTableAndSQLQueryExecution.png",
     alt: "FactTable",
   },
   {
     title: "Zero-Trust Audit Mode (Hallucination Guardrail)",
     desc: "Enterprise-grade verification layers that cross-reference every AI claim with source evidence, effectively eliminating hallucinations.",
-    img: "https://lh3.googleusercontent.com/aida/AP1WRLsP46HV228_qmTyeOYARpj71D3tKeYn-bg6XexRxlK6OR2FSbeaCol3k6te9Aqj_tS3tkUsiW59k5IWfzWwd7-DjrmUFxoq6XZQQqW0BI_tmAOW_APWrHGLpA74u1fi7M9V8YVPJdNKbDdNoH_IhByMoCmrntwIcW6EGlaCkc3YZPDbmBiqaIWoTaSfSqk2xCm7qqKoeylH0iFAADxGOI8ohCrA2xzdZE0JMBpMx9OZKWcMpznwypIuLuic",
+    img: "/Zero-TrustAuditMode(Anti-HallucinationGuardrail).png",
     alt: "Zero-Trust Audit",
   },
   {
     title: "Spatial Provenance & Bounding Box Citations",
     desc: "Don't just trust the answer—see exactly where it came from with pixel-perfect bounding box citations on the original page.",
-    img: "https://lh3.googleusercontent.com/aida/AP1WRLsbhLPU3EUnXlByvRtHoEcRXGz6E9fIZX89vxKN1gPsSqMZVApftDxaYx_pbZBAu-kIQYsBRJwcYaJK-H2YUOHS3i56hZAZFb7AdGPBj_DdYDnHt21wYCd-3M5e66en0_HGT9M8wo_3_oL8zWKErkdKA9Y4QPQObW7R_T6gTIsrPYuClHjc3xwhUDp6xzvc9U_MEKSiNdk0RlkQRt7IIDuXqFvr9XNbJK8EsnxhdK-6FbRcZpIddUdVTg4j",
+    img: "/Zero-TrustAuditMode(Anti-HallucinationGuardrail).png",
     alt: "Spatial Provenance",
   },
   {
     title: "Multi-Document Federated Search & Context",
     desc: "Search across your entire library simultaneously while maintaining a persistent conversational context for deep, multi-source analysis.",
-    img: "https://lh3.googleusercontent.com/aida/AP1WRLswLHRPKcY2SdXWHyqDSjY2PpX7p_28t7WBPYV3N_Nw4iCx3-UG5_qVmcZ8MM2FF6qdm6JujKOPqtiRiFb3FJPgt4tSr9Hisz5Hda6VFXs55pKPOYXISSJgWgdSNU62k1GV1aNfGUzpuaDSPfeVivzpeiKYOzFszTt6SRy95EwaClUw-tNLQY5JzOd0tuIo5-qhmASK6Jabm6bjVdG1oI8-oEOhQM11lW_eeTsvYEYAzgn7ihpb3Frvtezp",
+    img: "/Zero-TrustAuditMode(Anti-HallucinationGuardrail).png",
     alt: "Federated Search",
   },
 ];
+
 
 const advantages = [
   { icon: "account_tree", title: "Intelligent Triage", desc: "Automated document classification & cost-effective routing for enterprise scale." },
@@ -169,9 +170,8 @@ export default function LandingPage() {
           {capabilities.map((cap, i) => (
             <div
               key={cap.title}
-              className={`flex flex-col ${
-                i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-              } items-center gap-xl feature-interactive group`}
+              className={`flex flex-col ${i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
+                } items-center gap-xl feature-interactive group`}
             >
               <div className="w-full md:w-2/5 rounded-2xl overflow-hidden border border-black/5 dark:border-white/10 glass-card shadow-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
