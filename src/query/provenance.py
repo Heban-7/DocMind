@@ -32,6 +32,7 @@ def citation_from_hit(
         printed = resolve_printed_page(pdf_path, hit.page_number)
     return Citation(
         document_name=hit.document_name or hit.doc_id or "unknown",
+        doc_id=hit.doc_id or None,
         page_number=hit.page_number,
         bbox=bbox,
         content_hash=hit.content_hash or "",
@@ -39,6 +40,7 @@ def citation_from_hit(
         excerpt=(hit.excerpt or hit.title or "")[:700],
         printed_page=printed,
     )
+
 
 
 def _dedupe_key(citation: Citation) -> tuple:

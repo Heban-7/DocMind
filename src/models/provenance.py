@@ -62,11 +62,13 @@ class Citation(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     document_name: str = Field(description="source PDF filename")
+    doc_id: str | None = Field(default=None, description="document_id string for API PDF retrieval")
     page_number: int = Field(
         ge=1,
         description="1-indexed physical PDF page (source of truth for bbox / I/O)",
     )
     bbox: BoundingBox
+
     content_hash: str = Field(description="SHA-256 of the supporting LDU text")
     chunk_id: str | None = Field(
         default=None, description="LDU id when the hit came from a chunk"

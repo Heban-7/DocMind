@@ -125,14 +125,19 @@ def run_chat(payload: ChatRequest) -> ChatResponse:
         logger.info("Chat requested model=%s for thread_id=%s", payload.model, payload.thread_id)
     answer = agent.ask(payload.message, thread_id=payload.thread_id)
 
-    provenance = [
-        c.model_dump(mode="json") for c in answer.provenance.citations
-    ]
+    provenance = []
+    for c in answer.provenance.citations:
+        d = c.model_dump(mode="json")
+        if not d.get("doc_id") and payload.document_id:
+            d["doc_id"] = payload.document_id
+        provenance.append(d)
+
     return ChatResponse(
         response=answer.answer,
         thread_id=payload.thread_id,
         provenance=provenance,
     )
+
 
 
 
