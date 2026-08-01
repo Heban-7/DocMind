@@ -50,9 +50,10 @@ export default function DashboardHeader({
         {/* Federated Search Toggle */}
         <button
           onClick={onToggleFederated}
+          title="Federated Mode: Search across all your uploaded documents"
           className={`flex items-center gap-xs px-3 py-1.5 rounded-full text-label-md font-label-md font-bold transition-all border ${
             federatedSearch
-              ? "bg-primary text-white border-primary"
+              ? "bg-primary text-white border-primary shadow-sm"
               : "bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:border-primary"
           }`}
         >
@@ -63,15 +64,17 @@ export default function DashboardHeader({
         {/* Audit Mode Toggle */}
         <button
           onClick={onToggleAudit}
+          title="Audit Mode: Ground query strictly on the loaded document"
           className={`flex items-center gap-xs px-3 py-1.5 rounded-full text-label-md font-label-md font-bold transition-all border ${
             auditMode
-              ? "bg-primary text-white border-primary"
+              ? "bg-primary text-white border-primary shadow-sm"
               : "bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:border-primary"
           }`}
         >
           <span className="material-symbols-outlined text-[16px]">verified_user</span>
           <span className="text-[12px]">Audit</span>
         </button>
+
 
         {/* User Avatar */}
         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
