@@ -8,10 +8,25 @@ interface ProvenanceBadgeProps {
   citation: ProvenanceCitation;
 }
 
+function formatDisplayFilename(rawName?: string): string {
+  if (!rawName) return "Document.pdf";
+  // Strip auto-generated hex/UUID prefixes like 212dc42370e2_
+  let clean = rawName.replace(/^[a-f0-9]{8,32}_/i, "");
+  if (clean.length > 22) {
+    const extIdx = clean.lastIndexOf(".");
+    const ext = extIdx !== -1 ? clean.slice(extIdx) : "";
+    const base = extIdx !== -1 ? clean.slice(0, extIdx) : clean;
+    clean = `${base.slice(0, 16)}...${ext}`;
+  }
+  return clean;
+}
+
 export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fileName = citation.source_file || (citation as any).document_name || "Document.pdf";
+  const rawFileName = citation.source_file || (citation as any).document_name || "Document.pdf";
+  const displayFileName = formatDisplayFilename(rawFileName);
+
   const docId =
     (citation as any).doc_id ||
     (citation as any).document_id ||
@@ -50,7 +65,7 @@ export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
           description
         </span>
         <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-primary">
-          📄 {fileName}
+          📄 {displayFileName}
           {page != null && ` — Page ${page}`}{" "}
           <span className="font-bold text-green-600 ml-1">[Verified]</span>
         </span>
@@ -63,7 +78,7 @@ export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         docId={docId}
-        fileName={fileName}
+        fileName={rawFileName}
         pageNumber={page}
         bbox={bboxArray}
         chunkText={chunkText}

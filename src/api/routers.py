@@ -88,8 +88,9 @@ def get_pdf(doc_id: str):
         return FileResponse(
             path=str(pdf_path),
             media_type="application/pdf",
-            filename=pdf_path.name,
+            content_disposition_type="inline",
         )
+
     except FileNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
