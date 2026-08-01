@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import FileDropzone from "@/components/upload/FileDropzone";
@@ -36,14 +37,24 @@ export default function DashboardSidebar({
 
   return (
     <aside className="fixed left-0 top-0 h-screen hidden md:flex flex-col py-lg w-[280px] bg-slate-50 dark:bg-[#0c1021] border-r border-slate-200 dark:border-slate-800 z-40 text-slate-900 dark:text-white transition-colors">
-      <Link href="/" className="px-lg mb-xl block hover:opacity-80 transition-opacity group" title="Return to Home Page">
-        <h1 className="font-headline-md text-headline-md font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
-          DocMind AI
-        </h1>
-        <p className="font-body-sm text-body-sm text-slate-500 dark:text-slate-400">
-          Enterprise Intelligence
-        </p>
+      <Link href="/" className="px-lg mb-xl flex items-center gap-sm hover:opacity-80 transition-opacity group" title="Return to Home Page">
+        <Image
+          src="/logo.jpg"
+          alt="DocMind Logo"
+          width={36}
+          height={36}
+          className="w-9 h-9 rounded-lg object-cover shadow-sm"
+        />
+        <div>
+          <h1 className="font-headline-md text-headline-md font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+            DocMind AI
+          </h1>
+          <p className="font-body-sm text-xs text-slate-500 dark:text-slate-400">
+            Enterprise Intelligence
+          </p>
+        </div>
       </Link>
+
 
       <nav className="flex-1 px-md space-y-xs overflow-y-auto">
         {/* New Chat Button */}

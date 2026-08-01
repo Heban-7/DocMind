@@ -1,13 +1,23 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   return (
     <footer className="w-full py-xl px-lg bg-white/90 dark:bg-[#03050f]/80 backdrop-blur-md border-t border-black/5 dark:border-white/10 transition-colors duration-300 relative z-10">
       <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-xl">
         <div className="flex flex-col items-start">
-          <span className="font-headline-md text-headline-md font-bold text-primary dark:text-white mb-sm">
-            DocMind
-          </span>
+          <div className="flex items-center gap-sm mb-sm">
+            <Image
+              src="/logo.jpg"
+              alt="DocMind Logo"
+              width={28}
+              height={28}
+              className="w-7 h-7 rounded-lg object-cover"
+            />
+            <span className="font-headline-md text-headline-md font-bold text-primary dark:text-white">
+              DocMind
+            </span>
+          </div>
           <p className="font-body-sm text-body-sm text-on-background/60 dark:text-white/60">
             © 2026 Linnet AI Solutions. All rights reserved.
           </p>

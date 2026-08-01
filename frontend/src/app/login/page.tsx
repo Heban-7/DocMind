@@ -5,6 +5,8 @@ import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
+import Image from "next/image";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,12 +32,19 @@ export default function LoginPage() {
         <div className="w-full max-w-[440px] bg-white dark:bg-[#0c1021] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 sm:p-10 shadow-2xl relative z-10 fade-in">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 font-bold text-xl">
-              <span className="material-symbols-outlined text-[28px]">lock</span>
+            <div className="w-12 h-12 rounded-2xl overflow-hidden mx-auto mb-4 shadow-sm border border-primary/20">
+              <Image
+                src="/logo.jpg"
+                alt="DocMind Logo"
+                width={48}
+                height={48}
+                className="w-full h-full object-cover"
+              />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">
               Sign In to DocMind
             </h1>
+
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Enterprise Document Intelligence Refinery
             </p>
