@@ -37,8 +37,10 @@ export default function DashboardPage() {
 
   const handleSend = async (text: string, modelOverride?: string) => {
     const targetModel = modelOverride || selectedModel;
-    await send(text, uploadedDoc?.document_id, {
-      federatedSearch,
+    const isFederated = federatedSearch || !uploadedDoc?.document_id;
+    const targetDocId = isFederated ? undefined : uploadedDoc?.document_id;
+    await send(text, targetDocId, {
+      federatedSearch: isFederated,
       auditMode,
       model: targetModel,
     });
@@ -68,10 +70,23 @@ export default function DashboardPage() {
         {/* Header */}
         <DashboardHeader
           federatedSearch={federatedSearch}
-          onToggleFederated={() => setFederatedSearch((v) => !v)}
+          onToggleFederated={() => {
+            setFederatedSearch((prev) => {
+              const next = !prev;
+              if (next) setAuditMode(false);
+              return next;
+            });
+          }}
           auditMode={auditMode}
-          onToggleAudit={() => setAuditMode((v) => !v)}
+          onToggleAudit={() => {
+            setAuditMode((prev) => {
+              const next = !prev;
+              if (next) setFederatedSearch(false);
+              return next;
+            });
+          }}
         />
+
 
         {/* Error Alert Banner */}
         {activeError && (
