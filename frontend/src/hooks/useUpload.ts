@@ -7,9 +7,11 @@ import type { UploadedDocument, UploadState } from "@/lib/types";
 export function useUpload() {
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [document, setDocument] = useState<UploadedDocument | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const upload = useCallback(async (file: File) => {
+    setSelectedFile(file);
     setUploadState("uploading");
     setError(null);
 
@@ -37,8 +39,10 @@ export function useUpload() {
   const reset = useCallback(() => {
     setUploadState("idle");
     setDocument(null);
+    setSelectedFile(null);
     setError(null);
   }, []);
 
-  return { uploadState, document, error, upload, reset };
+  return { uploadState, document, selectedFile, error, upload, reset };
 }
+

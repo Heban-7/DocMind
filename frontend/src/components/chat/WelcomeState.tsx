@@ -11,7 +11,7 @@ const suggestions = [
 export default function WelcomeState({ onSuggestionClick }: WelcomeStateProps) {
   return (
     <div className="mb-xl" id="welcome-state">
-      <h2 className="font-display text-display text-on-surface mb-lg">
+      <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-lg">
         What would you like to verify today?
       </h2>
       <div className="flex flex-wrap gap-sm">
@@ -19,7 +19,7 @@ export default function WelcomeState({ onSuggestionClick }: WelcomeStateProps) {
           <button
             key={s}
             onClick={() => onSuggestionClick(s)}
-            className="px-4 py-2 border border-outline-variant rounded-full font-label-md text-label-md text-on-surface-variant hover:border-primary hover:text-primary transition-all"
+            className="px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 rounded-full font-label-md text-xs sm:text-sm text-slate-700 dark:text-slate-300 hover:border-primary hover:text-primary transition-all shadow-sm"
           >
             {s}
           </button>
@@ -28,3 +28,4 @@ export default function WelcomeState({ onSuggestionClick }: WelcomeStateProps) {
     </div>
   );
 }
+

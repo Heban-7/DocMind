@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -100,20 +101,28 @@ def process_upload(
     )
 
 
-def _agent_for_chat(document_id: str | None) -> QueryAgent:
-    """Build a memory-backed Query Agent, optionally pinned to one document."""
+def _agent_for_chat(document_id: str | None, model: str | None = None) -> QueryAgent:
+    """Build a memory-backed Query Agent, optionally pinned to one document and model."""
     pdf_path = resolve_pdf_path(document_id) if document_id else None
+    llm_client = get_text_client(model=model) if model else None
     return build_query_agent(
         document_id,
         pdf_path=pdf_path,
+        llm=llm_client,
         enable_memory=True,
     )
 
 
 def run_chat(payload: ChatRequest) -> ChatResponse:
     """Invoke the LangGraph Query Agent and return answer + provenance."""
-    agent = _agent_for_chat(payload.document_id)
+    doc_pin = None if payload.federated_search else payload.document_id
+    agent = _agent_for_chat(doc_pin, model=payload.model)
+    if payload.audit_mode:
+        logger.info("Chat invoked under Zero-Trust Audit Mode for thread_id=%s", payload.thread_id)
+    if payload.model:
+        logger.info("Chat requested model=%s for thread_id=%s", payload.model, payload.thread_id)
     answer = agent.ask(payload.message, thread_id=payload.thread_id)
+
     provenance = [
         c.model_dump(mode="json") for c in answer.provenance.citations
     ]
@@ -122,6 +131,7 @@ def run_chat(payload: ChatRequest) -> ChatResponse:
         thread_id=payload.thread_id,
         provenance=provenance,
     )
+
 
 
 def fetch_history(thread_id: str) -> HistoryResponse:

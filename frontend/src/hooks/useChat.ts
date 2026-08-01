@@ -13,7 +13,11 @@ export function useChat() {
   const threadId = threadIdRef.current;
 
   const send = useCallback(
-    async (text: string, documentId?: string | null) => {
+    async (
+      text: string,
+      documentId?: string | null,
+      options?: { federatedSearch?: boolean; auditMode?: boolean; model?: string }
+    ) => {
       const userMsg: ChatMessageUI = {
         id: crypto.randomUUID(),
         role: "user",
@@ -30,7 +34,12 @@ export function useChat() {
           message: text,
           thread_id: threadIdRef.current,
           document_id: documentId ?? undefined,
+          federated_search: options?.federatedSearch,
+          audit_mode: options?.auditMode,
+          model: options?.model,
         });
+
+
 
         const aiMsg: ChatMessageUI = {
           id: crypto.randomUUID(),

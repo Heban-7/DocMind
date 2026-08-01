@@ -1,5 +1,4 @@
-"use client";
-
+import Link from "next/link";
 import HealthIndicator from "@/components/dashboard/HealthIndicator";
 
 interface DashboardHeaderProps {
@@ -16,19 +15,31 @@ export default function DashboardHeader({
   onToggleAudit,
 }: DashboardHeaderProps) {
   return (
-    <header className="h-16 flex items-center justify-between px-lg glass-nav bg-surface/70 border-b border-outline-variant/30 z-30 sticky top-0">
+    <header className="h-16 flex items-center justify-between px-lg glass-nav bg-white/80 dark:bg-[#0c1021]/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 z-30 sticky top-0 text-slate-900 dark:text-white transition-colors">
       <div className="flex items-center gap-lg">
-        {/* View Switcher */}
-        <nav className="flex bg-surface-container p-1 rounded-lg">
-          <button className="px-4 py-1.5 font-label-md text-label-md bg-white rounded-md shadow-sm text-primary font-bold transition-all">
-            Chat
-          </button>
-          <button className="px-4 py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors">
-            Analysis
-          </button>
-          <button className="px-4 py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors">
-            Compare
-          </button>
+        {/* Easy Back Navigation */}
+        <nav className="flex items-center gap-md">
+          <Link
+            href="/"
+            className="flex items-center gap-xs font-label-md text-xs text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">home</span>
+            <span>Home</span>
+          </Link>
+          <span className="text-slate-400 dark:text-slate-600 text-xs">•</span>
+          <Link
+            href="/about"
+            className="font-label-md text-xs text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white transition-colors"
+          >
+            About
+          </Link>
+          <span className="text-slate-400 dark:text-slate-600 text-xs">•</span>
+          <Link
+            href="/contact"
+            className="font-label-md text-xs text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white transition-colors"
+          >
+            Contact
+          </Link>
         </nav>
 
         {/* Health Indicator */}
@@ -42,7 +53,7 @@ export default function DashboardHeader({
           className={`flex items-center gap-xs px-3 py-1.5 rounded-full text-label-md font-label-md font-bold transition-all border ${
             federatedSearch
               ? "bg-primary text-white border-primary"
-              : "bg-surface-container text-on-surface-variant border-outline-variant/30 hover:border-primary"
+              : "bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:border-primary"
           }`}
         >
           <span className="material-symbols-outlined text-[16px]">travel_explore</span>
@@ -55,7 +66,7 @@ export default function DashboardHeader({
           className={`flex items-center gap-xs px-3 py-1.5 rounded-full text-label-md font-label-md font-bold transition-all border ${
             auditMode
               ? "bg-primary text-white border-primary"
-              : "bg-surface-container text-on-surface-variant border-outline-variant/30 hover:border-primary"
+              : "bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:border-primary"
           }`}
         >
           <span className="material-symbols-outlined text-[16px]">verified_user</span>
@@ -70,3 +81,4 @@ export default function DashboardHeader({
     </header>
   );
 }
+

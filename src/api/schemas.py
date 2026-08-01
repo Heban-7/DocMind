@@ -21,6 +21,20 @@ class ChatRequest(BaseModel):
         default=None,
         description="Pin one document; omit for IntentRouter / corpus search",
     )
+    federated_search: bool = Field(
+        default=False,
+        description="Search across entire document library regardless of pin",
+    )
+    audit_mode: bool = Field(
+        default=False,
+        description="Enforce strict zero-trust audit verification mode",
+    )
+    model: Optional[str] = Field(
+        default="gpt-4o",
+        description="Selected LLM model for generation (e.g. gpt-4o, gemini-1.5-pro)",
+    )
+
+
 
 
 class ChatResponse(BaseModel):

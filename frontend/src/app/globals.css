@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4 */
+@variant dark (&:where(.dark, .dark *));
+
 /* ── DocMind Design Tokens (from Stitch exports) ─────────────────────── */
 @theme inline {
+
   /* ── Colors (M3-inspired palette) ── */
   --color-primary: #3525cd;
   --color-primary-container: #4f46e5;
@@ -130,10 +134,31 @@
 
 /* ── Dark mode overrides ── */
 .dark {
-  --color-background: #03050f;
-  --color-on-background: #ffffff;
-  --color-surface: #03050f;
+  --color-background: #070913;
+  --color-on-background: #f8fafc;
+  --color-surface: #070913;
+  --color-surface-dim: #0d1121;
+  --color-surface-bright: #161c33;
+  --color-surface-container-lowest: #0b0e1b;
+  --color-surface-container-low: #101529;
+  --color-surface-container: #161c36;
+  --color-surface-container-high: #1d2547;
+  --color-surface-container-highest: #263059;
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #cbd5e1;
+  --color-inverse-surface: #f8fafc;
+  --color-inverse-on-surface: #070913;
+  --color-outline: #64748b;
+  --color-outline-variant: #334155;
+  --color-primary: #818cf8;
+  --color-primary-container: #4f46e5;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #e0e7ff;
+  --color-secondary: #94a3b8;
+  --color-secondary-container: #1e293b;
+  --color-on-secondary-container: #e2e8f0;
 }
+
 
 /* ── Glass card (from Stitch landing page) ── */
 .glass-card {

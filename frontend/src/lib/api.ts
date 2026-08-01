@@ -21,6 +21,20 @@ export async function checkHealth(): Promise<HealthResponse> {
   return res.json();
 }
 
+function parseApiError(data: any, status: number, defaultMsg: string): string {
+  if (!data) return `${defaultMsg}: ${status}`;
+  if (typeof data.detail === "string") return data.detail;
+  if (Array.isArray(data.detail)) {
+    return data.detail
+      .map((e: any) => e.msg || e.message || (typeof e === "string" ? e : JSON.stringify(e)))
+      .join("; ");
+  }
+  if (data.detail && typeof data.detail === "object") {
+    return JSON.stringify(data.detail);
+  }
+  return `${defaultMsg}: ${status}`;
+}
+
 /* ─── Upload ─── */
 export async function uploadDocument(file: File): Promise<UploadResponse> {
   const formData = new FormData();
@@ -32,8 +46,8 @@ export async function uploadDocument(file: File): Promise<UploadResponse> {
   });
 
   if (!res.ok) {
-    const detail = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(detail.detail || `Upload failed: ${res.status}`);
+    const data = await res.json().catch(() => null);
+    throw new Error(parseApiError(data, res.status, "Upload failed"));
   }
   return res.json();
 }
@@ -49,11 +63,12 @@ export async function sendChatMessage(
   });
 
   if (!res.ok) {
-    const detail = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(detail.detail || `Chat failed: ${res.status}`);
+    const data = await res.json().catch(() => null);
+    throw new Error(parseApiError(data, res.status, "Chat query failed"));
   }
   return res.json();
 }
+
 
 /* ─── History ─── */
 export async function fetchHistory(threadId: string): Promise<HistoryResponse> {
