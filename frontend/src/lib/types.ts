@@ -9,7 +9,12 @@ export interface ChatRequest {
   message: string;
   thread_id: string;
   document_id?: string | null;
+  federated_search?: boolean;
+  audit_mode?: boolean;
+  model?: string;
 }
+
+
 
 export interface ProvenanceCitation {
   source_file?: string;

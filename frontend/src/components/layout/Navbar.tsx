@@ -39,8 +39,8 @@ export default function Navbar() {
               href={link.href}
               className={`font-label-md text-label-md transition-colors ${
                 pathname === link.href
-                  ? "text-on-background dark:text-white border-b-2 border-primary pb-1"
-                  : "text-on-background/70 dark:text-white/70 hover:text-primary dark:hover:text-white"
+                  ? "text-slate-900 dark:text-white font-bold border-b-2 border-primary pb-1"
+                  : "text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white font-medium"
               }`}
             >
               {link.label}
@@ -49,18 +49,27 @@ export default function Navbar() {
         </nav>
       </div>
       <div className="flex items-center gap-md">
-        <button
-          onClick={toggle}
-          className="w-10 h-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center transition-all"
-          title="Toggle theme"
+        {pathname !== "/about" && pathname !== "/contact" && (
+          <button
+            onClick={toggle}
+            className="w-10 h-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center transition-all text-slate-800 dark:text-white"
+            title="Toggle theme"
+          >
+            <span className="material-symbols-outlined text-[20px] text-slate-800 dark:text-white">
+              {theme === "light" ? "dark_mode" : "light_mode"}
+            </span>
+          </button>
+        )}
+
+
+        <Link
+          href="/login"
+          className="font-label-md text-label-md text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white font-medium transition-colors"
         >
-          <span className="material-symbols-outlined text-[20px]">
-            {theme === "light" ? "dark_mode" : "light_mode"}
-          </span>
-        </button>
-        <button className="font-label-md text-label-md text-on-background/70 dark:text-white/70 hover:text-primary dark:hover:text-white transition-colors">
           Sign In
-        </button>
+        </Link>
+
+
         <Link
           href="/dashboard"
           className="bg-primary text-white px-lg py-sm rounded-lg font-label-md text-label-md hover:scale-95 transition-all duration-150 ease-in-out"

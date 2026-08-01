@@ -1,43 +1,90 @@
-import Link from "next/link";
-import type { Metadata } from "next";
+"use client";
+
+import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
-export const metadata: Metadata = {
-  title: "DocMind | Founder & Systems Architect",
-  description: "Meet the founder and learn about the architectural philosophy behind DocMind Enterprise Document Intelligence.",
-};
-
 const techStack = [
-  { name: "Python", icon: "code" },
-  { name: "FastAPI", icon: "bolt" },
-  { name: "LangGraph", icon: "account_tree" },
-  { name: "ChromaDB", icon: "database" },
-  { name: "Next.js", icon: "layers" },
+  {
+    name: "Python 3.13",
+    icon: "code",
+    category: "Backend Core",
+    desc: "Type-safe asynchronous engine powering the Refinery pipeline.",
+  },
+  {
+    name: "FastAPI Gateway",
+    icon: "bolt",
+    category: "API Layer",
+    desc: "High-performance REST API supporting file streams & thread state.",
+  },
+  {
+    name: "LangGraph Memory",
+    icon: "account_tree",
+    category: "Agent State",
+    desc: "Cyclic multi-agent orchestrator backed by SQLite checkpointers.",
+  },
+  {
+    name: "ChromaDB Store",
+    icon: "database",
+    category: "Vector Index",
+    desc: "Dense semantic vector indexing for multi-document LDUs.",
+  },
+  {
+    name: "Next.js 16",
+    icon: "layers",
+    category: "Frontend UI",
+    desc: "Focus-first glassmorphic architecture built with React 19.",
+  },
+];
+
+const archTabs = [
+  {
+    id: "triage",
+    title: "1. Automated Triage",
+    icon: "speed",
+    detail:
+      "Inspects PDF origin, vector density, and layout complexity to route documents into optimal cost & speed execution tiers (Fast, Standard, Premium).",
+  },
+  {
+    id: "extract",
+    title: "2. Layout-Aware Extraction",
+    icon: "table_chart",
+    detail:
+      "Preserves multi-column reading order and cell-level table relationships without structure collapse.",
+  },
+  {
+    id: "chunk",
+    title: "3. Logical Unit Chunking",
+    icon: "segment",
+    detail:
+      "Fragments text on logical document boundaries (~450 target words) to ensure RAG retrieval retains full context.",
+  },
+  {
+    id: "audit",
+    title: "4. Zero-Trust Audit",
+    icon: "verified",
+    detail:
+      "Cross-references generated answers against spatial bounding box citations on original document pages.",
+  },
 ];
 
 export default function AboutPage() {
+  const [activeTech, setActiveTech] = useState<string | null>(null);
+  const [activeArch, setActiveArch] = useState<string>("triage");
+
+  const currentArch = archTabs.find((a) => a.id === activeArch) || archTabs[0];
+
   return (
-    <>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#03050f] text-slate-900 dark:text-white transition-colors">
       <Navbar />
 
-
-      <main className="pt-24 pb-xl px-margin-mobile md:px-lg max-w-[1200px] mx-auto min-h-screen">
-        {/* View Switcher */}
-        <div className="flex justify-center mb-xl">
-          <div className="inline-flex p-1 bg-surface-container-low rounded-xl border border-outline-variant/20">
-            <button className="px-6 py-2 rounded-lg font-label-md text-label-md bg-secondary-container text-on-secondary-container font-bold transition-all">
-              Founder
-            </button>
-          </div>
-        </div>
-
+      <main className="pt-28 pb-xl px-margin-mobile md:px-lg max-w-[1200px] mx-auto min-h-screen">
         {/* Bento Layout Hero */}
-        <div className="bento-grid">
+        <div className="bento-grid gap-lg">
           {/* Profile Card */}
           <div className="col-span-1 md:col-span-4 h-full">
-            <div className="glass-card p-lg rounded-xl border border-outline-variant/30 flex flex-col items-center text-center h-full">
-              <div className="w-32 h-32 rounded-full overflow-hidden mb-lg border-2 border-primary/20 p-1">
+            <div className="bg-white dark:bg-[#0c1021] p-lg rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center h-full hover:border-primary/50 transition-all shadow-md">
+              <div className="w-44 h-44 md:w-48 md:h-48 rounded-full overflow-hidden mb-lg border-4 border-primary/30 p-1.5 shadow-xl transition-transform duration-300 hover:scale-105">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   className="w-full h-full object-cover rounded-full"
@@ -45,140 +92,187 @@ export default function AboutPage() {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXXaYuH-XGg29hnT8g_s3v6H_PUCEgF7l1JjdryX4gRFtFRJk_au1de6Caq4Wgxmy1bzRDvQLsObtN6R_j6hmKT8yHf4p4WL0q69BqlWELpaY0ztshFOtLmg62qEhWaiAZ1DpgbbcSutPzi7A_FZDPwm7F19rby9tFEHNIXcBBZP6YM3ucWeZeUM7mFschQx3lapTnYRe006frxXv5QRvLryqQ2To9_npaS3Z24v2VzZ6Pdu6en6wGvl_o8inZP7NRJStMnqudQN5t"
                 />
               </div>
-              <h1 className="font-headline-lg text-headline-lg text-on-surface mb-xs">Liul Teshome</h1>
-              <p className="font-label-md text-label-md text-primary mb-lg">Systems Architect &amp; Founder</p>
+              <h1 className="font-headline-lg text-2xl font-bold text-slate-900 dark:text-white mb-xs">
+                Liul Teshome
+              </h1>
+              <p className="font-label-md text-sm font-bold text-primary mb-md">
+                Systems Architect &amp; Founder
+              </p>
               <div className="flex gap-md justify-center mb-lg">
-                <a className="text-on-surface-variant hover:text-primary transition-colors" href="mailto:liuljima1896@gmail.com" title="Email">
-                  <span className="material-symbols-outlined">mail</span>
+                <a
+                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-primary hover:bg-primary/10 transition-all"
+                  href="mailto:liuljima1896@gmail.com"
+                  title="Email"
+                >
+                  <span className="material-symbols-outlined text-[18px]">mail</span>
                 </a>
-                <a className="text-on-surface-variant hover:text-primary transition-colors" href="https://www.linkedin.com/in/liul-j-teshome" target="_blank" title="LinkedIn">
-                  <span className="material-symbols-outlined">link</span>
+                <a
+                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-primary hover:bg-primary/10 transition-all"
+                  href="https://www.linkedin.com/in/liul-j-teshome"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="LinkedIn"
+                >
+                  <span className="material-symbols-outlined text-[18px]">link</span>
                 </a>
-                <a className="text-on-surface-variant hover:text-primary transition-colors" href="https://github.com/Heban-7" target="_blank" title="GitHub">
-                  <span className="material-symbols-outlined">terminal</span>
+                <a
+                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-primary hover:bg-primary/10 transition-all"
+                  href="https://github.com/Heban-7"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="GitHub"
+                >
+                  <span className="material-symbols-outlined text-[18px]">terminal</span>
                 </a>
               </div>
-              <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-                Dedicated to bridging the gap between unstructured data and enterprise-grade intelligence. Building the future of contextual reasoning.
+              <p className="font-body-sm text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Dedicated to bridging the gap between unstructured document chaos and enterprise-grade intelligence. Building the future of contextual reasoning.
               </p>
             </div>
           </div>
 
           {/* Mission Section */}
           <div className="col-span-1 md:col-span-8">
-            <div className="glass-card p-xl rounded-xl border border-outline-variant/30 h-full relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 opacity-5 pointer-events-none">
-                <span className="material-symbols-outlined text-[120px]">architecture</span>
+            <div className="bg-white dark:bg-[#0c1021] p-xl rounded-2xl border border-slate-200 dark:border-slate-800 h-full relative overflow-hidden flex flex-col justify-between shadow-md">
+              <div className="absolute top-0 right-0 w-64 h-64 opacity-5 pointer-events-none text-slate-900 dark:text-white">
+                <span className="material-symbols-outlined text-[140px]">architecture</span>
               </div>
-              <span className="font-label-md text-label-md text-primary uppercase tracking-widest mb-md block">
-                Our Mission
-              </span>
-              <h2 className="font-display text-[32px] md:text-display text-on-surface leading-tight mb-xl max-w-2xl">
-                Solving Structure Collapse, Context Poverty, and Provenance Blindness.
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
-                <div className="space-y-sm">
-                  <div className="flex items-center gap-xs text-primary">
-                    <span className="material-symbols-outlined">grid_view</span>
-                    <span className="font-label-md text-label-md font-bold">Structure Collapse</span>
+              <div>
+                <span className="font-label-md text-xs font-bold text-primary uppercase tracking-widest mb-xs block">
+                  Architectural Pillars
+                </span>
+                <h2 className="font-display text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight mb-lg max-w-2xl">
+                  Solving Structure Collapse, Context Poverty, and Provenance Blindness.
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
+                <div className="p-md rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-primary/40 transition-all">
+                  <div className="flex items-center gap-xs text-primary mb-xs font-bold text-xs">
+                    <span className="material-symbols-outlined text-[18px]">grid_view</span>
+                    <span>Structure Collapse</span>
                   </div>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Preventing the loss of data hierarchy during ingestion and processing.
+                  <p className="font-body-sm text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Preventing table fragmentation and reading order destruction during PDF ingestion.
                   </p>
                 </div>
-                <div className="space-y-sm">
-                  <div className="flex items-center gap-xs text-primary">
-                    <span className="material-symbols-outlined">history_edu</span>
-                    <span className="font-label-md text-label-md font-bold">Context Poverty</span>
+                <div className="p-md rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-primary/40 transition-all">
+                  <div className="flex items-center gap-xs text-primary mb-xs font-bold text-xs">
+                    <span className="material-symbols-outlined text-[18px]">history_edu</span>
+                    <span>Context Poverty</span>
                   </div>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Ensuring every insight is grounded in the full history of the document set.
+                  <p className="font-body-sm text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Ensuring every query maintains persistent conversation state via LangGraph.
                   </p>
                 </div>
-                <div className="space-y-sm">
-                  <div className="flex items-center gap-xs text-primary">
-                    <span className="material-symbols-outlined">verified_user</span>
-                    <span className="font-label-md text-label-md font-bold">Provenance Blindness</span>
+                <div className="p-md rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-primary/40 transition-all">
+                  <div className="flex items-center gap-xs text-primary mb-xs font-bold text-xs">
+                    <span className="material-symbols-outlined text-[18px]">verified_user</span>
+                    <span>Provenance Blindness</span>
                   </div>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Providing absolute clarity on the source and validity of every AI output.
+                  <p className="font-body-sm text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Backing every AI answer with pixel-perfect bounding box source citations.
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Tech Stack Grid */}
-          <div className="col-span-1 md:col-span-12">
-            <div className="glass-card p-lg rounded-xl border border-outline-variant/30">
+          {/* Interactive Technology Stack */}
+          <div className="col-span-1 md:col-span-12 my-md">
+            <div className="bg-white dark:bg-[#0c1021] p-xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-lg">
                 <div>
-                  <h3 className="font-headline-md text-headline-md text-on-surface">The Intelligence Stack</h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Engineered for precision, speed, and deep traceability.
+                  <h3 className="font-headline-md text-xl font-bold text-slate-900 dark:text-white">
+                    The Intelligence Stack
+                  </h3>
+                  <p className="font-body-sm text-xs text-slate-600 dark:text-slate-400">
+                    Click any technology module below to inspect its system role.
                   </p>
                 </div>
-                <button className="flex items-center gap-sm text-primary font-label-md text-label-md group">
-                  Full Documentation
-                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                </button>
+                <a
+                  href="https://github.com/Heban-7/DocMind"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-xs text-primary font-label-md text-xs font-bold hover:underline"
+                >
+                  <span>Explore Source Code</span>
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </a>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-md">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-md">
                 {techStack.map((tech) => (
-                  <div
+                  <button
                     key={tech.name}
-                    className="p-md bg-surface-container rounded-lg border border-outline-variant/20 flex flex-col items-center text-center group hover:bg-primary transition-all duration-300"
+                    onClick={() => setActiveTech(activeTech === tech.name ? null : tech.name)}
+                    className={`p-md rounded-xl border transition-all text-left flex flex-col justify-between h-36 ${
+                      activeTech === tech.name
+                        ? "bg-primary text-white border-primary shadow-lg scale-105"
+                        : "bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-primary/50 text-slate-900 dark:text-white"
+                    }`}
                   >
-                    <div className="w-10 h-10 mb-sm flex items-center justify-center bg-surface-container-lowest rounded-full group-hover:bg-primary-container">
-                      <span className="material-symbols-outlined text-primary group-hover:text-on-primary-container">
+                    <div className="flex items-center justify-between w-full">
+                      <span className="material-symbols-outlined text-[24px]">
                         {tech.icon}
                       </span>
+                      <span className="text-[10px] uppercase tracking-wider opacity-70">
+                        {tech.category}
+                      </span>
                     </div>
-                    <span className="font-label-md text-label-md text-on-surface group-hover:text-on-primary">
-                      {tech.name}
-                    </span>
-                  </div>
+                    <div>
+                      <h4 className="font-label-md font-bold text-sm mb-0.5">{tech.name}</h4>
+                      <p className="text-[11px] opacity-80 line-clamp-2">{tech.desc}</p>
+                    </div>
+                  </button>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Architectural Philosophy */}
-          <div className="col-span-1 md:col-span-7 h-full">
-            <div className="glass-card p-xl rounded-xl border border-outline-variant/30 h-full">
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-md">Architectural Philosophy</h3>
-              <p className="font-body-md text-body-md text-on-surface-variant mb-lg leading-relaxed">
-                At DocMind, we believe that AI should be invisible until it is indispensable. Our systems are built on the principle of{" "}
-                <strong className="text-on-surface">Atomic Context Preservation</strong>. We don&apos;t just extract text; we map the spatial and semantic relationships that give that text meaning.
-              </p>
-              <div className="flex flex-col gap-sm">
-                {[
-                  "Rigorous validation layers for every LLM inference.",
-                  "Deterministic outcomes in non-deterministic environments.",
-                  "End-to-end encryption for the most sensitive enterprise assets.",
-                ].map((point, i) => (
-                  <div key={i} className="flex items-start gap-md">
-                    <div className="mt-1 w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                    <p className="font-body-sm text-body-sm text-on-surface-variant">{point}</p>
-                  </div>
+          {/* Interactive Pipeline Architecture Breakdown */}
+          <div className="col-span-1 md:col-span-12">
+            <div className="bg-white dark:bg-[#0c1021] p-xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md">
+              <div className="mb-lg">
+                <span className="font-label-md text-xs font-bold text-primary uppercase tracking-widest block mb-xs">
+                  Refinery Pipeline Interactive Tour
+                </span>
+                <h3 className="font-headline-md text-xl font-bold text-slate-900 dark:text-white">
+                  How DocMind Processes Complex Documents
+                </h3>
+              </div>
+
+              {/* Step Tabs */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-xs bg-slate-100 dark:bg-slate-900 p-1 rounded-xl mb-lg border border-slate-200 dark:border-slate-800">
+                {archTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveArch(tab.id)}
+                    className={`flex items-center justify-center gap-xs py-2 px-md rounded-lg font-label-md text-xs transition-all ${
+                      activeArch === tab.id
+                        ? "bg-primary text-white font-bold shadow-md"
+                        : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
+                    <span>{tab.title}</span>
+                  </button>
                 ))}
               </div>
-            </div>
-          </div>
 
-          {/* Visualization Card */}
-          <div className="col-span-1 md:col-span-5 h-full">
-            <div className="glass-card rounded-xl border border-outline-variant/30 overflow-hidden relative h-[400px] md:h-full">
-              <div
-                className="w-full h-full bg-cover bg-center"
-                style={{
-                  backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuBxqM_HgtYGDuwymgHHFioVKDo20Fn5LCP-AUmhep8dO7_VMXuy6gYu_EpB6PkTmvXCdLDYKdQphKmXLbsCvvLPiNju_jzoIyCO9EJa4NbVtf70SiTbY0eXCrTPl2DUZfK_3j_0zHwTq-y_egRi3d2DiGnf9kMN9aCJk1HJLLgnxkcNc2SQw6yH3-j8LqAFztuJ6dK77XLbyzyWf8umOvJPddoj1BqPIQs1Fwipp8veKH13CPnQVLh6BOBAdT-s-M1GXtRSUlLIn5b1')`,
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-surface to-transparent p-lg flex flex-col justify-end">
-                  <span className="font-label-md text-label-md text-primary font-bold">Network Visualization</span>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Visualizing context links across 50,000+ document fragments in real-time.
+              {/* Step Detail Card */}
+              <div className="p-lg rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-start gap-md">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-[24px]">
+                    {currentArch.icon}
+                  </span>
+                </div>
+                <div>
+                  <h4 className="font-headline-md text-base font-bold text-slate-900 dark:text-white mb-xs">
+                    {currentArch.title}
+                  </h4>
+                  <p className="font-body-md text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {currentArch.detail}
                   </p>
                 </div>
               </div>
@@ -188,7 +282,6 @@ export default function AboutPage() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }
-

@@ -10,13 +10,16 @@ import { useChat } from "@/hooks/useChat";
 import { useUpload } from "@/hooks/useUpload";
 import { useThreads } from "@/hooks/useThreads";
 
+import ProcessingProgressMessage from "@/components/chat/ProcessingProgressMessage";
+
 export default function DashboardPage() {
   const { messages, isLoading, error: chatError, threadId, send, loadThread, newChat } = useChat();
-  const { uploadState, document: uploadedDoc, error: uploadError, upload } = useUpload();
+  const { uploadState, document: uploadedDoc, selectedFile, error: uploadError, upload } = useUpload();
   const { threads, refresh: refreshThreads } = useThreads();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [federatedSearch, setFederatedSearch] = useState(false);
   const [auditMode, setAuditMode] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("gpt-4o");
   const [activeError, setActiveError] = useState<string | null>(null);
 
   // Sync errors to banner state
@@ -30,10 +33,15 @@ export default function DashboardPage() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, uploadState]);
 
-  const handleSend = async (text: string) => {
-    await send(text, uploadedDoc?.document_id);
+  const handleSend = async (text: string, modelOverride?: string) => {
+    const targetModel = modelOverride || selectedModel;
+    await send(text, uploadedDoc?.document_id, {
+      federatedSearch,
+      auditMode,
+      model: targetModel,
+    });
     refreshThreads();
   };
 
@@ -52,12 +60,11 @@ export default function DashboardPage() {
         onSelectThread={loadThread}
         onUpload={handleUpload}
         uploadState={uploadState}
-        uploadedFileName={uploadedDoc?.file_name}
-        strategyTier={uploadedDoc?.strategy_tier}
       />
 
       {/* Main Content Canvas */}
-      <main className="flex-1 md:ml-[280px] h-screen flex flex-col bg-background relative">
+      <main className="flex-1 md:ml-[280px] h-screen flex flex-col bg-slate-50 dark:bg-[#03050f] text-slate-900 dark:text-white relative transition-colors">
+
         {/* Header */}
         <DashboardHeader
           federatedSearch={federatedSearch}
@@ -85,9 +92,19 @@ export default function DashboardPage() {
         {/* Chat Workspace Area */}
         <section ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col items-center">
           <div className="w-full max-w-[800px] px-lg py-xl flex-1 flex flex-col">
-            {/* Welcome State (shown when no messages) */}
-            {messages.length === 0 && (
+            {/* Welcome State (shown when no messages and no upload in progress) */}
+            {messages.length === 0 && uploadState === "idle" && (
               <WelcomeState onSuggestionClick={handleSend} />
+            )}
+
+            {/* Inline Document Processing Progress Card in Agent Response stream */}
+            {uploadState !== "idle" && (
+              <ProcessingProgressMessage
+                fileName={uploadedDoc?.file_name || selectedFile?.name || "Document.pdf"}
+                fileSizeMb={selectedFile ? (selectedFile.size / (1024 * 1024)).toFixed(2) : null}
+                uploadState={uploadState}
+                strategyTier={uploadedDoc?.strategy_tier}
+              />
             )}
 
             {/* Chat Messages */}
@@ -107,7 +124,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <span className="font-label-md text-label-md font-bold text-primary">
-                        DocMind AI
+                        DocMind AI ({selectedModel})
                       </span>
                     </div>
                     <div className="flex items-center gap-sm text-on-surface-variant/50">
@@ -124,7 +141,14 @@ export default function DashboardPage() {
         </section>
 
         {/* Input Bar */}
-        <ChatInput onSend={handleSend} isLoading={isLoading} onAttachFile={handleUpload} />
+        <ChatInput
+          onSend={handleSend}
+          isLoading={isLoading}
+          onAttachFile={handleUpload}
+          selectedModel={selectedModel}
+          onSelectModel={setSelectedModel}
+        />
+
 
         {/* Decorative Background Element */}
         <div className="fixed top-0 right-0 -z-10 w-1/3 h-1/3 opacity-20 pointer-events-none blur-[100px] bg-gradient-to-br from-primary to-secondary" />
@@ -132,4 +156,6 @@ export default function DashboardPage() {
     </>
   );
 }
+
+
 

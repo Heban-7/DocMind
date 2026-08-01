@@ -106,15 +106,17 @@ def build_vision_client() -> LLMClient | None:
     return get_client(require_vision=True)
 
 
-def get_text_client() -> LLMClient | None:
-    """A cheap text client for tasks like domain classification / query agent.
+def get_text_client(model: str | None = None) -> LLMClient | None:
+    """A client for text tasks, optionally specifying an explicit model slug/alias.
 
-    Preference order: ``LLM_TEXT_MODEL`` -> ``LLM_MODEL`` -> registry
+    Preference order: ``model`` -> ``LLM_TEXT_MODEL`` -> ``LLM_MODEL`` -> registry
     ``defaults.text``.
     """
     text_model = (
-        VisionConfig.TEXT_MODEL
+        model
+        or VisionConfig.TEXT_MODEL
         or VisionConfig.MODEL
         or registry.default_model("text")
     )
     return get_client(model=text_model, require_vision=False)
+

@@ -5,16 +5,9 @@ import { useCallback, useState, useRef } from "react";
 interface FileDropzoneProps {
   onUpload: (file: File) => void;
   uploadState: string;
-  fileName?: string;
-  strategyTier?: string;
 }
 
-export default function FileDropzone({
-  onUpload,
-  uploadState,
-  fileName,
-  strategyTier,
-}: FileDropzoneProps) {
+export default function FileDropzone({ onUpload, uploadState }: FileDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -38,18 +31,12 @@ export default function FileDropzone({
     [onUpload]
   );
 
-  const tierColors: Record<string, string> = {
-    fast: "bg-green-100 text-green-700",
-    standard: "bg-blue-100 text-blue-700",
-    premium: "bg-purple-100 text-purple-700",
-  };
-
   return (
     <div
       className={`border-2 border-dashed rounded-xl p-md text-center transition-all cursor-pointer ${
         isDragging
-          ? "border-primary bg-primary/5"
-          : "border-outline-variant/40 hover:border-primary/50"
+          ? "border-primary bg-primary/10 scale-[1.02]"
+          : "border-outline-variant/40 hover:border-primary/50 hover:bg-surface-container-high/50"
       }`}
       onDragOver={(e) => {
         e.preventDefault();
@@ -69,56 +56,46 @@ export default function FileDropzone({
 
       {uploadState === "idle" && (
         <>
-          <span className="material-symbols-outlined text-on-surface-variant/50 text-[28px] mb-xs block">
+          <span className="material-symbols-outlined text-on-surface-variant/50 text-[26px] mb-xs block">
             upload_file
           </span>
-          <p className="font-body-sm text-body-sm text-on-surface-variant/60">
-            Drop PDF here
+          <p className="font-body-sm text-xs font-bold text-on-surface-variant">
+            Upload PDF Document
+          </p>
+          <p className="font-body-sm text-[11px] text-on-surface-variant/60">
+            Drag &amp; drop or click to index
           </p>
         </>
       )}
 
       {(uploadState === "uploading" || uploadState === "processing") && (
         <>
-          <span className="material-symbols-outlined text-primary text-[28px] mb-xs block animate-spin">
+          <span className="material-symbols-outlined text-primary text-[26px] mb-xs block animate-spin">
             progress_activity
           </span>
-          <p className="font-body-sm text-body-sm text-primary">
-            {uploadState === "uploading" ? "Uploading..." : "Processing..."}
+          <p className="font-body-sm text-xs font-bold text-primary">
+            {uploadState === "uploading" ? "Uploading..." : "Indexing PDF..."}
           </p>
         </>
       )}
 
-      {uploadState === "indexed" && fileName && (
+      {uploadState === "indexed" && (
         <>
-          <span className="material-symbols-outlined text-green-600 text-[28px] mb-xs block">
-            check_circle
+          <span className="material-symbols-outlined text-emerald-600 text-[26px] mb-xs block">
+            add_circle
           </span>
-          <p className="font-body-sm text-body-sm text-on-surface-variant truncate">
-            {fileName}
+          <p className="font-body-sm text-xs font-bold text-on-surface">
+            Index Another Document
           </p>
-          <div className="flex items-center justify-center gap-xs mt-xs">
-            <span className="font-label-md text-[11px] text-green-600">Indexed</span>
-            {strategyTier && (
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  tierColors[strategyTier.toLowerCase()] ||
-                  "bg-gray-100 text-gray-700"
-                }`}
-              >
-                {strategyTier}
-              </span>
-            )}
-          </div>
         </>
       )}
 
       {uploadState === "error" && (
         <>
-          <span className="material-symbols-outlined text-red-500 text-[28px] mb-xs block">
+          <span className="material-symbols-outlined text-red-500 text-[26px] mb-xs block">
             error
           </span>
-          <p className="font-body-sm text-body-sm text-red-500">Upload failed</p>
+          <p className="font-body-sm text-xs font-bold text-red-500">Upload failed</p>
         </>
       )}
     </div>

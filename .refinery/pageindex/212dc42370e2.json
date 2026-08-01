@@ -1,6 +1,6 @@
 {
   "doc_id": "212dc42370e2",
-  "source_filename": "9f832fb12a_sample.pdf",
+  "source_filename": "7f6b041a67_sample.pdf",
   "roots": [
     {
       "title": "1.  Introduction",
@@ -14,7 +14,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "15c84ccc-d11d-4041-ad02-b73320cfd035"
+        "84a71d87-4d98-464c-b0e4-9f471468d2f5"
       ],
       "key_entities": [],
       "children": []
@@ -31,7 +31,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "0fd8b7f5-a3d4-4eba-acc1-b878c03c1627"
+        "e4fce89a-1288-4c59-b55d-9c16afba9952"
       ],
       "key_entities": [],
       "children": []
@@ -48,8 +48,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "42821ae4-13e7-495c-b65a-6d5e0537f45d",
-        "3260f8d6-54ce-4e55-bafd-e3237638fd19"
+        "b33b8405-f0be-459c-b8e3-19494ef4992c",
+        "6caf9eb0-cd39-4d9a-b710-e21de270aee4"
       ],
       "key_entities": [],
       "children": []
@@ -66,8 +66,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "b0665cf9-3d37-4e1d-89f7-88b56be606df",
-        "57f567f0-e0a5-4047-8b3b-8fab985f47da"
+        "1cefea07-5bca-4e51-8c17-0094226087f7",
+        "bc187bb4-bb0b-4b6b-a0ae-cd1125d55822"
       ],
       "key_entities": [],
       "children": []
@@ -75,20 +75,37 @@
     {
       "title": "3.3 Data",
       "page_start": 15,
-      "page_end": 21,
+      "page_end": 15,
       "path": [
         "3.3 Data"
       ],
       "summary": "This report uses shipment-level microdata from the Ethiopian Customs Commission at the eight-digit HS level from FY 2018/19 to FY 2020/21. During this period, the Ethiopian Customs Commission transitioned from the Automated System for Customs Data (ASYCUDA++) to the electronic Customs Management System (eCMS).",
       "data_types_present": [
+        "prose"
+      ],
+      "chunk_ids": [
+        "5f3cc733-5bcd-4e39-b62f-c330431dc95a"
+      ],
+      "key_entities": [],
+      "children": []
+    },
+    {
+      "title": "4.1  Overall tax expenditures",
+      "page_start": 16,
+      "page_end": 21,
+      "path": [
+        "4.1  Overall tax expenditures"
+      ],
+      "summary": "Overall tax expenditures were ETB 120.7 billion in FY 2020/21. The overall tax expenditure estimate includes ETB 38.9 billion in forgone customs duty, ETB 18.8 billion in forgone excise duty, ETB 44.6 billion in forgone VAT on imports and ETB 18.4 billion in forgone surtax.",
+      "data_types_present": [
         "mixed",
         "prose"
       ],
       "chunk_ids": [
-        "77f9fecd-2f41-478a-ace5-ab075de06092",
-        "8d6189da-0675-41dd-b349-95c936fb65f7",
-        "f8ab5427-256e-45cd-a2b4-08e58e328aab",
-        "0053171f-19d7-413d-8af0-f3355605b75f"
+        "ff8eac0b-550d-4859-84ee-84ef4650ad3c",
+        "2fcc2b92-8b50-41ee-8e9a-912d178d4d96",
+        "c095c676-21b9-44b1-a827-a3c1ccc1d3e5",
+        "e915b0d9-df89-4ad8-88f8-951abf61cd02"
       ],
       "key_entities": [],
       "children": []
@@ -106,11 +123,11 @@
         "prose"
       ],
       "chunk_ids": [
-        "94fbedaa-b168-455c-955a-8e4a0019ddb4",
-        "e9dd0c30-d459-4589-b7fd-048f544e7f2a",
-        "53d051d0-491e-43b4-a561-38a9a4fd1049",
-        "53e41a0b-e478-4276-b0a4-9220971b718e",
-        "c1037459-e947-48e5-860d-c7fcfbd594ea"
+        "c3674ec2-8675-4ad0-b171-029a3177246a",
+        "6814577a-be04-4937-aa84-6380d91a020f",
+        "ea1968b1-cac8-4b1c-8644-814aa64b0195",
+        "ba852750-49bc-4b22-9036-ade8cfc329c9",
+        "732dd7bc-c4cd-4ec9-8c44-0d643ce58931"
       ],
       "key_entities": [],
       "children": []
@@ -128,9 +145,9 @@
         "prose"
       ],
       "chunk_ids": [
-        "b6e4b4fa-eedc-44a7-bea9-c711048557ce",
-        "caa5dfa8-00b1-4e54-aa4a-e346d5c420a7",
-        "7bda4871-7eec-4a32-bab0-2237b766c6f0"
+        "7a81a0a1-e3bd-4310-8e94-85b8aa86cbb6",
+        "5cb47dc5-894a-4653-b563-e08db826f560",
+        "d6fa014f-5f30-4b67-ac67-cded161bac23"
       ],
       "key_entities": [],
       "children": []
@@ -148,9 +165,9 @@
         "prose"
       ],
       "chunk_ids": [
-        "0737a275-5c30-416a-8f56-6b6085e8be90",
-        "0e48f15a-3544-4782-856b-47cbe2a2beb7",
-        "dfaef53d-d074-4c7b-b6ad-d249719e61c4"
+        "3ec2f93f-496a-4719-94af-7c16717b8b09",
+        "abe228d8-1836-458a-aca2-5bed4149da9b",
+        "27bbfbf0-c590-4aa0-ba5d-a1ad37aa76e2"
       ],
       "key_entities": [],
       "children": []
@@ -167,8 +184,8 @@
         "mixed"
       ],
       "chunk_ids": [
-        "bb28c4de-775b-48e9-a9d5-3801c2fbfcb0",
-        "55901a8c-c868-4cc9-8577-9f5163aa17be"
+        "5643fed8-c4be-49b5-b168-ccb9f36885d7",
+        "553c710d-0c14-4d00-b3ee-e10fc4b2bbd8"
       ],
       "key_entities": [],
       "children": []
@@ -185,7 +202,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "d1e5137a-f7ab-45cb-839e-b36593e412c6"
+        "c3a01a6b-3c57-4540-8fd7-948e39513fef"
       ],
       "key_entities": [],
       "children": []
@@ -202,7 +219,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "27456fd8-d0ba-4e33-8fbb-e2ca18893834"
+        "3d464c22-8556-41b1-8c6a-7b87a2025adf"
       ],
       "key_entities": [],
       "children": []
@@ -219,7 +236,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "c6564c5d-2647-4b0b-9473-13476498e804"
+        "8cf29734-357c-459a-98f3-92c6e41d2b78"
       ],
       "key_entities": [],
       "children": []
@@ -237,8 +254,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "967ed26f-d94d-4bb3-b0e3-d82887bdd201",
-        "7469ce29-3af8-478d-a252-aad25715f2b9"
+        "b3689846-e88c-45aa-bb89-d7f1ac841f36",
+        "8f750288-05ad-4d36-aa13-ff29b2c2e143"
       ],
       "key_entities": [],
       "children": []
@@ -256,8 +273,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "b1869604-7f5a-4b42-b259-97a35ec938b4",
-        "b1b4a953-543f-4902-b47c-8162f44756f3"
+        "272f1dc7-2c76-44cd-b6fe-cb927cb9cb86",
+        "1a977521-709c-48a1-a69d-250af3200a9d"
       ],
       "key_entities": [],
       "children": []
@@ -274,7 +291,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "5c8bcee0-0561-4d2f-9a4c-b9e955cbfc1f"
+        "de9f6933-2afd-46bc-be2b-b5c2b3345a9c"
       ],
       "key_entities": [],
       "children": []
@@ -291,7 +308,7 @@
         "table"
       ],
       "chunk_ids": [
-        "3f4df3c6-48f2-4210-ac6d-b9905d95b0f8"
+        "c216570b-3df0-40a3-9023-4a0a48bea359"
       ],
       "key_entities": [],
       "children": []
@@ -308,7 +325,7 @@
         "para"
       ],
       "chunk_ids": [
-        "43b92f67-bdec-4df8-8775-aa4f5adbfd64"
+        "de5c7cc7-44af-4034-8ca4-5cde06c1c0d1"
       ],
       "key_entities": [],
       "children": []
@@ -325,7 +342,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "2d41d66c-a44c-471f-b3e5-2b8500eb6655"
+        "b6dc3da2-b728-4692-82c5-f33af3010111"
       ],
       "key_entities": [],
       "children": []
@@ -342,7 +359,7 @@
         "mixed"
       ],
       "chunk_ids": [
-        "b59455ca-c1f6-4500-97fa-db7e90698c44"
+        "cc3cabfc-89d0-46bc-9a20-6dd663720402"
       ],
       "key_entities": [],
       "children": []
@@ -359,7 +376,7 @@
         "para"
       ],
       "chunk_ids": [
-        "4025494e-d91f-4728-b6ad-9d64f52762ac"
+        "491fe9fe-1455-4495-a39a-76fd5e3427b8"
       ],
       "key_entities": [],
       "children": []
@@ -376,8 +393,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "710c505b-99a3-469b-8410-7f123a80c215",
-        "9191a5d7-2d5e-465c-8850-16b53f201644"
+        "3d8a772b-3460-447d-84e8-d5a5606a919c",
+        "5ef989d2-03e9-4eb5-8dfd-561d9da21d9a"
       ],
       "key_entities": [],
       "children": []
@@ -395,18 +412,18 @@
         "table"
       ],
       "chunk_ids": [
-        "2757a7f9-3a69-4ee0-b8c1-b4d729f29a09",
-        "6b08aef0-a294-4c21-9f9d-a17bcb1fd4b9",
-        "78a9a9f8-5187-48f6-816d-b89cb910f7de",
-        "624a4806-5246-4544-81a2-896abfb17de9",
-        "c991cd2b-4d9f-4870-94bc-a1bd1051aa34",
-        "0190d04b-48b1-45b8-b403-9526549f3ef3",
-        "4b90b1f7-7b3a-424f-bf6a-94b527c875ed",
-        "2f956736-e049-4c1e-bd99-e3b721f0921e",
-        "34586942-6049-4fa7-932d-95278719877d",
-        "db98c40f-1b2a-4341-9432-53e33eb1cbe3",
-        "041a72ee-03da-4f40-9a1c-31fc5dd4a537",
-        "323bceb2-504f-43fb-917d-aa6ab822edda"
+        "428da33d-66e8-4958-8b83-99bf2e0ff4d1",
+        "61a35538-79ba-439c-aba3-80ac794f4682",
+        "1c70143a-2794-49cd-830a-92f00b5a997d",
+        "356ba0eb-7893-4788-b453-8bec3b937995",
+        "9dcef315-775f-4a28-b34c-778971c85935",
+        "5a5ce181-b718-454b-846e-5bdce8c7953c",
+        "8830b8d0-9242-45e7-9699-90cec00f5b3a",
+        "95211727-ece2-4a64-a6ec-3033760bec7d",
+        "d3d2dd76-915c-41a0-a51c-a69298343850",
+        "ebb41b7f-133a-4c80-a982-9ce7c0de0562",
+        "457d061c-df17-4962-a294-f4035edafb48",
+        "6cbbd4ec-3181-447f-821b-052f611cd0be"
       ],
       "key_entities": [],
       "children": []
@@ -423,7 +440,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "339197ba-2bbf-4a2b-9548-5886d260bc4e"
+        "12cfd7ee-9829-4410-a1e7-2f0ae67df499"
       ],
       "key_entities": [],
       "children": []
@@ -440,7 +457,7 @@
         "para"
       ],
       "chunk_ids": [
-        "74a48f65-95d8-4f80-b383-4a004d84065d"
+        "b9b216ec-eac3-4ab1-9aa2-47d50d100d8d"
       ],
       "key_entities": [],
       "children": []
@@ -457,7 +474,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "891e6880-881d-43b5-a848-99aeb5be1f25"
+        "c08ce44c-d720-4b15-aa80-eaea316bde94"
       ],
       "key_entities": [],
       "children": []
@@ -474,7 +491,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "ea68c008-12f1-4783-a53e-e63fd35dddc8"
+        "84fadecc-2998-4d47-88d8-dd9218819ac6"
       ],
       "key_entities": [],
       "children": []
@@ -491,7 +508,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "23b25bbd-027e-49e6-8d29-49b7eccc6420"
+        "c512757c-4209-4deb-999b-1546150569b5"
       ],
       "key_entities": [],
       "children": []
@@ -508,7 +525,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "25b3669a-5c09-4e30-9b26-b21275b4d0ea"
+        "60cd3d83-ce1c-4535-86bf-f004bcbb2f0f"
       ],
       "key_entities": [],
       "children": []
@@ -525,7 +542,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "5a9d3b03-6f49-4179-9bbe-91bb1ae7c8ea"
+        "7db41fd1-f7b4-4fdf-80ff-ef5dee70b98e"
       ],
       "key_entities": [],
       "children": []
@@ -542,7 +559,7 @@
         "list"
       ],
       "chunk_ids": [
-        "e2a61ee2-f7e3-4e60-bfef-25fde8c18d8e"
+        "bb85209c-5b86-43f0-b028-2770d6a46339"
       ],
       "key_entities": [],
       "children": []
@@ -559,7 +576,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "bdb4f1a5-5765-4451-b4b8-2e8e665bfa62"
+        "bf10b0ac-96aa-4432-b024-81890130aa86"
       ],
       "key_entities": [],
       "children": []
@@ -576,7 +593,7 @@
         "list"
       ],
       "chunk_ids": [
-        "19695d30-bbf5-4c50-9027-bed81bae7044"
+        "950feb86-be7a-447b-98a6-5e8dce3f11cc"
       ],
       "key_entities": [],
       "children": []
@@ -593,11 +610,11 @@
         "prose"
       ],
       "chunk_ids": [
-        "f2f3337d-a222-48a5-afc6-80649ff07143"
+        "056cbeee-0cc3-4687-9d33-9e01d4879c48"
       ],
       "key_entities": [],
       "children": []
     }
   ],
-  "created_at": "2026-07-24T13:19:59.696401Z"
+  "created_at": "2026-08-01T09:03:34.714114Z"
 }

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import WebGLBackground from "@/components/landing/WebGLBackground";
@@ -66,7 +65,7 @@ const advantages = [
 
 export default function LandingPage() {
   return (
-    <ThemeProvider>
+    <>
       <WebGLBackground />
       <Navbar />
 
@@ -79,21 +78,21 @@ export default function LandingPage() {
             </span>
           </div>
           <div className="parallax-target">
-            <h1 className="font-display text-display text-on-background dark:text-white max-w-4xl mx-auto mb-lg tracking-tight">
+            <h1 className="font-display text-display text-slate-900 dark:text-white max-w-4xl mx-auto mb-lg tracking-tight">
               Transform Unstructured Document Chaos into Auditable Intelligence.
             </h1>
-            <p className="font-body-lg text-body-lg text-on-background/70 dark:text-white/70 max-w-2xl mx-auto mb-xl leading-relaxed">
+            <p className="font-body-lg text-body-lg text-slate-700 dark:text-slate-300 max-w-2xl mx-auto mb-xl leading-relaxed">
               An agentic AI pipeline that ingests complex PDFs, financial reports, and scanned files with spatial provenance and zero-trust verification.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-md">
               <Link
                 href="/dashboard"
-                className="bg-primary text-white h-14 px-xl rounded-lg font-label-md text-label-md font-bold flex items-center gap-sm hover:opacity-90 transition-opacity"
+                className="bg-primary text-white h-14 px-xl rounded-lg font-label-md text-label-md font-bold flex items-center gap-sm hover:opacity-90 transition-opacity shadow-md"
               >
                 Try the Refinery
                 <span className="material-symbols-outlined">arrow_forward</span>
               </Link>
-              <button className="border border-black/20 dark:border-white/20 text-on-background dark:text-white h-14 px-xl rounded-lg font-label-md text-label-md font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <button className="border border-slate-300 dark:border-white/20 text-slate-900 dark:text-white h-14 px-xl rounded-lg font-label-md text-label-md font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                 View Architecture
               </button>
             </div>
@@ -117,6 +116,7 @@ export default function LandingPage() {
             className="block w-full bg-[#24292f]/95 hover:bg-[#1b1f23] backdrop-blur-md py-6 transition-all duration-300 border-y border-white/5 group"
             href="https://github.com/Heban-7/DocMind"
             target="_blank"
+            rel="noreferrer"
           >
             <div className="max-w-[1280px] mx-auto px-lg flex items-center justify-center gap-md">
               <svg className="w-8 h-8 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
@@ -135,7 +135,7 @@ export default function LandingPage() {
         {/* ── Key Advantages ── */}
         <section className="max-w-[1280px] mx-auto px-lg py-xl mb-xl">
           <div className="text-center mb-xl">
-            <h2 className="font-display text-4xl text-on-background dark:text-white mb-md">
+            <h2 className="font-display text-4xl text-slate-900 dark:text-white mb-md">
               Key Advantages
             </h2>
             <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
@@ -144,13 +144,15 @@ export default function LandingPage() {
             {advantages.map((a) => (
               <div
                 key={a.title}
-                className="bg-white dark:bg-white/5 p-lg rounded-2xl border border-black/5 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow group"
+                className="bg-white dark:bg-white/5 p-lg rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow group"
               >
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-md group-hover:scale-110 transition-transform">
                   <span className="material-symbols-outlined text-primary">{a.icon}</span>
                 </div>
-                <h3 className="font-headline-md text-xl mb-sm">{a.title}</h3>
-                <p className="text-on-background/70 dark:text-white/70">{a.desc}</p>
+                <h3 className="font-headline-md text-xl font-bold text-slate-900 dark:text-white mb-sm">
+                  {a.title}
+                </h3>
+                <p className="text-slate-700 dark:text-slate-300">{a.desc}</p>
               </div>
             ))}
           </div>
@@ -159,7 +161,7 @@ export default function LandingPage() {
         {/* ── Core Engine Capabilities ── */}
         <section className="max-w-[1280px] mx-auto px-lg py-xl space-y-24">
           <div className="text-center mb-xl">
-            <h2 className="font-display text-5xl text-on-background dark:text-white mb-md">
+            <h2 className="font-display text-5xl text-slate-900 dark:text-white mb-md">
               Core Engine Capabilities
             </h2>
             <div className="h-1 w-32 bg-primary mx-auto rounded-full" />
@@ -180,10 +182,10 @@ export default function LandingPage() {
                 />
               </div>
               <div className={`w-full md:w-3/5 ${i % 2 === 0 ? "md:pl-lg" : "md:pr-lg"}`}>
-                <h3 className="font-headline-lg text-4xl text-on-background dark:text-white mb-lg font-bold">
+                <h3 className="font-headline-lg text-4xl text-slate-900 dark:text-white mb-lg font-bold">
                   {cap.title}
                 </h3>
-                <p className="text-on-background/80 dark:text-white/80 text-xl md:text-2xl leading-relaxed">
+                <p className="text-slate-700 dark:text-slate-300 text-xl md:text-2xl leading-relaxed">
                   {cap.desc}
                 </p>
               </div>
@@ -193,6 +195,6 @@ export default function LandingPage() {
       </main>
 
       <Footer />
-    </ThemeProvider>
+    </>
   );
 }
