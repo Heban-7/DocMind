@@ -11,9 +11,15 @@ interface ProvenanceBadgeProps {
 export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fileName = citation.source_file || "Document.pdf";
-  const docId = (citation as any).doc_id || (citation as any).document_id;
+  const fileName = citation.source_file || (citation as any).document_name || "Document.pdf";
+  const docId =
+    (citation as any).doc_id ||
+    (citation as any).document_id ||
+    (typeof citation.chunk_id === "string" && citation.chunk_id.includes("_") ? citation.chunk_id.split("_")[0] : undefined) ||
+    (typeof citation.source_file === "string" && citation.source_file.includes("_") ? citation.source_file.split("_")[0] : undefined) ||
+    (typeof (citation as any).document_name === "string" && (citation as any).document_name.includes("_") ? (citation as any).document_name.split("_")[0] : undefined);
   const page = citation.page_number ?? 1;
+
   const hash = citation.content_hash;
 
   const rawBbox = citation.bbox;

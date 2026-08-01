@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getDocumentPdfUrl } from "@/lib/api";
 
 interface PDFViewerModalProps {
@@ -24,7 +24,14 @@ export default function PDFViewerModal({
 }: PDFViewerModalProps) {
   const [currentPage, setCurrentPage] = useState(pageNumber);
 
+  useEffect(() => {
+    if (isOpen && pageNumber) {
+      setCurrentPage(pageNumber);
+    }
+  }, [isOpen, pageNumber]);
+
   if (!isOpen) return null;
+
 
   const pdfBaseUrl = docId ? getDocumentPdfUrl(docId) : null;
   const pdfUrlWithPage = pdfBaseUrl ? `${pdfBaseUrl}#page=${currentPage}` : null;
@@ -102,6 +109,7 @@ export default function PDFViewerModal({
           <div className="flex-1 bg-surface-container-high/30 relative flex items-center justify-center border-r border-outline-variant/20">
             {pdfUrlWithPage ? (
               <iframe
+                key={`${docId}-${currentPage}`}
                 src={pdfUrlWithPage}
                 className="w-full h-full border-none"
                 title={fileName}
