@@ -375,6 +375,14 @@ class QueryAgent:
                     )
                 hits.extend(result.hits)
                 traces.append(result.trace)
+
+            if active:
+                scoped_hits = []
+                for h in hits:
+                    if not h.doc_id or h.doc_id == active:
+                        scoped_hits.append(h.model_copy(update={"doc_id": active}))
+                hits = scoped_hits
+
             pdf = state.get("pdf_path") or deps.pdf_path
             from src.query.page_map import enrich_hit_printed_page
 
@@ -385,6 +393,7 @@ class QueryAgent:
                 "hits": [h.model_dump(mode="json") for h in hits],
                 "tool_trace": [t.model_dump(mode="json") for t in traces],
             }
+
 
         def synthesize_node(state: QueryState) -> QueryState:
             hits = [EvidenceHit.model_validate(h) for h in (state.get("hits") or [])]
