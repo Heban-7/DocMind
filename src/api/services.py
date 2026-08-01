@@ -26,8 +26,10 @@ from src.api.schemas import (
     UploadResponse,
 )
 from src.config import CHECKPOINTS_DB_PATH, PROFILES_DIR, RAW_DIR
+from src.llm.factory import get_text_client
 from src.pipeline.ingest import ingest_pdf
 from src.pipeline.phase4 import resolve_pdf_path
+
 
 logger = logging.getLogger("docmind.api")
 

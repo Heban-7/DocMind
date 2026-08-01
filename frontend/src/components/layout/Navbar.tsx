@@ -22,16 +22,16 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-sm">
           <Image
             alt="DocMind Logo"
-            className="w-8 h-8 rounded-lg object-contain"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD49ygGQWTc4p3jjppKa6FymieNk8qc1Z1BhonLP0twZKlqnB9odZuE5OvQBvsgsPuvvRJsbwOfehs8mvK_KXR83KkG7CFefcNehUt0mSG_oJB5gvIq788HxvrCYRna3t2Hs9iq1P6oDSSilIaBGFt-MxVvmjkOq8vWp3xpFAavdHUU_dWPNE7AczUsoJTVjv_UG-CUsadzX1BHQAkmj_bNCFwot1FNgALljFtvGNs4LdtR_3NwcTPBkVdZvUchkcXrhDiD_Y1C9Mll"
+            className="w-8 h-8 rounded-lg object-cover"
+            src="/logo.jpg"
             width={32}
             height={32}
-            unoptimized
           />
           <span className="font-headline-lg text-lg font-bold text-primary dark:text-white tracking-tight">
             DocMind
           </span>
         </Link>
+
         <nav className="hidden md:flex gap-lg">
           {navLinks.map((link) => (
             <Link

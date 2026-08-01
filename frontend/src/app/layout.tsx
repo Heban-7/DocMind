@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   title: "DocMind | Enterprise Document Intelligence",
   description:
     "An agentic AI pipeline that ingests complex PDFs, financial reports, and scanned files with spatial provenance and zero-trust verification.",
+  icons: {
+    icon: "/logo.jpg",
+    shortcut: "/logo.jpg",
+    apple: "/logo.jpg",
+  },
 };
 
 export default function RootLayout({
@@ -33,6 +38,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} scroll-smooth`}>
       <head>
+        <link rel="icon" href="/logo.jpg" type="image/jpeg" />
+        <link rel="shortcut icon" href="/logo.jpg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/logo.jpg" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -56,6 +64,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
+
       <body className="bg-background text-on-background font-body-md overflow-x-hidden selection:bg-primary/30 transition-colors duration-300">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
