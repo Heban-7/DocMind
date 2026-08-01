@@ -81,6 +81,30 @@ def test_chat_validation_error():
     assert res.status_code == 422
 
 
+def test_chat_with_custom_model_parameter():
+    fake = ChatResponse(
+        response="Model selected response",
+        provenance=[],
+        thread_id="t-99",
+        document_id=None,
+        status="success",
+    )
+    with patch("src.api.routers.run_chat", return_value=fake) as mock_run:
+        res = _client().post(
+            "/chat",
+            json={
+                "message": "Summarize this",
+                "model": "GPT-4o",
+                "thread_id": "t-99",
+            },
+        )
+    assert res.status_code == 200
+    assert res.json()["response"] == "Model selected response"
+    mock_run.assert_called_once()
+
+
+
+
 def test_history_mocked():
     fake = HistoryResponse(
         thread_id="t-1",

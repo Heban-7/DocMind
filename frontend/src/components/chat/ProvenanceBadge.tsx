@@ -15,7 +15,18 @@ export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
   const docId = (citation as any).doc_id || (citation as any).document_id;
   const page = citation.page_number ?? 1;
   const hash = citation.content_hash;
-  const bbox = citation.bbox as number[] | undefined;
+
+  const rawBbox = citation.bbox;
+  const bboxArray: number[] | undefined = Array.isArray(rawBbox)
+    ? rawBbox
+    : typeof rawBbox === "string"
+    ? (rawBbox as string)
+        .split(",")
+        .map((s) => parseFloat(s.trim()))
+        .filter((n) => !isNaN(n))
+    : undefined;
+
+  const bboxStr = bboxArray && bboxArray.length > 0 ? bboxArray.join(", ") : null;
   const chunkText = citation.chunk_text as string | undefined;
 
   return (
@@ -25,7 +36,7 @@ export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
         className="inline-flex items-center gap-xs bg-surface-container-lowest border border-outline-variant/30 hover:border-primary px-3 py-1.5 rounded-lg transition-all group"
         title={
           hash
-            ? `Click to view source PDF evidence.\nContent hash: ${hash}${bbox ? `\nBBox: [${bbox.join(", ")}]` : ""}`
+            ? `Click to view source PDF evidence.\nContent hash: ${hash}${bboxStr ? `\nBBox: [${bboxStr}]` : ""}`
             : "Click to view source PDF evidence"
         }
       >
@@ -48,10 +59,9 @@ export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
         docId={docId}
         fileName={fileName}
         pageNumber={page}
-        bbox={bbox}
+        bbox={bboxArray}
         chunkText={chunkText}
       />
     </>
   );
 }
-
