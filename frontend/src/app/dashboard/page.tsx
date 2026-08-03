@@ -13,7 +13,7 @@ import { useThreads } from "@/hooks/useThreads";
 import ProcessingProgressMessage from "@/components/chat/ProcessingProgressMessage";
 
 export default function DashboardPage() {
-  const { messages, isLoading, error: chatError, threadId, send, loadThread, newChat } = useChat();
+  const { messages, isLoading, error: chatError, threadId, activeDocId, send, loadThread, newChat } = useChat();
   const { uploadState, document: uploadedDoc, selectedFile, error: uploadError, upload } = useUpload();
   const { threads, refresh: refreshThreads } = useThreads();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -37,8 +37,9 @@ export default function DashboardPage() {
 
   const handleSend = async (text: string, modelOverride?: string) => {
     const targetModel = modelOverride || selectedModel;
-    const isFederated = federatedSearch || !uploadedDoc?.document_id;
-    const targetDocId = isFederated ? undefined : uploadedDoc?.document_id;
+    const currentDocId = uploadedDoc?.document_id || activeDocId;
+    const isFederated = federatedSearch || !currentDocId;
+    const targetDocId = isFederated ? undefined : currentDocId;
     await send(text, targetDocId, {
       federatedSearch: isFederated,
       auditMode,
@@ -46,6 +47,7 @@ export default function DashboardPage() {
     });
     refreshThreads();
   };
+
 
   const handleUpload = async (file: File) => {
     await upload(file);

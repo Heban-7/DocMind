@@ -115,28 +115,38 @@ def _agent_for_chat(document_id: str | None, model: str | None = None) -> QueryA
     )
 
 
+_THREAD_DOC_MAP: dict[str, str] = {}
+
+
 def run_chat(payload: ChatRequest) -> ChatResponse:
     """Invoke the LangGraph Query Agent and return answer + provenance."""
-    doc_pin = None if payload.federated_search else payload.document_id
+    thread_id = payload.thread_id
+    if payload.document_id:
+        _THREAD_DOC_MAP[thread_id] = payload.document_id
+
+    bound_doc_id = _THREAD_DOC_MAP.get(thread_id)
+    doc_pin = None if payload.federated_search else (payload.document_id or bound_doc_id)
+
     agent = _agent_for_chat(doc_pin, model=payload.model)
     if payload.audit_mode:
-        logger.info("Chat invoked under Zero-Trust Audit Mode for thread_id=%s", payload.thread_id)
+        logger.info("Chat invoked under Zero-Trust Audit Mode for thread_id=%s", thread_id)
     if payload.model:
-        logger.info("Chat requested model=%s for thread_id=%s", payload.model, payload.thread_id)
-    answer = agent.ask(payload.message, thread_id=payload.thread_id)
+        logger.info("Chat requested model=%s for thread_id=%s", payload.model, thread_id)
+    answer = agent.ask(payload.message, thread_id=thread_id)
 
     provenance = []
     for c in answer.provenance.citations:
         d = c.model_dump(mode="json")
-        if not d.get("doc_id") and payload.document_id:
-            d["doc_id"] = payload.document_id
+        if not d.get("doc_id") and doc_pin:
+            d["doc_id"] = doc_pin
         provenance.append(d)
 
     return ChatResponse(
         response=answer.answer,
-        thread_id=payload.thread_id,
+        thread_id=thread_id,
         provenance=provenance,
     )
+
 
 
 
@@ -155,18 +165,21 @@ def fetch_history(thread_id: str) -> HistoryResponse:
 
 
 def list_threads() -> ThreadListResponse:
-    """Return all active thread_ids with their titles and message counts."""
+    """Return all active thread_ids ordered by most recent activity (top to down)."""
     if not CHECKPOINTS_DB_PATH.exists():
         return ThreadListResponse(threads=[])
 
     try:
         conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
-        cursor = conn.execute("SELECT DISTINCT thread_id FROM checkpoints")
+        cursor = conn.execute(
+            "SELECT thread_id, MAX(rowid) AS last_active FROM checkpoints GROUP BY thread_id ORDER BY last_active DESC"
+        )
         thread_ids = [row[0] for row in cursor.fetchall() if row[0]]
         conn.close()
     except Exception:
         logger.exception("Failed to query checkpoints DB")
         return ThreadListResponse(threads=[])
+
 
     agent = build_query_agent(None, enable_memory=True)
     summaries: list[ThreadSummary] = []

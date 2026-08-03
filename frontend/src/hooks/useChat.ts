@@ -9,8 +9,10 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const threadIdRef = useRef<string>(crypto.randomUUID());
+  const threadDocMapRef = useRef<Record<string, string>>({});
 
   const threadId = threadIdRef.current;
+  const activeDocId = threadDocMapRef.current[threadId];
 
   const send = useCallback(
     async (
@@ -18,6 +20,16 @@ export function useChat() {
       documentId?: string | null,
       options?: { federatedSearch?: boolean; auditMode?: boolean; model?: string }
     ) => {
+      const currentThreadId = threadIdRef.current;
+
+      if (documentId) {
+        threadDocMapRef.current[currentThreadId] = documentId;
+      }
+
+      const effectiveDocId = options?.federatedSearch
+        ? undefined
+        : (documentId || threadDocMapRef.current[currentThreadId]);
+
       const userMsg: ChatMessageUI = {
         id: crypto.randomUUID(),
         role: "user",
@@ -32,14 +44,12 @@ export function useChat() {
       try {
         const res = await sendChatMessage({
           message: text,
-          thread_id: threadIdRef.current,
-          document_id: documentId ?? undefined,
+          thread_id: currentThreadId,
+          document_id: effectiveDocId,
           federated_search: options?.federatedSearch,
           audit_mode: options?.auditMode,
           model: options?.model,
         });
-
-
 
         const aiMsg: ChatMessageUI = {
           id: crypto.randomUUID(),
@@ -85,6 +95,5 @@ export function useChat() {
     setError(null);
   }, []);
 
-  return { messages, isLoading, error, threadId, send, loadThread, newChat };
+  return { messages, isLoading, error, threadId, activeDocId, send, loadThread, newChat };
 }
-
