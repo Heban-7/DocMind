@@ -75,6 +75,9 @@ export function useChat() {
     try {
       threadIdRef.current = targetThreadId;
       const res = await fetchHistory(targetThreadId);
+      if (res.document_id) {
+        threadDocMapRef.current[targetThreadId] = res.document_id;
+      }
       const uiMsgs: ChatMessageUI[] = res.messages.map((m) => ({
         id: crypto.randomUUID(),
         role: m.role === "human" || m.role === "user" ? "user" : "ai",
@@ -82,12 +85,15 @@ export function useChat() {
         timestamp: Date.now(),
       }));
       setMessages(uiMsgs);
+      return res;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load thread history");
+      return null;
     } finally {
       setIsLoading(false);
     }
   }, []);
+
 
   const newChat = useCallback(() => {
     threadIdRef.current = crypto.randomUUID();

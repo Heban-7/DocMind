@@ -115,16 +115,91 @@ def _agent_for_chat(document_id: str | None, model: str | None = None) -> QueryA
     )
 
 
-_THREAD_DOC_MAP: dict[str, str] = {}
+def _init_thread_doc_db():
+    try:
+        if not CHECKPOINTS_DB_PATH.parent.exists():
+            CHECKPOINTS_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS thread_documents (
+                thread_id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.commit()
+        conn.close()
+    except Exception as exc:
+        logger.warning("Failed to init thread_documents db: %s", exc)
+
+
+def save_thread_document(thread_id: str, document_id: str) -> None:
+    if not thread_id or not document_id:
+        return
+    try:
+        _init_thread_doc_db()
+        conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
+        conn.execute(
+            """
+            INSERT INTO thread_documents (thread_id, document_id)
+            VALUES (?, ?)
+            ON CONFLICT(thread_id) DO UPDATE SET document_id = excluded.document_id, updated_at = CURRENT_TIMESTAMP
+            """,
+            (thread_id, document_id),
+        )
+        conn.commit()
+        conn.close()
+    except Exception as exc:
+        logger.warning("Failed to save thread_document: %s", exc)
+
+
+def get_thread_document(thread_id: str) -> str | None:
+    if not thread_id or not CHECKPOINTS_DB_PATH.exists():
+        return None
+    try:
+        conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
+        cursor = conn.execute(
+            "SELECT document_id FROM thread_documents WHERE thread_id = ?",
+            (thread_id,),
+        )
+        row = cursor.fetchone()
+        conn.close()
+        return row[0] if row else None
+    except Exception:
+        return None
+
+
+def get_document_info(document_id: str) -> DocumentInfo | None:
+    if not document_id or not PROFILES_DIR.exists():
+        return None
+    for p in PROFILES_DIR.glob("*.json"):
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            did = data.get("doc_id", p.stem)
+            if did == document_id:
+                return DocumentInfo(
+                    document_id=did,
+                    file_name=data.get("source_filename", p.name),
+                    page_count=data.get("page_count", 0),
+                    strategy_tier=data.get("estimated_cost", {}).get("value", "standard")
+                    if isinstance(data.get("estimated_cost"), dict)
+                    else str(data.get("estimated_cost", "standard")),
+                    status="indexed",
+                )
+        except Exception:
+            continue
+    return None
 
 
 def run_chat(payload: ChatRequest) -> ChatResponse:
     """Invoke the LangGraph Query Agent and return answer + provenance."""
     thread_id = payload.thread_id
     if payload.document_id:
-        _THREAD_DOC_MAP[thread_id] = payload.document_id
+        save_thread_document(thread_id, payload.document_id)
 
-    bound_doc_id = _THREAD_DOC_MAP.get(thread_id)
+    bound_doc_id = get_thread_document(thread_id)
     doc_pin = None if payload.federated_search else (payload.document_id or bound_doc_id)
 
     agent = _agent_for_chat(doc_pin, model=payload.model)
@@ -148,9 +223,6 @@ def run_chat(payload: ChatRequest) -> ChatResponse:
     )
 
 
-
-
-
 def fetch_history(thread_id: str) -> HistoryResponse:
     """Load persisted conversation turns for ``thread_id``."""
     tid = (thread_id or "").strip()
@@ -161,7 +233,14 @@ def fetch_history(thread_id: str) -> HistoryResponse:
         HistoryMessage(role=m.role.value, content=m.content)
         for m in agent.get_messages(tid)
     ]
-    return HistoryResponse(thread_id=tid, messages=messages)
+    doc_id = get_thread_document(tid)
+    doc_info = get_document_info(doc_id) if doc_id else None
+    return HistoryResponse(
+        thread_id=tid,
+        messages=messages,
+        document_id=doc_id,
+        document_info=doc_info,
+    )
 
 
 def list_threads() -> ThreadListResponse:
@@ -180,7 +259,6 @@ def list_threads() -> ThreadListResponse:
         logger.exception("Failed to query checkpoints DB")
         return ThreadListResponse(threads=[])
 
-
     agent = build_query_agent(None, enable_memory=True)
     summaries: list[ThreadSummary] = []
     for tid in thread_ids:
@@ -190,14 +268,22 @@ def list_threads() -> ThreadListResponse:
         user_msgs = [m for m in msgs if m.role.value == "user"]
         first_text = user_msgs[0].content if user_msgs else "Conversation"
         title = first_text[:60] + ("..." if len(first_text) > 60 else "")
+        doc_id = get_thread_document(tid)
+        doc_info = get_document_info(doc_id) if doc_id else None
         summaries.append(
             ThreadSummary(
                 thread_id=tid,
                 title=title,
                 message_count=len(msgs),
+                document_id=doc_id,
+                document_info=doc_info,
             )
         )
     return ThreadListResponse(threads=summaries)
+
+
+
+
 
 
 def list_documents() -> DocumentListResponse:

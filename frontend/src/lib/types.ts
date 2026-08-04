@@ -47,12 +47,16 @@ export interface HistoryMessage {
 export interface HistoryResponse {
   thread_id: string;
   messages: HistoryMessage[];
+  document_id?: string;
+  document_info?: DocumentInfo;
 }
 
 export interface ThreadSummary {
   thread_id: string;
   title: string;
   message_count: number;
+  document_id?: string;
+  document_info?: DocumentInfo;
 }
 
 export interface ThreadListResponse {

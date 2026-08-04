@@ -30,6 +30,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { UploadProvider } from "@/context/UploadContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -66,10 +68,13 @@ export default function RootLayout({
       </head>
 
       <body className="bg-background text-on-background font-body-md overflow-x-hidden selection:bg-primary/30 transition-colors duration-300">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <UploadProvider>{children}</UploadProvider>
+        </ThemeProvider>
       </body>
     </html>
 
   );
 }
+
 

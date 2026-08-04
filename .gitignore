@@ -1,6 +1,9 @@
 # Data corpus (large PDFs) -- keep out of version control
 data/
 
+# frontend assets
+frontend_design/
+
 # Python virtual environment (managed by uv)
 .venv/
 
