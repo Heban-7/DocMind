@@ -14,13 +14,17 @@ import ProcessingProgressMessage from "@/components/chat/ProcessingProgressMessa
 
 export default function DashboardPage() {
   const { messages, isLoading, error: chatError, threadId, activeDocId, send, loadThread, newChat } = useChat();
-  const { uploadState, document: uploadedDoc, selectedFile, error: uploadError, upload } = useUpload();
+  const { uploadState, uploadingThreadId, selectedFile, error: uploadError, upload, getThreadDocument, setThreadDocument } = useUpload();
   const { threads, refresh: refreshThreads } = useThreads();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [federatedSearch, setFederatedSearch] = useState(false);
   const [auditMode, setAuditMode] = useState(false);
   const [selectedModel, setSelectedModel] = useState("gpt-4o");
   const [activeError, setActiveError] = useState<string | null>(null);
+
+  // Strictly resolve document ONLY for this exact thread
+  const activeDoc = getThreadDocument(threadId);
+  const isCurrentThreadUploading = uploadingThreadId === threadId && uploadState !== "idle";
 
   // Sync errors to banner state
   useEffect(() => {
@@ -37,7 +41,7 @@ export default function DashboardPage() {
 
   const handleSend = async (text: string, modelOverride?: string) => {
     const targetModel = modelOverride || selectedModel;
-    const currentDocId = uploadedDoc?.document_id || activeDocId;
+    const currentDocId = activeDoc?.document_id || activeDocId;
     const isFederated = federatedSearch || !currentDocId;
     const targetDocId = isFederated ? undefined : currentDocId;
     await send(text, targetDocId, {
@@ -48,10 +52,19 @@ export default function DashboardPage() {
     refreshThreads();
   };
 
-
   const handleUpload = async (file: File) => {
-    await upload(file);
+    const doc = await upload(file, threadId);
+    if (doc) {
+      setThreadDocument(threadId, doc);
+    }
     refreshThreads();
+  };
+
+  const handleSelectThread = async (id: string) => {
+    const res = await loadThread(id);
+    if (res?.document_info) {
+      setThreadDocument(id, res.document_info);
+    }
   };
 
   return (
@@ -61,9 +74,9 @@ export default function DashboardPage() {
         onNewChat={newChat}
         threads={threads}
         activeThreadId={threadId}
-        onSelectThread={loadThread}
+        onSelectThread={handleSelectThread}
         onUpload={handleUpload}
-        uploadState={uploadState}
+        uploadState={isCurrentThreadUploading ? uploadState : "idle"}
       />
 
       {/* Main Content Canvas */}
@@ -89,7 +102,6 @@ export default function DashboardPage() {
           }}
         />
 
-
         {/* Error Alert Banner */}
         {activeError && (
           <div className="bg-red-500/10 border-b border-red-500/30 text-red-700 px-lg py-sm flex items-center justify-between z-20 text-body-sm">
@@ -109,20 +121,22 @@ export default function DashboardPage() {
         {/* Chat Workspace Area */}
         <section ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col items-center">
           <div className="w-full max-w-[800px] px-lg py-xl flex-1 flex flex-col">
-            {/* Welcome State (shown when no messages and no upload in progress) */}
-            {messages.length === 0 && uploadState === "idle" && (
+            {/* Welcome State (shown when no messages, no upload in progress, and no document bound to this thread) */}
+            {messages.length === 0 && !isCurrentThreadUploading && !activeDoc && (
               <WelcomeState onSuggestionClick={handleSend} />
             )}
 
-            {/* Inline Document Processing Progress Card in Agent Response stream */}
-            {uploadState !== "idle" && (
+            {/* Inline Document Processing Progress Card / Attached Document Banner */}
+            {(isCurrentThreadUploading || activeDoc) && (
               <ProcessingProgressMessage
-                fileName={uploadedDoc?.file_name || selectedFile?.name || "Document.pdf"}
-                fileSizeMb={selectedFile ? (selectedFile.size / (1024 * 1024)).toFixed(2) : null}
-                uploadState={uploadState}
-                strategyTier={uploadedDoc?.strategy_tier}
+                fileName={activeDoc?.file_name || (isCurrentThreadUploading ? selectedFile?.name : null) || "Document.pdf"}
+                fileSizeMb={selectedFile && isCurrentThreadUploading ? (selectedFile.size / (1024 * 1024)).toFixed(2) : null}
+                uploadState={isCurrentThreadUploading ? uploadState : "indexed"}
+                strategyTier={activeDoc?.strategy_tier}
               />
             )}
+
+
 
             {/* Chat Messages */}
             <div className="space-y-xl pb-32">

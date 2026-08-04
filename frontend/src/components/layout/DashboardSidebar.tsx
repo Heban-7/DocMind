@@ -98,16 +98,25 @@ export default function DashboardSidebar({
               <button
                 key={thread.thread_id}
                 onClick={() => onSelectThread?.(thread.thread_id)}
-                className={`w-full text-left flex items-center gap-sm px-4 py-2 rounded-lg transition-all text-ellipsis overflow-hidden whitespace-nowrap ${
+                className={`w-full text-left flex items-center justify-between gap-xs px-4 py-2 rounded-lg transition-all text-ellipsis overflow-hidden whitespace-nowrap ${
                   activeThreadId === thread.thread_id
                     ? "bg-primary/10 text-primary dark:bg-white/10 dark:text-white font-bold"
                     : "text-slate-700 dark:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-white/5"
                 }`}
+                title={thread.document_info ? `Attached PDF: ${thread.document_info.file_name}` : undefined}
               >
-                <span className="material-symbols-outlined text-sm">chat_bubble</span>
-                <span className="font-body-sm text-body-sm truncate">{thread.title}</span>
+                <div className="flex items-center gap-sm truncate min-w-0">
+                  <span className="material-symbols-outlined text-sm shrink-0">chat_bubble</span>
+                  <span className="font-body-sm text-body-sm truncate">{thread.title}</span>
+                </div>
+                {thread.document_info && (
+                  <span className="material-symbols-outlined text-[14px] text-primary shrink-0" title={`Attached PDF: ${thread.document_info.file_name}`}>
+                    description
+                  </span>
+                )}
               </button>
             ))
+
           )}
         </div>
 
