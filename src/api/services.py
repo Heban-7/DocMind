@@ -220,6 +220,7 @@ def run_chat(payload: ChatRequest) -> ChatResponse:
         response=answer.answer,
         thread_id=thread_id,
         provenance=provenance,
+        follow_ups=list(answer.follow_ups) if answer.follow_ups else [],
     )
 
 

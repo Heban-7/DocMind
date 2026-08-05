@@ -1,6 +1,6 @@
 {
   "doc_id": "212dc42370e2",
-  "source_filename": "b3fd86ddde_sample.pdf",
+  "source_filename": "a4edc02c3c_sample.pdf",
   "roots": [
     {
       "title": "1.  Introduction",
@@ -14,7 +14,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "5340fa56-4249-4afd-b527-9856766ac338"
+        "afc6184e-8063-458d-a875-7208e1e07a02"
       ],
       "key_entities": [],
       "children": []
@@ -31,7 +31,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "0ecec982-1b71-445f-959a-7c1d1cb3ed80"
+        "d6625675-94dc-4a5d-be5d-ff30aba89499"
       ],
       "key_entities": [],
       "children": []
@@ -48,8 +48,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "4427292a-1a43-499e-a75a-8e3becef4c46",
-        "4e09e241-9411-4f18-a47b-a0ad3de5ba9b"
+        "a4a85fc9-b0ba-4e93-ab09-0817f6b3ed11",
+        "5b521e72-1db5-4a84-866d-b58a63b03d0f"
       ],
       "key_entities": [],
       "children": []
@@ -66,8 +66,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "66b4b02a-f9db-4fb9-a248-6a26143a5c96",
-        "9f792bf5-404a-493f-9264-10300bd257c0"
+        "367756fe-5902-42c6-9355-a5250210f722",
+        "25c5c5fa-66a3-4ed5-9af7-08fc1d1c162e"
       ],
       "key_entities": [],
       "children": []
@@ -84,7 +84,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "71e9b127-8a3b-44cb-bfd0-0be2d98fbb52"
+        "de432e65-e14e-49c3-a4cd-3f531769527b"
       ],
       "key_entities": [],
       "children": []
@@ -102,10 +102,10 @@
         "prose"
       ],
       "chunk_ids": [
-        "c6cbab3d-9a0b-4552-906c-b1e65798ce19",
-        "f0e1901d-203a-451f-b932-972b984aac31",
-        "bd8ea225-f5ec-4de0-9a87-49921b8b635b",
-        "62d32828-76bc-4f91-aba3-1c0dbe191dbe"
+        "76e166d2-2aa1-4044-94d1-9d349d060e17",
+        "2b397254-887e-44a2-93cc-dfa4344365cc",
+        "b37c8077-76bc-4a00-8165-98f7b63e6b35",
+        "dc287798-71c2-4c30-9bf1-948826c8c88e"
       ],
       "key_entities": [],
       "children": []
@@ -123,11 +123,11 @@
         "prose"
       ],
       "chunk_ids": [
-        "3ab47336-b563-484a-8613-30710694dec2",
-        "ce0a0333-8c61-4c2c-a496-e1f45f1a2ddc",
-        "a08f141a-0578-445c-b955-fea4051ffa88",
-        "c0fd5237-fea7-41a6-8af1-7920a280a14b",
-        "18fe25ed-62ba-4ac1-9e14-4834acd107bd"
+        "57f24cb0-3de7-433e-8784-5698dec798e2",
+        "d6dc2d9a-79b6-4039-a48f-28596a1d0c60",
+        "7031a556-2695-440c-9855-a7d6138f5c1b",
+        "c518d695-f659-4b62-9d12-840bc3909c2b",
+        "00a44440-bbca-4340-b9d4-8556c1734563"
       ],
       "key_entities": [],
       "children": []
@@ -145,9 +145,9 @@
         "prose"
       ],
       "chunk_ids": [
-        "6e2ab1c5-d51c-4075-92e3-a8f45bc2f39a",
-        "09560d1d-a582-450e-a078-fe425cb27a6a",
-        "89f09d27-4596-429a-8c5c-3f8e16d995e8"
+        "1924f525-a40c-41a2-a1fb-7ff1c7570b23",
+        "be32213d-c803-4160-ad71-fc031fb72dea",
+        "e2670cb5-b71b-45d1-83c6-f00193d4fd1a"
       ],
       "key_entities": [],
       "children": []
@@ -165,9 +165,9 @@
         "prose"
       ],
       "chunk_ids": [
-        "000133c1-8019-45b5-ba76-68ecf0a3a305",
-        "9ed31193-a445-44e8-bdfc-2dc4d08f73b2",
-        "c65f693a-0e46-482b-9907-b908d57bc316"
+        "1b9ede9d-886a-41d9-bc91-13ff5f494b95",
+        "189dbaf1-7e0f-4466-a656-e07262f8bb30",
+        "2d31bdfc-fe02-45e5-bf50-42237403c98c"
       ],
       "key_entities": [],
       "children": []
@@ -184,8 +184,8 @@
         "mixed"
       ],
       "chunk_ids": [
-        "0061fb09-94a8-4abd-a45c-e56efedc0f6b",
-        "ea3c5084-b52f-44d8-acf0-521f9d4fdb65"
+        "66c8d60a-acc9-4747-b12c-df163433bf38",
+        "aced723e-f3c8-45ff-94c0-d300a8df95bd"
       ],
       "key_entities": [],
       "children": []
@@ -202,7 +202,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "7d4b072e-ba15-4b1c-b8f5-f47f24c5c260"
+        "8fd35d44-8c30-4bcf-9d77-5115ba8ba8a2"
       ],
       "key_entities": [],
       "children": []
@@ -219,7 +219,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "71a3d316-28d3-47d3-8698-6d9b5f98791f"
+        "a19d18cf-1a7c-4337-8c51-714fd00d8686"
       ],
       "key_entities": [],
       "children": []
@@ -236,7 +236,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "0ea2fd2c-f21e-4c8d-89fe-6cfac27c3461"
+        "cfe6265a-fe43-490c-a127-9ce454acaf6b"
       ],
       "key_entities": [],
       "children": []
@@ -254,8 +254,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "b9901045-6221-418c-a7a8-5557bb77838e",
-        "3efbdd86-9835-4269-b6d7-bd47236da067"
+        "803fae05-3fc8-49d9-9e48-cf005ad2cc21",
+        "80d7cc0a-b258-4204-a7ac-22fc446c673e"
       ],
       "key_entities": [],
       "children": []
@@ -273,8 +273,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "70b39a94-1bda-4d71-8e0a-246ebf739e8d",
-        "a221c719-8544-4b15-9a22-7ba325b55c2f"
+        "851431ec-cd4c-4243-9f56-04f0fcf17cd0",
+        "5af56dd2-7941-492b-9dc8-dd0274550181"
       ],
       "key_entities": [],
       "children": []
@@ -291,7 +291,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "31d22702-e20b-413e-adfd-4bbae36bbf34"
+        "33a58fe7-73de-40de-b42a-ba921ea59533"
       ],
       "key_entities": [],
       "children": []
@@ -308,7 +308,7 @@
         "table"
       ],
       "chunk_ids": [
-        "b8b58508-324e-460a-afb5-0e613b67a17f"
+        "d06a26bd-7508-4272-bdbc-45f12951455c"
       ],
       "key_entities": [],
       "children": []
@@ -325,7 +325,7 @@
         "para"
       ],
       "chunk_ids": [
-        "3de10b4d-ecbe-4d3d-8ded-219f878cfcd2"
+        "9c1c7e55-3f05-4f4b-8c10-b340ee317836"
       ],
       "key_entities": [],
       "children": []
@@ -342,7 +342,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "50919782-5390-44d3-ab1e-53159dafd7a9"
+        "979b1cfc-3273-4f0b-8dfd-2279faa7ac3a"
       ],
       "key_entities": [],
       "children": []
@@ -359,7 +359,7 @@
         "mixed"
       ],
       "chunk_ids": [
-        "2507492b-7863-448e-9743-a3d688a9451e"
+        "03285449-fe4a-4cc1-a040-6880cafd3efd"
       ],
       "key_entities": [],
       "children": []
@@ -376,7 +376,7 @@
         "para"
       ],
       "chunk_ids": [
-        "2853e28a-ffe8-4bf2-9b93-f835e6bec97a"
+        "5b46b145-dad3-4a45-8fe7-59a07ebabdcb"
       ],
       "key_entities": [],
       "children": []
@@ -393,8 +393,8 @@
         "prose"
       ],
       "chunk_ids": [
-        "b756e089-16db-47dc-9d42-e78dd8e5dda9",
-        "255b375d-feb6-4240-8b9a-7efbaa13e90f"
+        "9cdcd443-a31c-4e34-8100-0c756c91163c",
+        "efe91903-335d-4aec-9b4a-82d408a8c4bd"
       ],
       "key_entities": [],
       "children": []
@@ -412,18 +412,18 @@
         "table"
       ],
       "chunk_ids": [
-        "649fe478-c3da-4da7-8fae-950d034de880",
-        "b79c3255-4728-425a-9a19-1e896fc2fef7",
-        "8d569fc5-675d-4fe0-9760-513c24dc26eb",
-        "50115688-3c5f-492b-af05-6d2e3d6701ad",
-        "272b68b0-6242-4ca3-9019-25c1f1787efc",
-        "0615fd4f-a9b6-4eea-b8c0-3f9874e1b0f4",
-        "1674220a-8654-49a2-85b6-ea49e798e169",
-        "c8e58f54-6683-474e-9c93-2faa561c3524",
-        "c382ea16-cdab-47a0-9b48-6e80c7dc0eb9",
-        "5780f3c8-34e7-4ad2-a13e-cd6db0c355b0",
-        "b97ebef1-038e-4dbb-9b16-fed96b93c425",
-        "0445c302-1635-4c8e-87b7-b0272d3302e6"
+        "f2400623-df2e-4d1b-a53b-c312c96636c7",
+        "b9c90ec2-006c-430c-a164-49c13a84d049",
+        "e38a82d4-6a1d-4b91-aae9-a7f4603b2e71",
+        "6db685d6-8f37-4be8-8e4c-5a266edfdf3f",
+        "808336a1-1e12-4718-a8a3-540838e1e02f",
+        "ebad65a8-5181-4056-b2ec-fc9d3a1d9742",
+        "e0640e3a-4601-4cd0-a7c9-b3e75cc8ee7b",
+        "21ca83da-7972-4bd8-a6f2-e38b139844d9",
+        "d9c48312-0513-4cb5-8d6d-dae0eb88295f",
+        "e41c0202-3acc-4826-9fb4-2ba7b8a40fc6",
+        "eff7db45-a433-403d-8e23-85e4f16550c0",
+        "3ad473bf-049b-4dc1-b42f-7f2947af741c"
       ],
       "key_entities": [],
       "children": []
@@ -440,7 +440,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "c264dbce-0499-4507-b75f-6d8174d4207b"
+        "75724352-ad07-4a34-9623-79b071a6b652"
       ],
       "key_entities": [],
       "children": []
@@ -457,7 +457,7 @@
         "para"
       ],
       "chunk_ids": [
-        "4a82e83f-ac79-4c2a-9aa9-200e1c19bc6a"
+        "54748643-83d4-408b-9c61-ae8e0e99c3a5"
       ],
       "key_entities": [],
       "children": []
@@ -474,7 +474,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "4be2a034-d2ae-461f-982b-c5608f15bba6"
+        "3342f917-e35c-47c7-8894-9bcc5f99364d"
       ],
       "key_entities": [],
       "children": []
@@ -491,7 +491,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "ea94cac8-317e-40e6-a5e9-28ed84d56fdb"
+        "49c64b53-21aa-41fc-82c8-c2f33e35a722"
       ],
       "key_entities": [],
       "children": []
@@ -508,7 +508,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "d5250c2f-e49a-408f-8e10-3f572a58918b"
+        "f97f87f9-98ce-4c42-89e1-7afb5720bb8d"
       ],
       "key_entities": [],
       "children": []
@@ -525,7 +525,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "8a5116f6-2d74-4dab-a852-6bc1fc81d7c6"
+        "7923ee71-2f10-4a2e-80f0-b31fb3bdae40"
       ],
       "key_entities": [],
       "children": []
@@ -542,7 +542,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "270db1c7-f10a-42cf-bdf8-2f7d38c6ab0b"
+        "b35b679e-d2de-450f-a416-3b924d44145f"
       ],
       "key_entities": [],
       "children": []
@@ -559,7 +559,7 @@
         "list"
       ],
       "chunk_ids": [
-        "7ba330cc-360b-412a-82f5-090fcadcf9d5"
+        "36f28161-5f49-41c0-ab1f-cdd5bff0c540"
       ],
       "key_entities": [],
       "children": []
@@ -576,7 +576,7 @@
         "prose"
       ],
       "chunk_ids": [
-        "e8058502-424e-4f22-b4d7-b0a03042386b"
+        "b8f53b66-7ac9-4231-9604-66ca0b69f2a0"
       ],
       "key_entities": [],
       "children": []
@@ -593,7 +593,7 @@
         "list"
       ],
       "chunk_ids": [
-        "2d1cebda-5548-4ac1-9a11-8b6dcfb90a2d"
+        "94af731d-ec4d-4f81-9acf-1076bc4bb6b6"
       ],
       "key_entities": [],
       "children": []
@@ -610,11 +610,11 @@
         "prose"
       ],
       "chunk_ids": [
-        "d341bdc6-f1b1-4582-bb08-5b2341ef6103"
+        "b2976706-ccff-401e-8e29-08cf929c084b"
       ],
       "key_entities": [],
       "children": []
     }
   ],
-  "created_at": "2026-08-04T19:14:57.474801Z"
+  "created_at": "2026-08-04T20:20:56.996324Z"
 }

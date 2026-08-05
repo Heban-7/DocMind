@@ -48,6 +48,10 @@ class QueryAnswer(BaseModel):
     doc_id: str | None = Field(
         default=None, description="scoped document id when the query was per-doc"
     )
+    follow_ups: list[str] = Field(
+        default_factory=list,
+        description="Autonomous follow-up questions suggested by the synthesizer.",
+    )
 
     @model_validator(mode="after")
     def _require_citations_for_substantive_answers(self) -> QueryAnswer:
@@ -64,9 +68,22 @@ class QueryAnswer(BaseModel):
             "i don't know",
             "i do not know",
         )
+        # Allow greeting / conversational responses without citations.
+        greeting_markers = (
+            "welcome to docmind",
+            "hello",
+            "ready to help",
+            "document intelligence assistant",
+            "upload a pdf",
+            "how can i help",
+            "good morning",
+            "good afternoon",
+            "good evening",
+        )
         lowered = self.answer.strip().lower()
         is_refusal = (not lowered) or any(m in lowered for m in refusal_markers)
-        if not is_refusal and self.provenance.is_empty:
+        is_greeting = any(m in lowered for m in greeting_markers)
+        if not is_refusal and not is_greeting and self.provenance.is_empty:
             raise ValueError(
                 "QueryAnswer with a substantive answer must include at least "
                 "one provenance citation."
