@@ -41,6 +41,10 @@ class ChatResponse(BaseModel):
     response: str
     thread_id: str
     provenance: list[dict[str, Any]] = Field(default_factory=list)
+    follow_ups: list[str] = Field(
+        default_factory=list,
+        description="Autonomous follow-up questions suggested by the AI.",
+    )
 
 
 class UploadResponse(BaseModel):

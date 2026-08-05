@@ -17,7 +17,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, Any, Literal, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -27,9 +27,13 @@ from langgraph.graph.message import add_messages
 from src.agents.intent_router import list_corpus_documents, route_intent
 from src.agents.json_util import extract_json
 from src.agents.query_prompts import (
+    CLASSIFIER_SYSTEM,
     PLANNER_SYSTEM,
+    REWRITER_SYSTEM,
     SYNTHESIZER_SYSTEM,
+    classifier_user_prompt,
     planner_user_prompt,
+    rewriter_user_prompt,
     synthesizer_user_prompt,
 )
 from src.config import DEFAULT_SAMPLE_PDF, PAGEINDEX_DIR
@@ -50,6 +54,17 @@ from src.retrieval.vector_store import ChromaLDUStore
 logger = logging.getLogger("docmind.query_agent")
 
 
+# Regex pattern for obvious greetings — avoids LLM call entirely.
+_GREETING_RE = re.compile(
+    r"^\s*"
+    r"(h(i|ello|ey|owdy)|good\s*(morning|afternoon|evening|day)"
+    r"|thanks?|thank\s*you|bye|goodbye|see\s*you|cheers"
+    r"|what'?s\s*up|yo|sup|greetings)"
+    r"[!.,?\s]*$",
+    re.IGNORECASE,
+)
+
+
 class QueryState(TypedDict, total=False):
     """LangGraph state. ``messages`` accumulate across turns when checkpointed."""
 
@@ -58,6 +73,8 @@ class QueryState(TypedDict, total=False):
     doc_id: str
     active_doc_id: str | None
     intent: dict[str, Any]
+    intent_type: str  # "greeting" | "document_query"
+    rewritten_question: str  # decontextualised query
     pdf_path: str | None
     plan_calls: list[dict[str, Any]]
     hits: list[dict[str, Any]]
@@ -65,6 +82,7 @@ class QueryState(TypedDict, total=False):
     draft_answer: str
     cite_indices: list[int]
     refusal: bool
+    follow_ups: list[str]  # autonomous follow-up suggestions
     answer: dict[str, Any] | None
     error: str | None
 
@@ -278,6 +296,120 @@ class QueryAgent:
     def _build_graph(self):
         deps = self.deps
 
+        # ---- NEW: Intent Classification (entry point) --------------------
+        def classify_intent_node(state: QueryState) -> QueryState:
+            """Fast-path regex or LLM classification: greeting vs document query."""
+            question = (state.get("question") or "").strip()
+
+            # Regex fast-path: obvious greetings skip the LLM entirely.
+            if _GREETING_RE.match(question):
+                logger.debug("classify_intent: regex matched greeting")
+                return {"intent_type": "greeting", "error": None}
+
+            # LLM fallback for edge cases.
+            try:
+                result = deps.llm.complete(
+                    classifier_user_prompt(question),
+                    system=CLASSIFIER_SYSTEM,
+                    response_format="json",
+                    temperature=0.0,
+                    max_tokens=60,
+                )
+                payload = _extract_json(result.text)
+                intent = str(payload.get("intent") or "document_query").strip().lower()
+                if intent not in ("greeting", "document_query"):
+                    intent = "document_query"
+            except Exception as exc:  # pragma: no cover
+                logger.warning("Intent classifier failed (%s); defaulting to document_query", exc)
+                intent = "document_query"
+
+            logger.debug("classify_intent: %s", intent)
+            return {"intent_type": intent, "error": None}
+
+        # ---- NEW: Greeting Response (short-circuit) ----------------------
+        def greeting_response_node(state: QueryState) -> QueryState:
+            """Generate a warm greeting, optionally acknowledging the active document."""
+            active = state.get("active_doc_id") or deps.doc_id
+            if active:
+                # Try to find document name from corpus or profile.
+                doc_name = active
+                corpus = deps.corpus
+                if corpus is None:
+                    corpus = list_corpus_documents()
+                for d in (corpus or []):
+                    if d.document_id == active:
+                        doc_name = d.document_name or active
+                        break
+                answer_text = (
+                    f"Hello! I'm ready to help you explore **{doc_name}**. "
+                    "What would you like to know about this document?"
+                )
+            else:
+                answer_text = (
+                    "Hello! Welcome to DocMind \U0001f4c4 — your document intelligence "
+                    "assistant. Upload a PDF to get started, or ask me anything "
+                    "about your documents!"
+                )
+
+            qa = QueryAnswer(
+                question=state.get("question") or "",
+                answer=answer_text,
+                provenance=ProvenanceChain(),
+                doc_id=active,
+            )
+            return {
+                "draft_answer": answer_text,
+                "refusal": False,
+                "cite_indices": [],
+                "follow_ups": [],
+                "hits": [],
+                "tool_trace": [],
+                "answer": qa.model_dump(mode="json"),
+                "messages": [AIMessage(content=answer_text)],
+            }
+
+        # ---- NEW: Query Rewriter (pronoun resolution) --------------------
+        def rewrite_query_node(state: QueryState) -> QueryState:
+            """Decontextualize the question: strip fluff, resolve pronouns."""
+            question = (state.get("question") or "").strip()
+            history = _format_history(
+                list(state.get("messages") or []),
+                max_messages=deps.history_max_messages,
+            )
+
+            # Skip rewriting if there's no conversation history to resolve.
+            if not history.strip():
+                return {"rewritten_question": question, "error": None}
+
+            try:
+                result = deps.llm.complete(
+                    rewriter_user_prompt(question, history=history),
+                    system=REWRITER_SYSTEM,
+                    temperature=0.0,
+                    max_tokens=200,
+                )
+                rewritten = result.text.strip().strip('"').strip("'").strip()
+                if not rewritten:
+                    rewritten = question
+            except Exception as exc:  # pragma: no cover
+                logger.warning("Query rewriter failed (%s); using original", exc)
+                rewritten = question
+
+            logger.debug("rewrite_query: '%s' -> '%s'", question, rewritten)
+            return {
+                "rewritten_question": rewritten,
+                "question": rewritten,  # update for downstream nodes
+                "error": None,
+            }
+
+        # ---- Conditional edge function -----------------------------------
+        def _after_classify(state: QueryState) -> Literal["greeting_response", "rewrite_query"]:
+            """Route to greeting or full retrieval pipeline."""
+            if state.get("intent_type") == "greeting":
+                return "greeting_response"
+            return "rewrite_query"
+
+        # ---- Existing nodes (updated) ------------------------------------
         def route_node(state: QueryState) -> QueryState:
             """IntentRouter before retrieval: pin one doc or search the corpus."""
             question = state["question"]
@@ -394,7 +526,6 @@ class QueryAgent:
                 "tool_trace": [t.model_dump(mode="json") for t in traces],
             }
 
-
         def synthesize_node(state: QueryState) -> QueryState:
             hits = [EvidenceHit.model_validate(h) for h in (state.get("hits") or [])]
             blocks = [_format_hit(h, i) for i, h in enumerate(hits)]
@@ -429,15 +560,26 @@ class QueryAgent:
                     if 0 <= i < len(hits):
                         cite_indices.append(i)
 
+            # Extract follow-up suggestions from synthesizer output if present.
+            raw_followups = payload.get("follow_ups") or []
+            follow_ups: list[str] = []
+            if isinstance(raw_followups, list):
+                for f in raw_followups:
+                    s = str(f).strip()
+                    if s:
+                        follow_ups.append(s)
+
             if not answer:
                 refusal = True
-                answer = "I could not find that in the document."
+                answer = "Unverifiable / Source Not Found — the document does not contain this information."
                 cite_indices = []
+                follow_ups = []
             elif not hits:
                 refusal = True
-                if "could not find" not in answer.lower():
-                    answer = "I could not find that in the document."
+                if "could not find" not in answer.lower() and "unverifiable" not in answer.lower():
+                    answer = "Unverifiable / Source Not Found — the document does not contain this information."
                 cite_indices = []
+                follow_ups = []
             elif not refusal:
                 # LLM often cites 1-3; pad with next-best retrieved hits (5-7).
                 cite_indices = _expand_cite_indices(
@@ -451,9 +593,14 @@ class QueryAgent:
                 "draft_answer": answer,
                 "cite_indices": cite_indices,
                 "refusal": refusal,
+                "follow_ups": follow_ups,
             }
 
         def finalize_node(state: QueryState) -> QueryState:
+            # If greeting_response already set the answer, just pass through.
+            if state.get("answer") and state.get("intent_type") == "greeting":
+                return {}
+
             hits = [EvidenceHit.model_validate(h) for h in (state.get("hits") or [])]
             idxs = state.get("cite_indices") or []
             selected = [hits[i] for i in idxs if 0 <= i < len(hits)]
@@ -479,7 +626,7 @@ class QueryAgent:
                 ToolTrace.model_validate(t) for t in (state.get("tool_trace") or [])
             ]
             answer_text = state.get("draft_answer") or (
-                "I could not find that in the document."
+                "Unverifiable / Source Not Found — the document does not contain this information."
             )
             if provenance.is_empty:
                 lowered = answer_text.lower()
@@ -494,7 +641,9 @@ class QueryAgent:
                         "i do not know",
                     )
                 ):
-                    answer_text = "I could not find that in the document."
+                    answer_text = "Unverifiable / Source Not Found — the document does not contain this information."
+
+            follow_ups = list(state.get("follow_ups") or [])
 
             qa = QueryAnswer(
                 question=state["question"],
@@ -502,6 +651,7 @@ class QueryAgent:
                 provenance=provenance,
                 tool_trace=traces,
                 doc_id=state.get("active_doc_id") or deps.doc_id,
+                follow_ups=follow_ups,
             )
             # Persist assistant turn onto the Patient File (messages channel).
             return {
@@ -509,13 +659,28 @@ class QueryAgent:
                 "messages": [AIMessage(content=answer_text)],
             }
 
+        # ---- Graph assembly with conditional routing ---------------------
         graph = StateGraph(QueryState)
+        graph.add_node("classify_intent", classify_intent_node)
+        graph.add_node("greeting_response", greeting_response_node)
+        graph.add_node("rewrite_query", rewrite_query_node)
         graph.add_node("route", route_node)
         graph.add_node("plan", plan_node)
         graph.add_node("execute_tools", tools_node)
         graph.add_node("synthesize", synthesize_node)
         graph.add_node("finalize", finalize_node)
-        graph.set_entry_point("route")
+
+        graph.set_entry_point("classify_intent")
+        graph.add_conditional_edges(
+            "classify_intent",
+            _after_classify,
+            {
+                "greeting_response": "greeting_response",
+                "rewrite_query": "rewrite_query",
+            },
+        )
+        graph.add_edge("greeting_response", "finalize")
+        graph.add_edge("rewrite_query", "route")
         graph.add_edge("route", "plan")
         graph.add_edge("plan", "execute_tools")
         graph.add_edge("execute_tools", "synthesize")

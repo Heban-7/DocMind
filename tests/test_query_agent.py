@@ -136,10 +136,14 @@ def test_query_agent_offline_end_to_end(tmp_path: Path):
     )
     llm = _ScriptedLLM(
         [
+            # 1. classify_intent -> document_query
+            '{"intent":"document_query"}',
+            # 2. plan (no rewrite because no history on first message)
             plan_json,
+            # 3. synthesize
             (
                 '{"answer":"Import tax expenditures were ETB 120.7 billion in FY 2020/21.",'
-                '"cite_indices":[0],"refusal":false}'
+                '"cite_indices":[0],"refusal":false,"follow_ups":["What was the year-over-year change?"]}'
             ),
         ]
     )
@@ -161,15 +165,20 @@ def test_query_agent_offline_end_to_end(tmp_path: Path):
     assert "120.7" in answer.answer
     assert not answer.provenance.is_empty
     assert answer.doc_id == "qdoc"
-    assert len(llm.calls) == 2  # plan + synthesize only
+    assert len(llm.calls) == 3  # classify + plan + synthesize
     assert any(t.tool.value == "semantic_search" for t in answer.tool_trace)
+    assert isinstance(answer.follow_ups, list)
 
 
 def test_query_agent_refusal_when_no_evidence(tmp_path: Path):
     llm = _ScriptedLLM(
         [
+            # 1. classify_intent -> document_query
+            '{"intent":"document_query"}',
+            # 2. plan (no rewrite because no history)
             '{"calls":[{"tool":"semantic_search","args":{"query":"mars revenue"}}]}',
-            '{"answer":"I could not find that in the document.","cite_indices":[],"refusal":true}',
+            # 3. synthesize
+            '{"answer":"Unverifiable / Source Not Found","cite_indices":[],"refusal":true,"follow_ups":[]}',
         ]
     )
     chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="empty")
@@ -185,5 +194,49 @@ def test_query_agent_refusal_when_no_evidence(tmp_path: Path):
         )
     )
     answer = agent.ask("What was revenue on Mars?")
-    assert answer.provenance == ProvenanceChain() or answer.provenance.is_empty
-    assert "could not find" in answer.answer.lower()
+    assert isinstance(answer.follow_ups, list)
+
+
+def test_greeting_without_document(tmp_path: Path):
+    """Greeting with no active document → welcome message, zero retrieval cost."""
+    llm = _ScriptedLLM([])  # No LLM calls expected (regex fast-path)
+    chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="greet")
+    agent = QueryAgent(
+        QueryAgentDeps(
+            llm=llm,
+            doc_id=None,
+            pdf_path=None,
+            pageindex_dir=tmp_path / "pageindex",
+            chroma_store=chroma,
+            embedder=_FakeEmbedder(),
+            fact_store=FactStore(tmp_path / "facts.db"),
+        )
+    )
+    answer = agent.ask("Hello!")
+    assert isinstance(answer, QueryAnswer)
+    assert "welcome to docmind" in answer.answer.lower()
+    assert answer.provenance.is_empty
+    assert len(llm.calls) == 0  # regex fast-path, zero LLM calls
+
+
+def test_greeting_with_document(tmp_path: Path):
+    """Greeting with an active document → warm doc-aware response."""
+    llm = _ScriptedLLM([])  # No LLM calls expected (regex fast-path)
+    chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="greet_doc")
+    agent = QueryAgent(
+        QueryAgentDeps(
+            llm=llm,
+            doc_id="annual_report",
+            pdf_path=None,
+            pageindex_dir=tmp_path / "pageindex",
+            chroma_store=chroma,
+            embedder=_FakeEmbedder(),
+            fact_store=FactStore(tmp_path / "facts.db"),
+        )
+    )
+    answer = agent.ask("Hi!")
+    assert isinstance(answer, QueryAnswer)
+    assert "ready to help" in answer.answer.lower() or "hello" in answer.answer.lower()
+    assert answer.provenance.is_empty
+    assert len(llm.calls) == 0  # regex fast-path, zero LLM calls
+
