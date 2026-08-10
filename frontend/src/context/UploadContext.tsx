@@ -3,8 +3,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { uploadDocument } from "@/lib/api";
 import type { UploadedDocument, UploadState, DocumentInfo } from "@/lib/types";
+import { useAuth } from "@/context/AuthContext";
 
-const LOCAL_STORAGE_KEY = "docmind_thread_docs_v1";
+const LOCAL_STORAGE_KEY_PREFIX = "docmind_thread_docs_";
 
 interface UploadContextType {
   uploadState: UploadState;
@@ -21,32 +22,38 @@ interface UploadContextType {
 const UploadContext = createContext<UploadContextType | undefined>(undefined);
 
 export function UploadProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const storageKey = user ? `${LOCAL_STORAGE_KEY_PREFIX}${user.id}` : null;
+
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [uploadingThreadId, setUploadingThreadId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [threadDocMap, setThreadDocMap] = useState<Record<string, UploadedDocument>>({});
 
-  // Load persisted thread documents on mount
+  // Load persisted thread documents on mount or user change
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
-        setThreadDocMap(JSON.parse(saved));
-      }
-    } catch {
-      // Ignore localStorage read errors
+    if (!storageKey) {
+      setThreadDocMap({});
+      return;
     }
-  }, []);
+    try {
+      const saved = localStorage.getItem(storageKey);
+      setThreadDocMap(saved ? JSON.parse(saved) : {});
+    } catch {
+      setThreadDocMap({});
+    }
+  }, [storageKey]);
 
   // Sync to localStorage on threadDocMap change
   const persistThreadDocs = useCallback((map: Record<string, UploadedDocument>) => {
+    if (!storageKey) return;
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(map));
+      localStorage.setItem(storageKey, JSON.stringify(map));
     } catch {
       // Ignore localStorage write errors
     }
-  }, []);
+  }, [storageKey]);
 
   const setThreadDocument = useCallback((threadId: string, doc: UploadedDocument | DocumentInfo) => {
     if (!threadId || !doc) return;

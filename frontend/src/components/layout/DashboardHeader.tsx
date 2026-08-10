@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import HealthIndicator from "@/components/dashboard/HealthIndicator";
+import { useAuth } from "@/context/AuthContext";
 
 interface DashboardHeaderProps {
   federatedSearch: boolean;
@@ -14,6 +17,8 @@ export default function DashboardHeader({
   auditMode,
   onToggleAudit,
 }: DashboardHeaderProps) {
+  const { user, logout } = useAuth();
+
   return (
     <header className="h-16 flex items-center justify-between px-lg glass-nav bg-white/80 dark:bg-[#0c1021]/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 z-30 sticky top-0 text-slate-900 dark:text-white transition-colors">
       <div className="flex items-center gap-lg">
@@ -75,13 +80,37 @@ export default function DashboardHeader({
           <span className="text-[12px]">Audit</span>
         </button>
 
+        {/* User Avatar Badge on Top Right */}
+        {user ? (
+          <div className="relative group flex items-center">
+            <div
+              className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-blue-500 text-white font-bold text-sm flex items-center justify-center shadow-md cursor-pointer border-2 border-white dark:border-slate-800 transition-transform group-hover:scale-105"
+              title={user.email}
+            >
+              {user.email.charAt(0).toUpperCase()}
+            </div>
 
-        {/* User Avatar */}
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
-          JD
-        </div>
+            {/* Hover Tooltip displaying email & Sign Out */}
+            <div className="absolute right-0 top-11 hidden group-hover:flex flex-col items-end min-w-[200px] bg-white dark:bg-[#0c1021] border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xl z-50 fade-in">
+              <span className="text-xs font-semibold text-slate-900 dark:text-white truncate max-w-[180px]">
+                {user.email}
+              </span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 mb-2">Authenticated User</span>
+              <button
+                onClick={logout}
+                className="w-full flex items-center justify-center gap-1.5 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 py-1.5 px-3 rounded-lg font-medium transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+            DM
+          </div>
+        )}
       </div>
     </header>
   );
 }
-

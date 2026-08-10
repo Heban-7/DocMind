@@ -1,7 +1,7 @@
 {
   "doc_id": "d0effa290ba2",
-  "source_filename": "f1bcf905ca_20191010_Pharmaceutical-Manufacturing-Opportunites-in-Ethiopia_VF.pdf",
-  "source_path": "C:\\Users\\liulj\\Desktop\\AI_Engineer\\The_Document_Intelligence_Refinery_Project\\DocMind\\data\\raw\\f1bcf905ca_20191010_Pharmaceutical-Manufacturing-Opportunites-in-Ethiopia_VF.pdf",
+  "source_filename": "f09bab915a_20191010_Pharmaceutical-Manufacturing-Opportunites-in-Ethiopia_VF.pdf",
+  "source_path": "C:\\Users\\liulj\\Desktop\\AI_Engineer\\The_Document_Intelligence_Refinery_Project\\DocMind\\data\\raw\\f09bab915a_20191010_Pharmaceutical-Manufacturing-Opportunites-in-Ethiopia_VF.pdf",
   "page_count": 15,
   "origin_type": "native_digital",
   "layout_complexity": "mixed",
@@ -229,5 +229,5 @@
     "cost=needs_layout_model: derived from origin 'native_digital' and layout 'mixed'"
   ],
   "triage_version": "1.1.0",
-  "created_at": "2026-08-01T13:12:10.289862Z"
+  "created_at": "2026-08-06T20:03:24.355498Z"
 }

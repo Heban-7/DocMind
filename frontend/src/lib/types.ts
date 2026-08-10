@@ -1,5 +1,29 @@
 /* ─── TypeScript interfaces mirroring FastAPI Pydantic schemas ─── */
 
+/* ─── Auth types ─── */
+
+export interface UserRegister {
+  email: string;
+  password: string;
+}
+
+export interface UserLogin {
+  email: string;
+  password: string;
+}
+
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+}
+
+/* ─── API types ─── */
+
 export interface HealthResponse {
   status: string;
   version: string;

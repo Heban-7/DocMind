@@ -6,11 +6,18 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
+from src.api.dependencies import get_current_user_id
 from src.api.main import create_app
 from src.api.schemas import ChatResponse, HistoryResponse, UploadResponse
 
 
 def _client() -> TestClient:
+    app = create_app()
+    app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
+    return TestClient(app)
+
+
+def _unauth_client() -> TestClient:
     return TestClient(create_app())
 
 
@@ -20,6 +27,56 @@ def test_health():
     body = res.json()
     assert body["status"] == "ok"
     assert body["version"]
+
+
+def test_protected_endpoints_require_auth():
+    client = _unauth_client()
+    assert client.post("/upload").status_code == 401
+    assert client.post("/chat", json={"message": "hi", "thread_id": "t1"}).status_code == 401
+    assert client.get("/history/t1").status_code == 401
+    assert client.get("/threads").status_code == 401
+    assert client.get("/documents").status_code == 401
+
+
+def test_auth_register_and_login(tmp_path):
+    from uuid import uuid4
+    client = _unauth_client()
+    unique_email = f"test_{uuid4().hex[:8]}@example.com"
+    
+    # Register user
+    reg_res = client.post(
+        "/api/auth/register",
+        json={"email": unique_email, "password": "password123"},
+    )
+    assert reg_res.status_code == 201
+    user_data = reg_res.json()
+    assert user_data["email"] == unique_email
+    assert "id" in user_data
+
+    # Duplicate registration fails
+    dup_res = client.post(
+        "/api/auth/register",
+        json={"email": unique_email, "password": "password123"},
+    )
+    assert dup_res.status_code == 409
+
+    # Login user
+    login_res = client.post(
+        "/api/auth/login",
+        json={"email": unique_email, "password": "password123"},
+    )
+    assert login_res.status_code == 200
+    token_data = login_res.json()
+    assert "access_token" in token_data
+    token = token_data["access_token"]
+
+    # Access /api/auth/me with Bearer token
+    me_res = client.get(
+        "/api/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert me_res.status_code == 200
+    assert me_res.json()["email"] == unique_email
 
 
 def test_upload_rejects_non_pdf():
@@ -103,8 +160,6 @@ def test_chat_with_custom_model_parameter():
     mock_run.assert_called_once()
 
 
-
-
 def test_history_mocked():
     fake = HistoryResponse(
         thread_id="t-1",
@@ -138,7 +193,6 @@ def test_save_upload_writes_pdf(tmp_path):
     upload.filename = "My Report!.pdf"
     upload.content_type = "application/pdf"
     upload.file = MagicMock()
-    # copyfileobj reads from .file
     from io import BytesIO
 
     upload.file = BytesIO(b"%PDF-1.4 content")
@@ -188,4 +242,3 @@ def test_pdf_endpoint_404_when_missing():
     with patch("src.api.routers.get_pdf_file_path", side_effect=FileNotFoundError("Missing")):
         res = _client().get("/documents/nonexistent/pdf")
     assert res.status_code == 404
-

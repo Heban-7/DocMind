@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import WebGLBackground from "@/components/landing/WebGLBackground";
+import { useAuth } from "@/context/AuthContext";
 
 const capabilities = [
   {
@@ -65,6 +67,17 @@ const advantages = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const handleTryRefinery = () => {
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    } else {
+      router.push("/login?redirect=/dashboard");
+    }
+  };
+
   return (
     <>
       <WebGLBackground />
@@ -86,14 +99,20 @@ export default function LandingPage() {
               An agentic AI pipeline that ingests complex PDFs, financial reports, and scanned files with spatial provenance and zero-trust verification.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-md">
-              <Link
-                href="/dashboard"
-                className="bg-primary text-white h-14 px-xl rounded-lg font-label-md text-label-md font-bold flex items-center gap-sm hover:opacity-90 transition-opacity shadow-md"
+              <button
+                onClick={handleTryRefinery}
+                className="bg-primary text-white h-14 px-xl rounded-lg font-label-md text-label-md font-bold flex items-center gap-sm hover:opacity-90 transition-opacity shadow-md cursor-pointer"
               >
                 Try the Refinery
                 <span className="material-symbols-outlined">arrow_forward</span>
-              </Link>
-              <button className="border border-slate-300 dark:border-white/20 text-slate-900 dark:text-white h-14 px-xl rounded-lg font-label-md text-label-md font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              </button>
+              <button
+                onClick={() => {
+                  const el = document.getElementById("hero-section");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="border border-slate-300 dark:border-white/20 text-slate-900 dark:text-white h-14 px-xl rounded-lg font-label-md text-label-md font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              >
                 View Architecture
               </button>
             </div>
