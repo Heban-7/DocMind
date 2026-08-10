@@ -70,6 +70,7 @@ def save_upload(file: UploadFile, *, destination_dir: Path | None = None) -> Pat
 def process_upload(
     file: UploadFile,
     *,
+    user_id: str = "",
     skip_embed: bool | None = None,
 ) -> UploadResponse:
     """Save PDF, run Phases 1-4 indexing, return an UploadResponse."""
@@ -81,7 +82,7 @@ def process_upload(
         }
 
     saved = save_upload(file)
-    logger.info("upload saved path=%s", saved)
+    logger.info("upload saved path=%s user=%s", saved, user_id)
     try:
         result = ingest_pdf(saved, skip_phase4=False, skip_embed=skip_embed)
     except Exception:
@@ -125,29 +126,39 @@ def _init_thread_doc_db():
             CREATE TABLE IF NOT EXISTS thread_documents (
                 thread_id TEXT PRIMARY KEY,
                 document_id TEXT NOT NULL,
+                user_id TEXT NOT NULL DEFAULT '',
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
+        # Ensure user_id column exists (migration for existing DBs)
+        try:
+            conn.execute("SELECT user_id FROM thread_documents LIMIT 1")
+        except sqlite3.OperationalError:
+            conn.execute("ALTER TABLE thread_documents ADD COLUMN user_id TEXT NOT NULL DEFAULT ''")
         conn.commit()
         conn.close()
     except Exception as exc:
         logger.warning("Failed to init thread_documents db: %s", exc)
 
 
-def save_thread_document(thread_id: str, document_id: str) -> None:
-    if not thread_id or not document_id:
+def save_thread_document(thread_id: str, document_id: str | None = None, user_id: str = "") -> None:
+    if not thread_id:
         return
     try:
         _init_thread_doc_db()
         conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
+        doc_id = document_id or ""
         conn.execute(
             """
-            INSERT INTO thread_documents (thread_id, document_id)
-            VALUES (?, ?)
-            ON CONFLICT(thread_id) DO UPDATE SET document_id = excluded.document_id, updated_at = CURRENT_TIMESTAMP
+            INSERT INTO thread_documents (thread_id, document_id, user_id)
+            VALUES (?, ?, ?)
+            ON CONFLICT(thread_id) DO UPDATE SET
+                document_id = CASE WHEN excluded.document_id != '' THEN excluded.document_id ELSE thread_documents.document_id END,
+                user_id = CASE WHEN excluded.user_id != '' THEN excluded.user_id ELSE thread_documents.user_id END,
+                updated_at = CURRENT_TIMESTAMP
             """,
-            (thread_id, document_id),
+            (thread_id, doc_id, user_id),
         )
         conn.commit()
         conn.close()
@@ -193,11 +204,11 @@ def get_document_info(document_id: str) -> DocumentInfo | None:
     return None
 
 
-def run_chat(payload: ChatRequest) -> ChatResponse:
+def run_chat(payload: ChatRequest, *, user_id: str = "") -> ChatResponse:
     """Invoke the LangGraph Query Agent and return answer + provenance."""
     thread_id = payload.thread_id
-    if payload.document_id:
-        save_thread_document(thread_id, payload.document_id)
+    # Always record thread ownership for tenant isolation
+    save_thread_document(thread_id, payload.document_id, user_id=user_id)
 
     bound_doc_id = get_thread_document(thread_id)
     doc_pin = None if payload.federated_search else (payload.document_id or bound_doc_id)
@@ -224,11 +235,49 @@ def run_chat(payload: ChatRequest) -> ChatResponse:
     )
 
 
-def fetch_history(thread_id: str) -> HistoryResponse:
+def run_chat_stream(payload: ChatRequest, *, user_id: str = ""):
+    """Stream response tokens followed by metadata JSON as Server-Sent Events."""
+    import time
+    res = run_chat(payload, user_id=user_id)
+    text = res.response
+    words = text.split(" ")
+    for i, word in enumerate(words):
+        chunk = word if i == len(words) - 1 else word + " "
+        evt = {"type": "token", "token": chunk}
+        yield f"data: {json.dumps(evt)}\n\n"
+        time.sleep(0.012)
+
+    done_evt = {
+        "type": "done",
+        "provenance": res.provenance,
+        "follow_ups": res.follow_ups,
+    }
+    yield f"data: {json.dumps(done_evt)}\n\n"
+
+
+def fetch_history(thread_id: str, *, user_id: str = "") -> HistoryResponse:
     """Load persisted conversation turns for ``thread_id``."""
     tid = (thread_id or "").strip()
     if not tid:
         raise ValueError("thread_id must be a non-empty string.")
+
+    # Enforce tenant isolation for thread history if user_id is passed
+    if user_id:
+        _init_thread_doc_db()
+        try:
+            conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
+            cursor = conn.execute(
+                "SELECT user_id FROM thread_documents WHERE thread_id = ?",
+                (tid,),
+            )
+            row = cursor.fetchone()
+            conn.close()
+            if row and row[0] and row[0] != user_id:
+                raise ValueError("Access denied: thread belongs to another user.")
+        except ValueError:
+            raise
+        except Exception:
+            pass
     agent = build_query_agent(None, enable_memory=True)
     messages = [
         HistoryMessage(role=m.role.value, content=m.content)
@@ -244,8 +293,8 @@ def fetch_history(thread_id: str) -> HistoryResponse:
     )
 
 
-def list_threads() -> ThreadListResponse:
-    """Return all active thread_ids ordered by most recent activity (top to down)."""
+def list_threads(*, user_id: str = "") -> ThreadListResponse:
+    """Return all active thread_ids ordered by most recent activity for the user."""
     if not CHECKPOINTS_DB_PATH.exists():
         return ThreadListResponse(threads=[])
 
@@ -254,7 +303,20 @@ def list_threads() -> ThreadListResponse:
         cursor = conn.execute(
             "SELECT thread_id, MAX(rowid) AS last_active FROM checkpoints GROUP BY thread_id ORDER BY last_active DESC"
         )
-        thread_ids = [row[0] for row in cursor.fetchall() if row[0]]
+        all_thread_ids = [row[0] for row in cursor.fetchall() if row[0]]
+
+        # Filter threads strictly by user_id
+        if user_id:
+            _init_thread_doc_db()
+            cursor2 = conn.execute(
+                "SELECT thread_id FROM thread_documents WHERE user_id = ?",
+                (user_id,),
+            )
+            user_thread_ids = {row[0] for row in cursor2.fetchall()}
+            thread_ids = [tid for tid in all_thread_ids if tid in user_thread_ids]
+        else:
+            thread_ids = all_thread_ids
+
         conn.close()
     except Exception:
         logger.exception("Failed to query checkpoints DB")
@@ -287,7 +349,7 @@ def list_threads() -> ThreadListResponse:
 
 
 
-def list_documents() -> DocumentListResponse:
+def list_documents(*, user_id: str = "") -> DocumentListResponse:
     """Return all ingested document profiles from PROFILES_DIR."""
     if not PROFILES_DIR.exists():
         return DocumentListResponse(documents=[])

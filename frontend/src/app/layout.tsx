@@ -1,23 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
+const geistSans = { variable: "--font-geist-sans" };
+const geistMono = { variable: "--font-geist-mono" };
+const inter = { variable: "--font-inter" };
 
 export const metadata: Metadata = {
   title: "DocMind | Enterprise Document Intelligence",
@@ -31,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import { UploadProvider } from "@/context/UploadContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 export default function RootLayout({
   children,
@@ -69,7 +57,9 @@ export default function RootLayout({
 
       <body className="bg-background text-on-background font-body-md overflow-x-hidden selection:bg-primary/30 transition-colors duration-300">
         <ThemeProvider>
-          <UploadProvider>{children}</UploadProvider>
+          <AuthProvider>
+            <UploadProvider>{children}</UploadProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

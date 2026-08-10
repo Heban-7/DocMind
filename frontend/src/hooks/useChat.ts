@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { fetchHistory, sendChatMessage } from "@/lib/api";
+import { fetchHistory, sendChatMessageStream } from "@/lib/api";
 import type { ChatMessageUI } from "@/lib/types";
 
 export function useChat() {
@@ -37,34 +37,48 @@ export function useChat() {
         timestamp: Date.now(),
       };
 
-      setMessages((prev) => [...prev, userMsg]);
+      const aiMsgId = crypto.randomUUID();
+      const initialAiMsg: ChatMessageUI = {
+        id: aiMsgId,
+        role: "ai",
+        content: "",
+        provenance: [],
+        timestamp: Date.now(),
+      };
+
+      setMessages((prev) => [...prev, userMsg, initialAiMsg]);
       setIsLoading(true);
       setError(null);
 
-      try {
-        const res = await sendChatMessage({
+      await sendChatMessageStream(
+        {
           message: text,
           thread_id: currentThreadId,
           document_id: effectiveDocId,
           federated_search: options?.federatedSearch,
           audit_mode: options?.auditMode,
           model: options?.model,
-        });
-
-        const aiMsg: ChatMessageUI = {
-          id: crypto.randomUUID(),
-          role: "ai",
-          content: res.response,
-          provenance: res.provenance,
-          timestamp: Date.now(),
-        };
-
-        setMessages((prev) => [...prev, aiMsg]);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Chat failed");
-      } finally {
-        setIsLoading(false);
-      }
+        },
+        (token) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMsgId ? { ...msg, content: msg.content + token } : msg
+            )
+          );
+        },
+        (provenance) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMsgId ? { ...msg, provenance } : msg
+            )
+          );
+          setIsLoading(false);
+        },
+        (err) => {
+          setError(err.message || "Streaming response failed");
+          setIsLoading(false);
+        }
+      );
     },
     []
   );
@@ -93,7 +107,6 @@ export function useChat() {
       setIsLoading(false);
     }
   }, []);
-
 
   const newChat = useCallback(() => {
     threadIdRef.current = crypto.randomUUID();

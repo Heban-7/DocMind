@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import ChatMessage from "@/components/chat/ChatMessage";
@@ -9,10 +10,15 @@ import WelcomeState from "@/components/chat/WelcomeState";
 import { useChat } from "@/hooks/useChat";
 import { useUpload } from "@/hooks/useUpload";
 import { useThreads } from "@/hooks/useThreads";
+import { useAuth } from "@/context/AuthContext";
 
 import ProcessingProgressMessage from "@/components/chat/ProcessingProgressMessage";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // All custom hooks called unconditionally at top level
   const { messages, isLoading, error: chatError, threadId, activeDocId, send, loadThread, newChat } = useChat();
   const { uploadState, uploadingThreadId, selectedFile, error: uploadError, upload, getThreadDocument, setThreadDocument } = useUpload();
   const { threads, refresh: refreshThreads } = useThreads();
@@ -21,6 +27,13 @@ export default function DashboardPage() {
   const [auditMode, setAuditMode] = useState(false);
   const [selectedModel, setSelectedModel] = useState("gpt-4o");
   const [activeError, setActiveError] = useState<string | null>(null);
+
+  // Auth guard: redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   // Strictly resolve document ONLY for this exact thread
   const activeDoc = getThreadDocument(threadId);
@@ -38,6 +51,18 @@ export default function DashboardPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, uploadState]);
+
+  // Show loading while checking auth
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#03050f]">
+        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
+          <span className="material-symbols-outlined animate-spin">progress_activity</span>
+          <span className="text-sm font-medium">Verifying authentication...</span>
+        </div>
+      </div>
+    );
+  }
 
   const handleSend = async (text: string, modelOverride?: string) => {
     const targetModel = modelOverride || selectedModel;
@@ -136,37 +161,11 @@ export default function DashboardPage() {
               />
             )}
 
-
-
             {/* Chat Messages */}
             <div className="space-y-xl pb-32">
               {messages.map((msg) => (
-                <ChatMessage key={msg.id} message={msg} />
+                <ChatMessage key={msg.id} message={msg} selectedModel={selectedModel} />
               ))}
-
-              {/* Loading Indicator */}
-              {isLoading && (
-                <div className="flex flex-col items-start fade-in">
-                  <div className="max-w-[90%] space-y-md">
-                    <div className="flex items-center gap-sm mb-xs">
-                      <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white text-[16px]">
-                          auto_awesome
-                        </span>
-                      </div>
-                      <span className="font-label-md text-label-md font-bold text-primary">
-                        DocMind AI ({selectedModel})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-sm text-on-surface-variant/50">
-                      <span className="material-symbols-outlined text-sm animate-spin">
-                        progress_activity
-                      </span>
-                      <span className="font-body-sm text-body-sm">Analyzing documents...</span>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </section>
@@ -180,13 +179,9 @@ export default function DashboardPage() {
           onSelectModel={setSelectedModel}
         />
 
-
         {/* Decorative Background Element */}
         <div className="fixed top-0 right-0 -z-10 w-1/3 h-1/3 opacity-20 pointer-events-none blur-[100px] bg-gradient-to-br from-primary to-secondary" />
       </main>
     </>
   );
 }
-
-
-

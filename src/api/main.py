@@ -23,6 +23,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routers import chat_router, health_router, upload_router
+from src.api.routes.auth import auth_router, _init_users_table
 from src.config import RAW_DIR
 
 logger = logging.getLogger("docmind.api")
@@ -45,6 +46,7 @@ def _cors_origins() -> list[str]:
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     RAW_DIR.mkdir(parents=True, exist_ok=True)
+    _init_users_table()
     logger.info("DocMind API ready (raw_dir=%s)", RAW_DIR)
     yield
 
@@ -68,6 +70,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(health_router)
+    app.include_router(auth_router)
     app.include_router(upload_router)
     app.include_router(chat_router)
     return app

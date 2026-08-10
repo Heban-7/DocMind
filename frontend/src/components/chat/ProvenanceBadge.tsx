@@ -12,11 +12,11 @@ function formatDisplayFilename(rawName?: string): string {
   if (!rawName) return "Document.pdf";
   // Strip auto-generated hex/UUID prefixes like 212dc42370e2_
   let clean = rawName.replace(/^[a-f0-9]{8,32}_/i, "");
-  if (clean.length > 22) {
+  if (clean.length > 20) {
     const extIdx = clean.lastIndexOf(".");
     const ext = extIdx !== -1 ? clean.slice(extIdx) : "";
     const base = extIdx !== -1 ? clean.slice(0, extIdx) : clean;
-    clean = `${base.slice(0, 16)}...${ext}`;
+    clean = `${base.slice(0, 14)}...${ext}`;
   }
   return clean;
 }
@@ -54,22 +54,21 @@ export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="inline-flex items-center gap-xs bg-surface-container-lowest border border-outline-variant/30 hover:border-primary px-3 py-1.5 rounded-lg transition-all group"
+        className="w-full flex items-center justify-between gap-1.5 bg-surface-container-lowest border border-outline-variant/30 hover:border-primary px-3 py-1.5 rounded-xl transition-all group shadow-2xs hover:shadow-xs cursor-pointer min-w-0"
         title={
           hash
-            ? `Click to view source PDF evidence.\nContent hash: ${hash}${bboxStr ? `\nBBox: [${bboxStr}]` : ""}`
-            : "Click to view source PDF evidence"
+            ? `Click to view source PDF evidence.\nDocument: ${rawFileName}\nPage: ${page}\nContent hash: ${hash}${bboxStr ? `\nBBox: [${bboxStr}]` : ""}`
+            : `Click to view source PDF evidence (Page ${page})`
         }
       >
-        <span className="material-symbols-outlined text-primary text-sm">
+        <span className="material-symbols-outlined text-primary text-sm shrink-0">
           description
         </span>
-        <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-primary">
-          📄 {displayFileName}
-          {page != null && ` — Page ${page}`}{" "}
+        <span className="font-body-sm text-xs text-on-surface-variant group-hover:text-primary font-medium truncate max-w-[210px]">
+          📄 {displayFileName} — Page {page}{" "}
           <span className="font-bold text-green-600 ml-1">[Verified]</span>
         </span>
-        <span className="material-symbols-outlined text-xs text-on-surface-variant/40 group-hover:text-primary">
+        <span className="material-symbols-outlined text-xs text-on-surface-variant/40 group-hover:text-primary shrink-0">
           visibility
         </span>
       </button>

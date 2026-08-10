@@ -540,7 +540,7 @@ class QueryAgent:
                     system=SYNTHESIZER_SYSTEM,
                     response_format="json",
                     temperature=0.0,
-                    max_tokens=700,
+                    max_tokens=2048,
                 )
                 payload = _extract_json(result.text)
             except Exception as exc:  # pragma: no cover
@@ -549,6 +549,17 @@ class QueryAgent:
 
             refusal = bool(payload.get("refusal"))
             answer = str(payload.get("answer") or "").strip()
+
+            # Clean inline citation badges: convert [📄 doc_id — Page p.X] or [Page p.X] into [Page X]
+            if answer:
+                answer = re.sub(
+                    r"\[(?:📄\s*)?[^\]]*?Page\s*(?:p\.)?\s*(\d+)\]",
+                    r"[Page \1]",
+                    answer,
+                    flags=re.IGNORECASE,
+                )
+                answer = re.sub(r"\[p\.\s*(\d+)\]", r"[Page \1]", answer, flags=re.IGNORECASE)
+
             raw_idxs = payload.get("cite_indices") or []
             cite_indices: list[int] = []
             if isinstance(raw_idxs, list):

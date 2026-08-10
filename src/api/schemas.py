@@ -12,6 +12,30 @@ class HealthResponse(BaseModel):
     version: str
 
 
+# ── Auth schemas ──────────────────────────────────────────────────────────────
+
+class UserRegister(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: str = Field(min_length=3, max_length=100, description="User email address")
+    password: str = Field(min_length=6, description="Password (min 6 characters)")
+
+
+class UserLogin(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: str = Field(min_length=1)
+    password: str = Field(min_length=1)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserProfile(BaseModel):
+    id: str
+    email: str
+
+
 class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
