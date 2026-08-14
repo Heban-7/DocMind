@@ -1,7 +1,7 @@
 {
   "doc_id": "212dc42370e2",
-  "source_filename": "f2578bb23d_sample.pdf",
-  "source_path": "C:\\Users\\liulj\\Desktop\\AI_Engineer\\The_Document_Intelligence_Refinery_Project\\DocMind\\data\\raw\\f2578bb23d_sample.pdf",
+  "source_filename": "7b3cd30fb1_sample.pdf",
+  "source_path": "C:\\Users\\liulj\\Desktop\\AI_Engineer\\The_Document_Intelligence_Refinery_Project\\DocMind\\data\\raw\\7b3cd30fb1_sample.pdf",
   "page_count": 60,
   "origin_type": "native_digital",
   "layout_complexity": "table_heavy",
@@ -229,5 +229,5 @@
     "cost=needs_layout_model: derived from origin 'native_digital' and layout 'table_heavy'"
   ],
   "triage_version": "1.1.0",
-  "created_at": "2026-08-06T22:36:24.000944Z"
+  "created_at": "2026-08-13T13:23:37.258520Z"
 }

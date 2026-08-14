@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,17 +49,16 @@ const capabilities = [
   {
     title: "Spatial Provenance & Bounding Box Citations",
     desc: "Don't just trust the answer—see exactly where it came from with pixel-perfect bounding box citations on the original page.",
-    img: "/Zero-TrustAuditMode(Anti-HallucinationGuardrail).png",
+    img: "/SpatialProvenanceAndBoundingBoxCitations.png",
     alt: "Spatial Provenance",
   },
   {
     title: "Multi-Document Federated Search & Context",
     desc: "Search across your entire library simultaneously while maintaining a persistent conversational context for deep, multi-source analysis.",
-    img: "/Zero-TrustAuditMode(Anti-HallucinationGuardrail).png",
+    img: "/Multi-DocumentFederatedSearchAndConversationalMemory.png",
     alt: "Federated Search",
   },
 ];
-
 
 const advantages = [
   { icon: "account_tree", title: "Intelligent Triage", desc: "Automated document classification & cost-effective routing for enterprise scale." },
@@ -66,9 +66,29 @@ const advantages = [
   { icon: "verified", title: "Zero-Trust Provenance", desc: "Every answer backed by exact page numbers and spatial citations." },
 ];
 
+const heroImages = [
+  {
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCK3ChtdvMBnB-2jTMAALqplO__6ZA21fe2od35atzWrIg23Zp2KOjPY_hHmNePGqMcdCLxHlSIqPsZdK6rFcYrwMinK62WeEN0NTHUvRF4iDSZxM41Yslm2e5l6rTFU1U5k-KnEMkaE6w5Bs9aNvTlJBXIZY-I7blLErZLSDWvxMe3D7jDeRlXmYCnDgIAc1RqNagRs2PB596VPxxp1_YzbQQOQV124yh7Q-5eiRUTvnrmrY5K6ZGZC9CXlbQ3xO66J77WSnHs4WOZ",
+    alt: "DocMind Intelligence Workspace",
+  },
+  {
+    src: "/DocMind Homepage.png",
+    alt: "DocMind Enterprise Document Refinery",
+  },
+];
+
 export default function LandingPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+
+  // Auto-play horizontal image slide every 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleTryRefinery = () => {
     if (isAuthenticated) {
@@ -116,16 +136,59 @@ export default function LandingPage() {
                 View Architecture
               </button>
             </div>
-            <div className="mt-xl max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-lg border border-black/5 dark:border-white/10 glass-card hero-float">
-              <Image
-                alt="DocMind Dashboard Visualization"
-                className="w-full h-auto object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCK3ChtdvMBnB-2jTMAALqplO__6ZA21fe2od35atzWrIg23Zp2KOjPY_hHmNePGqMcdCLxHlSIqPsZdK6rFcYrwMinK62WeEN0NTHUvRF4iDSZxM41Yslm2e5l6rTFU1U5k-KnEMkaE6w5Bs9aNvTlJBXIZY-I7blLErZLSDWvxMe3D7jDeRlXmYCnDgIAc1RqNagRs2PB596VPxxp1_YzbQQOQV124yh7Q-5eiRUTvnrmrY5K6ZGZC9CXlbQ3xO66J77WSnHs4WOZ"
-                width={1280}
-                height={720}
-                unoptimized
-                priority
-              />
+
+            {/* Horizontal Interchangeable Hero Carousel */}
+            <div className="mt-xl max-w-5xl mx-auto relative group hero-float">
+              <div className="rounded-2xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 glass-card">
+                <div
+                  className="flex transition-transform duration-700 ease-in-out w-full"
+                  style={{ transform: `translateX(-${currentHeroIndex * 100}%)` }}
+                >
+                  {heroImages.map((img, idx) => (
+                    <div key={idx} className="w-full flex-shrink-0 relative aspect-[16/9]">
+                      <Image
+                        alt={img.alt}
+                        className="w-full h-full object-cover"
+                        src={img.src}
+                        width={1280}
+                        height={720}
+                        unoptimized
+                        priority={idx === 0}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Slide Indicator Dots */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full z-20 border border-white/20 shadow-md">
+                {heroImages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentHeroIndex(idx)}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${
+                      idx === currentHeroIndex ? "bg-white w-6" : "bg-white/40 hover:bg-white/70 w-2"
+                    }`}
+                    aria-label={`Slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Prev / Next Slide Controls */}
+              <button
+                onClick={() => setCurrentHeroIndex((prev) => (prev === 0 ? heroImages.length - 1 : prev - 1))}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/75 text-white backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 z-20 cursor-pointer border border-white/10 shadow-lg"
+                aria-label="Previous Slide"
+              >
+                <span className="material-symbols-outlined text-xl">chevron_left</span>
+              </button>
+              <button
+                onClick={() => setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/75 text-white backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 z-20 cursor-pointer border border-white/10 shadow-lg"
+                aria-label="Next Slide"
+              >
+                <span className="material-symbols-outlined text-xl">chevron_right</span>
+              </button>
             </div>
           </div>
         </section>
@@ -189,22 +252,26 @@ export default function LandingPage() {
           {capabilities.map((cap, i) => (
             <div
               key={cap.title}
-              className={`flex flex-col ${i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-                } items-center gap-xl feature-interactive group`}
+              className={`flex flex-col ${
+                i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
+              } items-center gap-xl feature-interactive group`}
             >
-              <div className="w-full md:w-2/5 rounded-2xl overflow-hidden border border-black/5 dark:border-white/10 glass-card shadow-lg">
+              {/* Full Size Image Container */}
+              <div className="w-full md:w-[48%] rounded-2xl overflow-hidden border border-black/10 dark:border-white/15 glass-card shadow-xl p-2 bg-slate-950/40 transition-transform duration-300 group-hover:scale-[1.01]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   alt={cap.alt}
-                  className="w-full aspect-video object-cover"
+                  className="w-full h-auto object-contain rounded-xl block max-h-[420px] mx-auto"
                   src={cap.img}
                 />
               </div>
-              <div className={`w-full md:w-3/5 ${i % 2 === 0 ? "md:pl-lg" : "md:pr-lg"}`}>
-                <h3 className="font-headline-lg text-4xl text-slate-900 dark:text-white mb-lg font-bold">
+
+              {/* Capability Description & Title (Note made smaller and cleaner) */}
+              <div className={`w-full md:w-[52%] ${i % 2 === 0 ? "md:pl-xl" : "md:pr-xl"}`}>
+                <h3 className="font-headline-lg text-2xl md:text-3xl text-slate-900 dark:text-white mb-md font-bold tracking-tight">
                   {cap.title}
                 </h3>
-                <p className="text-slate-700 dark:text-slate-300 text-xl md:text-2xl leading-relaxed">
+                <p className="text-slate-700 dark:text-slate-300 text-lg md:text-xl leading-relaxed font-normal">
                   {cap.desc}
                 </p>
               </div>
