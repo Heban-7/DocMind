@@ -101,7 +101,7 @@ flowchart TD
         J --> K3[Tool: PageIndex Tree Traversal]
         K1 & K2 & K3 --> L[Evidence Synthesizer]
         L --> M{Zero-Trust Audit Guard}
-        M -->|Provenance Verified| N[Streaming Response + [Page X] BBox Citations]
+        M -->|Provenance Verified| N["Streaming Response + [Page X] BBox Citations"]
         M -->|Evidence Missing| O[Refusal & Clarification Protocol]
     end
 ```
