@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from src.api.dependencies import get_current_user_id
+from src.api.dependencies import get_current_user_id, get_user_id_header_or_query
 from src.api.main import create_app
 from src.api.schemas import ChatResponse, HistoryResponse, UploadResponse
 
@@ -14,6 +14,7 @@ from src.api.schemas import ChatResponse, HistoryResponse, UploadResponse
 def _client() -> TestClient:
     app = create_app()
     app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
+    app.dependency_overrides[get_user_id_header_or_query] = lambda: "test-user-123"
     return TestClient(app)
 
 
@@ -36,6 +37,8 @@ def test_protected_endpoints_require_auth():
     assert client.get("/history/t1").status_code == 401
     assert client.get("/threads").status_code == 401
     assert client.get("/documents").status_code == 401
+    assert client.get("/documents/any/pdf").status_code == 401
+    assert client.post("/chat/stream", json={"message": "hi", "thread_id": "t1"}).status_code == 401
 
 
 def test_auth_register_and_login(tmp_path):
