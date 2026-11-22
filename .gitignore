@@ -25,3 +25,6 @@ __pycache__/
 
 # side notes
 notes.txt
+
+# Generated pipeline data and local databases (never commit)
+.refinery/
