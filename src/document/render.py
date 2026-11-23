@@ -39,10 +39,17 @@ def _table_md(table: Table, header_from: Table | None = None) -> str:
 
 def render_page(page: Page, tables_by_id: dict[str, Table]) -> str:
     parts = [f"<!-- page {page.number} -->"]
-    if not page.blocks and not page.tables:
+    has_text = any(
+        b.text.strip()
+        for b in page.blocks
+        if b.type not in (BlockType.FIGURE, BlockType.TABLE, BlockType.PAGE_HEADER, BlockType.PAGE_FOOTER)
+    )
+    no_text_flag = any(f.startswith(("no readable text", "no text could")) for f in page.quality.flags)
+    if (not has_text and not page.tables) or no_text_flag:
         reason = "; ".join(page.quality.flags) or "no content"
         parts.append(f"<!-- page {page.number} failed: {reason} -->")
-        return "\n\n".join(parts)
+        if not has_text and not page.tables:
+            return "\n\n".join(parts)
     # A table's caption is printed right above the table (so the chunker keeps
     # them together), and skipped where Docling placed it in reading order.
     table_captions = {" ".join(t.caption.split()) for t in page.tables if t.caption}

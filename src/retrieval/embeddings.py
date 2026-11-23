@@ -17,6 +17,9 @@ from src.llm._http import post_json
 logger = logging.getLogger("docmind.embeddings")
 
 _OPENAI_EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings"
+# text-embedding-3 models accept at most 8,191 tokens per input. 24,000
+# characters stays under that even for dense numeric tables.
+MAX_INPUT_CHARS = 24_000
 
 
 class EmbeddingClient(ABC):
@@ -58,8 +61,9 @@ class OpenAIEmbeddingClient(EmbeddingClient):
     def embed(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
-        # OpenAI rejects empty strings; keep positional alignment with placeholders.
-        cleaned = [t if t.strip() else " " for t in texts]
+        # OpenAI rejects empty strings and inputs over 8,191 tokens; keep positional
+        # alignment with placeholders and cut oversized inputs (about 6k tokens).
+        cleaned = [t[:MAX_INPUT_CHARS] if t.strip() else " " for t in texts]
         vectors: list[list[float]] = []
         for start in range(0, len(cleaned), self.batch_size):
             batch = cleaned[start : start + self.batch_size]

@@ -197,3 +197,13 @@ def test_oversized_prose_is_split_on_sentences():
     assert len(chunks) > 1
     # No chunk should be wildly over the target (sentence-bounded splitting).
     assert all(c.metadata.word_count <= 120 for c in chunks)
+
+
+def test_unclosed_code_fence_stops_at_the_next_page():
+    from src.chunking.engine import ContextAwareChunker
+
+    md = "<!-- page 1 -->\n\n```\nstray fence from a model\n\n<!-- page 2 -->\n\nBody text on page two."
+    chunks = ContextAwareChunker().chunk(md)
+    body = [c for c in chunks if "Body text on page two." in c.text]
+    assert body and 2 in body[0].metadata.page_numbers
+    assert not any("<!-- page 2 -->" in c.text for c in chunks)  # the marker was not swallowed

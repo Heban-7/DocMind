@@ -123,14 +123,15 @@ def _parse_blocks(markdown: str) -> list[_Block]:
             i += 1
             continue
 
-        # Fenced code block: consume until the closing fence.
+        # Fenced code block: consume until the closing fence. An unclosed fence
+        # stops at the next page marker so it cannot swallow the document.
         if stripped.startswith("```"):
             buf = [raw]
             i += 1
-            while i < n and not lines[i].strip().startswith("```"):
+            while i < n and not lines[i].strip().startswith("```") and not _PAGE_RE.match(lines[i].strip()):
                 buf.append(lines[i])
                 i += 1
-            if i < n:  # closing fence
+            if i < n and lines[i].strip().startswith("```"):  # closing fence
                 buf.append(lines[i])
                 i += 1
             blocks.append(_Block("code", "\n".join(buf), page))

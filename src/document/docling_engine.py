@@ -74,9 +74,19 @@ def _ocr_options(is_gpu: bool):
 
 
 def table_mode() -> str:
+    """TableFormer mode. ``auto``: accurate on a GPU, fast on CPU.
+
+    Cell text comes from the PDF's own words, so the mode only affects the
+    grid. On the golden set both modes scored the same on table rows while
+    fast was 1.7x quicker on 2 CPU threads (11.9 s vs 20.5 s per table page).
+    """
     import os
 
-    return os.getenv("DOCMIND_V2_TABLE_MODE", "accurate").lower()
+    mode = os.getenv("DOCMIND_V2_TABLE_MODE", "auto").lower()
+    if mode == "auto":
+        _, is_gpu = _device()
+        return "accurate" if is_gpu else "fast"
+    return mode
 
 
 def converter(ocr: bool):

@@ -208,8 +208,11 @@ def _vision_page(pdf_path: Path, page_no: int, client, guard) -> tuple[list[Bloc
     )
     result = client.analyze_image(buf.getvalue(), prompt)
     guard.record(result.cost_usd)
+    # Models often wrap the transcription in a ``` fence; an unclosed fence would
+    # swallow the rest of the document downstream, so fences are removed.
+    text = "\n".join(ln for ln in result.text.strip().splitlines() if not ln.strip().startswith("```"))
     blocks = []
-    for i, para in enumerate(p for p in re.split(r"\n\s*\n", result.text.strip()) if p.strip()):
+    for i, para in enumerate(p for p in re.split(r"\n\s*\n", text.strip()) if p.strip()):
         blocks.append(Block(block_id=f"p{page_no}-b{i}", type=BlockType.TEXT, text=para.strip()))
     return blocks, result.cost_usd, None
 
@@ -353,6 +356,11 @@ def extract_document(pdf_path: str | Path, *, vision_client=None, allow_vision: 
             if not any(b.text.strip() for b in blocks) and not tables:
                 flags.append("no text could be extracted from this page")
 
+        body = "".join(
+            b.text for b in blocks if b.type not in (BlockType.FIGURE, BlockType.TABLE, BlockType.PAGE_HEADER, BlockType.PAGE_FOOTER)
+        )
+        if not tables and len(re.sub(r"\s+", "", body)) < MIN_TEXT_CHARS and not any("no text" in f for f in flags):
+            flags.append("no readable text on this page (image-only or blank)")
         needs_review = bool(flags) or confidence < OCR_LOW_CONFIDENCE
         pages.append(
             Page(

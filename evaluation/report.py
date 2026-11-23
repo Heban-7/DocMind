@@ -83,8 +83,38 @@ def _extraction(golden: GoldenSet, run_dir: Path) -> dict:
     ran = [d for d in docs_out if d.get("coverage")]
     total_pages = sum(d["pages"] for d in ran)
     engines: dict[str, list[dict]] = defaultdict(list)
+    page_engines: dict[str, list[float]] = defaultdict(list)
+    review_pages = 0
     for d in ran:
-        engines[d["engine"] or "?"].append(d)
+        raw = json.loads((run_dir / "extraction" / f"{d['doc_key']}.json").read_text(encoding="utf-8"))
+        ledger = raw.get("ledger")
+        if ledger:  # V2: speed per page by the engine that read it
+            for row in ledger:
+                page_engines[row["engine"]].append(float(row["seconds"]))
+            review_pages += sum(1 for row in ledger if row.get("needs_review"))
+            d["engine"] = (d["engine"] or "").replace("structured_v2 ", "")
+        else:
+            engines[d["engine"] or "?"].append(d)
+    speed = {
+        e: {
+            "documents": len(ds),
+            "pages": sum(d["pages"] for d in ds),
+            "seconds_per_page": round(
+                sum(d["extract_seconds"] for d in ds) / max(1, sum(d["coverage"]["with_content"] for d in ds)), 2
+            ),
+            "devices": sorted({d["device"] or "?" for d in ds}),
+        }
+        for e, ds in sorted(engines.items())
+    }
+    devices = sorted({d["device"] or "?" for d in ran})
+    for e, secs in sorted(page_engines.items()):
+        speed[e] = {
+            "documents": None,
+            "pages": len(secs),
+            "seconds_per_page": round(statistics.mean(secs), 2),
+            "p95_seconds_per_page": _quantile(secs, 0.95),
+            "devices": devices,
+        }
     return {
         "documents": docs_out,
         "figures": fig_summary(fig_rows),
@@ -96,17 +126,8 @@ def _extraction(golden: GoldenSet, run_dir: Path) -> dict:
             "silently_missing": sum(d["coverage"]["silently_missing"] for d in ran),
             "flagged_failed": sum(d["coverage"]["flagged_failed"] for d in ran),
         },
-        "speed_by_engine": {
-            e: {
-                "documents": len(ds),
-                "pages": sum(d["pages"] for d in ds),
-                "seconds_per_page": round(
-                    sum(d["extract_seconds"] for d in ds) / max(1, sum(d["coverage"]["with_content"] for d in ds)), 2
-                ),
-                "devices": sorted({d["device"] or "?" for d in ds}),
-            }
-            for e, ds in sorted(engines.items())
-        },
+        "speed_by_engine": speed,
+        "pages_needing_review": review_pages,
         "ingest_cost_usd": round(sum(d["cost_usd"] for d in ran), 4),
         "ingest_seconds": round(sum(d["total_seconds"] or 0 for d in ran), 1),
     }
@@ -261,9 +282,19 @@ def render_markdown(r: dict) -> str:
             f"| {cls} | {s['figures']} | {_fmt(s['intact_on_page_pct'], '%')} | {_fmt(s['split_digits_pct'], '%')} | "
             f"{_fmt(s['missing_pct'], '%')} | {_fmt(s['row_intact_pct'], '%')} | {_fmt(s['fact_correct_pct'], '%')} |"
         )
-    lines += ["", "**Speed by engine** (extraction stage, per page that produced content)", "", "| Engine | Documents | Pages | Seconds per page | Device |", "| --- | --- | --- | --- | --- |"]
+    lines += [
+        "",
+        "**Speed by engine** (extraction stage, per page that produced content; for page-level routing, per page by the engine that read it)",
+        "",
+        "| Engine | Pages | Seconds per page | p95 | Device |",
+        "| --- | --- | --- | --- | --- |",
+    ]
     for e, s in ex["speed_by_engine"].items():
-        lines.append(f"| {e} | {s['documents']} | {s['pages']} | {s['seconds_per_page']} | {', '.join(s['devices'])} |")
+        lines.append(
+            f"| {e} | {s['pages']} | {s['seconds_per_page']} | {_fmt(s.get('p95_seconds_per_page'))} | {', '.join(s['devices'])} |"
+        )
+    if ex.get("pages_needing_review"):
+        lines.append(f"\nPages flagged for a person to check: {ex['pages_needing_review']}")
     lines += [
         "",
         "**Per document**",
