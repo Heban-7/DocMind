@@ -1,0 +1,1385 @@
+[
+ {
+  "question_id": "audited_fs_2021-q01",
+  "doc_key": "audited_fs_2021",
+  "question": "In Ethio Telecom's IFRS financial statements for the year ended 30 June 2021, what was revenue from contracts with customers for that year?",
+  "qtype": "lookup_number",
+  "gold_value": 55499196000.0,
+  "gold_value_raw": 55499196.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "Birr 55,499,196 thousand (about Birr 55.5 billion)",
+  "figure_ids": [
+   "audited_fs_2021-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "audited_fs_2021-q02",
+  "doc_key": "audited_fs_2021",
+  "question": "What were Ethio Telecom's finance costs for the year ended 30 June 2021?",
+  "qtype": "lookup_number",
+  "gold_value": -10191041000.0,
+  "gold_value_raw": -10191041.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "Birr (10,191,041) thousand",
+  "figure_ids": [
+   "audited_fs_2021-m05"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "audited_fs_2021-q03",
+  "doc_key": "audited_fs_2021",
+  "question": "What were Ethio Telecom's total assets at 30 June 2021?",
+  "qtype": "lookup_number",
+  "gold_value": 77218285000.0,
+  "gold_value_raw": 77218285.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   2
+  ],
+  "gold_answer_text": "Birr 77,218,285 thousand",
+  "figure_ids": [
+   "audited_fs_2021-m06"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "audited_fs_2021-q04",
+  "doc_key": "audited_fs_2021",
+  "question": "What were Ethio Telecom's retained earnings at 30 June 2021?",
+  "qtype": "lookup_number",
+  "gold_value": -4790941000.0,
+  "gold_value_raw": -4790941.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   2
+  ],
+  "gold_answer_text": "Birr (4,790,941) thousand, a deficit",
+  "figure_ids": [
+   "audited_fs_2021-m08"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "audited_fs_2021-q05",
+  "doc_key": "audited_fs_2021",
+  "question": "By what percentage did Ethio Telecom's profit after tax change from the year ended 30 June 2020 to the year ended 30 June 2021?",
+  "qtype": "change_percent",
+  "gold_value": -40.94,
+  "gold_value_raw": -40.94,
+  "gold_is_percent": true,
+  "tolerance": 0.02,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "-40.9% (9,453,072 to 5,583,227)",
+  "figure_ids": [
+   "audited_fs_2021-m04",
+   "audited_fs_2021-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "audited_fs_2021-q06",
+  "doc_key": "audited_fs_2021",
+  "question": "How many mobile subscribers did Ethio Telecom report at 30 June 2021 in these financial statements?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "dbe_audit_2023-q01",
+  "doc_key": "dbe_audit_2023",
+  "question": "According to the Development Bank of Ethiopia's cash flow statement, how much did the Bank receive from issuing debt securities in the year ended 30 June 2023?",
+  "qtype": "lookup_number",
+  "gold_value": 15854181000.0,
+  "gold_value_raw": 15854181.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   15
+  ],
+  "gold_answer_text": "15,854,181 ETB",
+  "figure_ids": [
+   "dbe_audit_2023-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "dbe_audit_2023-q02",
+  "doc_key": "dbe_audit_2023",
+  "question": "What were the Development Bank of Ethiopia's (Bank, not Group) cash and cash equivalents at the end of the year ended 30 June 2023?",
+  "qtype": "lookup_number",
+  "gold_value": 33087090000.0,
+  "gold_value_raw": 33087090.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   15
+  ],
+  "gold_answer_text": "33,087,090 ETB",
+  "figure_ids": [
+   "dbe_audit_2023-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "dbe_audit_2023-q03",
+  "doc_key": "dbe_audit_2023",
+  "question": "What was the Development Bank of Ethiopia's total income tax expense for the year ended 30 June 2023?",
+  "qtype": "lookup_number",
+  "gold_value": 725496000.0,
+  "gold_value_raw": 725496.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   66
+  ],
+  "gold_answer_text": "725,496 ETB",
+  "figure_ids": [
+   "dbe_audit_2023-m07"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "dbe_audit_2023-q04",
+  "doc_key": "dbe_audit_2023",
+  "question": "By what percentage did the Development Bank of Ethiopia's profit before tax change from the year ended 30 June 2022 to the year ended 30 June 2023?",
+  "qtype": "change_percent",
+  "gold_value": 88.65,
+  "gold_value_raw": 88.65,
+  "gold_is_percent": true,
+  "tolerance": 0.02,
+  "gold_items": [],
+  "gold_pages": [
+   66
+  ],
+  "gold_answer_text": "+88.6% (3,426,199 to 6,463,494)",
+  "figure_ids": [
+   "dbe_audit_2023-m06",
+   "dbe_audit_2023-m05"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "dbe_audit_2023-q05",
+  "doc_key": "dbe_audit_2023",
+  "question": "How much interest did the Development Bank of Ethiopia receive in the year ended 30 June 2023?",
+  "qtype": "lookup_number",
+  "gold_value": 7031415000.0,
+  "gold_value_raw": 7031415.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   15
+  ],
+  "gold_answer_text": "7,031,415 ETB",
+  "figure_ids": [
+   "dbe_audit_2023-m04"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "dbe_audit_2023-q06",
+  "doc_key": "dbe_audit_2023",
+  "question": "What was the Development Bank of Ethiopia's profit before tax for the year ended 30 June 2030?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2010_11-q01",
+  "doc_key": "cbe_2010_11",
+  "question": "According to the CBE Annual Report 2010-11, what were the Bank's total expenses in the fiscal year under review?",
+  "qtype": "lookup_number",
+  "gold_value": 2756000000.0,
+  "gold_value_raw": 2756.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   12
+  ],
+  "gold_answer_text": "Birr 2,756 million",
+  "figure_ids": [
+   "cbe_2010_11-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2010_11-q02",
+  "doc_key": "cbe_2010_11",
+  "question": "What was CBE's staff strength at the end of the 2010/11 fiscal year?",
+  "qtype": "lookup_number",
+  "gold_value": 10753.0,
+  "gold_value_raw": 10753.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   20
+  ],
+  "gold_answer_text": "10,753 employees",
+  "figure_ids": [
+   "cbe_2010_11-m04"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2010_11-q03",
+  "doc_key": "cbe_2010_11",
+  "question": "How many permanent employees did CBE recruit during 2010/11?",
+  "qtype": "lookup_number",
+  "gold_value": 2473.0,
+  "gold_value_raw": 2473.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   20
+  ],
+  "gold_answer_text": "2,473 employees",
+  "figure_ids": [
+   "cbe_2010_11-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2010_11-q04",
+  "doc_key": "cbe_2010_11",
+  "question": "By what percentage did CBE's total expenses increase in 2010/11 compared with the preceding year?",
+  "qtype": "lookup_number",
+  "gold_value": 63.5,
+  "gold_value_raw": 63.5,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   12
+  ],
+  "gold_answer_text": "63.5%",
+  "figure_ids": [
+   "cbe_2010_11-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2010_11-q05",
+  "doc_key": "cbe_2010_11",
+  "question": "How many CBE employees were offered training programs in 2010/11?",
+  "qtype": "lookup_number",
+  "gold_value": 9705.0,
+  "gold_value_raw": 9705.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   20
+  ],
+  "gold_answer_text": "9,705 employees",
+  "figure_ids": [
+   "cbe_2010_11-m05"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2010_11-q06",
+  "doc_key": "cbe_2010_11",
+  "question": "How many ATMs did CBE operate in Kenya according to the 2010-11 annual report?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2009_10-q01",
+  "doc_key": "cbe_2009_10",
+  "question": "According to the CBE Annual Report 2009-10, what were the Bank's total expenses in 2009/10?",
+  "qtype": "lookup_number",
+  "gold_value": 1676000000.0,
+  "gold_value_raw": 1676.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   11
+  ],
+  "gold_answer_text": "Birr 1,676 million",
+  "figure_ids": [
+   "cbe_2009_10-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2009_10-q02",
+  "doc_key": "cbe_2009_10",
+  "question": "How many employees did CBE have at the end of fiscal year 2009/10?",
+  "qtype": "lookup_number",
+  "gold_value": 8726.0,
+  "gold_value_raw": 8726.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   16
+  ],
+  "gold_answer_text": "8,726 employees",
+  "figure_ids": [
+   "cbe_2009_10-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2009_10-q03",
+  "doc_key": "cbe_2009_10",
+  "question": "How many new employees did CBE recruit in 2009/10?",
+  "qtype": "lookup_number",
+  "gold_value": 1209.0,
+  "gold_value_raw": 1209.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   16
+  ],
+  "gold_answer_text": "1,209 employees",
+  "figure_ids": [
+   "cbe_2009_10-m04"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2009_10-q04",
+  "doc_key": "cbe_2009_10",
+  "question": "By what percentage did CBE's total expenses grow from 2008/09 to 2009/10?",
+  "qtype": "change_percent",
+  "gold_value": 48.06,
+  "gold_value_raw": 48.06,
+  "gold_is_percent": true,
+  "tolerance": 0.02,
+  "gold_items": [],
+  "gold_pages": [
+   11
+  ],
+  "gold_answer_text": "+48.1% (1,132 to 1,676)",
+  "figure_ids": [
+   "cbe_2009_10-m01",
+   "cbe_2009_10-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2009_10-q05",
+  "doc_key": "cbe_2009_10",
+  "question": "To what amount was the capital of the Bank increased, according to note 20 of the CBE 2009-10 annual report?",
+  "qtype": "lookup_number",
+  "gold_value": 4000000000.0,
+  "gold_value_raw": 4000000000.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   29
+  ],
+  "gold_answer_text": "4,000,000,000 ETB",
+  "figure_ids": [
+   "cbe_2009_10-m05"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cbe_2009_10-q06",
+  "doc_key": "cbe_2009_10",
+  "question": "What was CBE's mobile banking revenue in 2009/10?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_2019-q01",
+  "doc_key": "ethswitch_2019",
+  "question": "How many interbank transactions did EthSwitch process in the fiscal year covered by its 2019 annual report?",
+  "qtype": "lookup_number",
+  "gold_value": 27062074.0,
+  "gold_value_raw": 27062074.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   9
+  ],
+  "gold_answer_text": "27,062,074 transactions",
+  "figure_ids": [
+   "ethswitch_2019-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_2019-q02",
+  "doc_key": "ethswitch_2019",
+  "question": "How many successful cash withdrawals were among EthSwitch's interbank transactions that year?",
+  "qtype": "lookup_number",
+  "gold_value": 15044699.0,
+  "gold_value_raw": 15044699.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   9
+  ],
+  "gold_answer_text": "15,044,699 transactions",
+  "figure_ids": [
+   "ethswitch_2019-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_2019-q03",
+  "doc_key": "ethswitch_2019",
+  "question": "What did EthSwitch's total assets rise to during the fiscal year under review in the 2019 annual report?",
+  "qtype": "lookup_number",
+  "gold_value": 272937443.0,
+  "gold_value_raw": 272937443.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   25
+  ],
+  "gold_answer_text": "272,937,443.00 ETB",
+  "figure_ids": [
+   "ethswitch_2019-m04"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_2019-q04",
+  "doc_key": "ethswitch_2019",
+  "question": "By what percentage did EthSwitch's profit before tax change from 2019 to 2020, according to the cash flow statement?",
+  "qtype": "change_percent",
+  "gold_value": 105.11,
+  "gold_value_raw": 105.11,
+  "gold_is_percent": true,
+  "tolerance": 0.02,
+  "gold_items": [],
+  "gold_pages": [
+   37
+  ],
+  "gold_answer_text": "+105.1% (13,658,388 to 28,015,111)",
+  "figure_ids": [
+   "ethswitch_2019-m06",
+   "ethswitch_2019-m05"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_2019-q05",
+  "doc_key": "ethswitch_2019",
+  "question": "By what percentage did EthSwitch's interbank transaction volume grow compared with the previous fiscal year?",
+  "qtype": "change_percent",
+  "gold_value": 17.5,
+  "gold_value_raw": 17.5,
+  "gold_is_percent": true,
+  "tolerance": 0.02,
+  "gold_items": [],
+  "gold_pages": [
+   9
+  ],
+  "gold_answer_text": "+17.5% (23,031,552 to 27,062,074)",
+  "figure_ids": [
+   "ethswitch_2019-m02",
+   "ethswitch_2019-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_2019-q06",
+  "doc_key": "ethswitch_2019",
+  "question": "How many mobile wallets were linked to EthSwitch in 2019 according to this report?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "security_disclosure-q01",
+  "doc_key": "security_disclosure",
+  "question": "Under the Security Vulnerability Disclosure Standard Procedure, at least how many working days should a reporter allow before public disclosure?",
+  "qtype": "lookup_number",
+  "gold_value": 120.0,
+  "gold_value_raw": 120.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   11
+  ],
+  "gold_answer_text": "At least 120 working days",
+  "figure_ids": [
+   "security_disclosure-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "security_disclosure-q02",
+  "doc_key": "security_disclosure",
+  "question": "Within how many business days will receipt of a vulnerability report be acknowledged?",
+  "qtype": "lookup_number",
+  "gold_value": 5.0,
+  "gold_value_raw": 5.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   13
+  ],
+  "gold_answer_text": "5 business days",
+  "figure_ids": [
+   "security_disclosure-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "security_disclosure-q03",
+  "doc_key": "security_disclosure",
+  "question": "What is the minimum TLS version recommended in the Security Vulnerability Disclosure Standard Procedure?",
+  "qtype": "lookup_number",
+  "gold_value": 1.2,
+  "gold_value_raw": 1.2,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   6
+  ],
+  "gold_answer_text": "TLS 1.2",
+  "figure_ids": [
+   "security_disclosure-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "security_disclosure-q04",
+  "doc_key": "security_disclosure",
+  "question": "According to the Security Vulnerability Disclosure Standard Procedure, which kinds of vulnerabilities are out of scope?",
+  "qtype": "list",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [
+   "Volumetric vulnerabilities",
+   "headers",
+   "TLS1.0 support"
+  ],
+  "gold_pages": [
+   9
+  ],
+  "gold_answer_text": "Volumetric vulnerabilities; headers; TLS1.0 support",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "security_disclosure-q05",
+  "doc_key": "security_disclosure",
+  "question": "What cash reward does the procedure pay for a critical vulnerability?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_budget-q01",
+  "doc_key": "am_budget",
+  "question": "In the 2013 E.C. regular budget and expense document, what was the total approved budget for budget year 2013?",
+  "qtype": "lookup_number",
+  "gold_value": 97447000.0,
+  "gold_value_raw": 97447.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "97,447 thousand birr",
+  "figure_ids": [
+   "am_budget-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_budget-q02",
+  "doc_key": "am_budget",
+  "question": "What was the total expense in budget year 2012 according to the 2013 E.C. budget and expense document?",
+  "qtype": "lookup_number",
+  "gold_value": 50401000.0,
+  "gold_value_raw": 50401.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "50,401 thousand birr",
+  "figure_ids": [
+   "am_budget-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_budget-q03",
+  "doc_key": "am_budget",
+  "question": "What approved budget did Program 2 (investment promotion) receive for 2013 E.C.?",
+  "qtype": "lookup_number",
+  "gold_value": 14963000.0,
+  "gold_value_raw": 14963.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "14,963 thousand birr",
+  "figure_ids": [
+   "am_budget-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_budget-q04",
+  "doc_key": "am_budget",
+  "question": "By what percentage did the total approved budget change from budget year 2012 to budget year 2013?",
+  "qtype": "change_percent",
+  "gold_value": 18.32,
+  "gold_value_raw": 18.32,
+  "gold_is_percent": true,
+  "tolerance": 0.02,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "+18.3% (82,358 to 97,447)",
+  "figure_ids": [
+   "am_budget-m05",
+   "am_budget-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_budget-q05",
+  "doc_key": "am_budget",
+  "question": "How much had Program 1 (management and administration) spent up to the third quarter of 2013 E.C.?",
+  "qtype": "lookup_number",
+  "gold_value": 18100000.0,
+  "gold_value_raw": 18100.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "18,100 thousand birr",
+  "figure_ids": [
+   "am_budget-m04"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_budget-q06",
+  "doc_key": "am_budget",
+  "question": "What was the approved capital budget for 2014 E.C.?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_procurement-q01",
+  "doc_key": "am_procurement",
+  "question": "In the 2013 E.C. procurement information document, what was the total contract price of the single-source procurement?",
+  "qtype": "lookup_number",
+  "gold_value": 640780.0,
+  "gold_value_raw": 640780.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "640,780.00 birr",
+  "figure_ids": [
+   "am_procurement-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_procurement-q02",
+  "doc_key": "am_procurement",
+  "question": "What was the total contract price for the hotel service procured by restricted tender?",
+  "qtype": "lookup_number",
+  "gold_value": 482228.46,
+  "gold_value_raw": 482228.46,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "482,228.46 birr",
+  "figure_ids": [
+   "am_procurement-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_procurement-q03",
+  "doc_key": "am_procurement",
+  "question": "What was the total contract price for the garage service procured under open tender 006/2011?",
+  "qtype": "lookup_number",
+  "gold_value": 375400.0,
+  "gold_value_raw": 375400.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "375,400.00 birr",
+  "figure_ids": [
+   "am_procurement-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_procurement-q04",
+  "doc_key": "am_procurement",
+  "question": "Which procurement methods appear in the 2013 E.C. procurement information document?",
+  "qtype": "list",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [
+   "single source",
+   "restricted tender",
+   "open tender"
+  ],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "single source; restricted tender; open tender",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_procurement-q05",
+  "doc_key": "am_procurement",
+  "question": "What was the contract price for vehicle procurement in this document?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_audit_findings-q01",
+  "doc_key": "am_audit_findings",
+  "question": "Which budget year was audited, according to the 2013 E.C. audit finding information document?",
+  "qtype": "lookup_number",
+  "gold_value": 2011.0,
+  "gold_value_raw": 2011.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "2011 E.C.",
+  "figure_ids": [
+   "am_audit_findings-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_audit_findings-q02",
+  "doc_key": "am_audit_findings",
+  "question": "Which institution was audited in the 2013 E.C. audit finding information document?",
+  "qtype": "list",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [
+   "Ethiopian Investment Commission"
+  ],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "Ethiopian Investment Commission",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "am_audit_findings-q03",
+  "doc_key": "am_audit_findings",
+  "question": "What total amount of money did the auditors recover in this document?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "pharma_2019-q01",
+  "doc_key": "pharma_2019",
+  "question": "According to the Pharmaceutical Manufacturing Opportunities in Ethiopia report, what was Ethiopia's average economic growth over the past 10 years?",
+  "qtype": "lookup_number",
+  "gold_value": 9.68,
+  "gold_value_raw": 9.68,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   4
+  ],
+  "gold_answer_text": "9.68%",
+  "figure_ids": [
+   "pharma_2019-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "pharma_2019-q02",
+  "doc_key": "pharma_2019",
+  "question": "What share of Africa's population does the pharmaceutical report attribute to Ethiopia?",
+  "qtype": "lookup_number",
+  "gold_value": 8.5,
+  "gold_value_raw": 8.5,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   9
+  ],
+  "gold_answer_text": "~8.5%",
+  "figure_ids": [
+   "pharma_2019-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "pharma_2019-q03",
+  "doc_key": "pharma_2019",
+  "question": "What was the total value of pharmaceutical exports from Ethiopia in 2030?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_10th-q01",
+  "doc_key": "ethswitch_10th_2023_24",
+  "question": "How many P2P interoperable transactions did EthSwitch process in 2023/24, according to its 10th annual report?",
+  "qtype": "lookup_number",
+  "gold_value": 14140881.0,
+  "gold_value_raw": 14140881.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   11
+  ],
+  "gold_answer_text": "14,140,881 transactions",
+  "figure_ids": [
+   "ethswitch_10th-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_10th-q02",
+  "doc_key": "ethswitch_10th_2023_24",
+  "question": "By what percentage did EthSwitch's total assets increase in 2023/24?",
+  "qtype": "lookup_number",
+  "gold_value": 64.0,
+  "gold_value_raw": 64.0,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   12
+  ],
+  "gold_answer_text": "64%",
+  "figure_ids": [
+   "ethswitch_10th-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_10th-q03",
+  "doc_key": "ethswitch_10th_2023_24",
+  "question": "By what percentage did EthSwitch's net profit before tax increase in 2023/24?",
+  "qtype": "lookup_number",
+  "gold_value": 172.0,
+  "gold_value_raw": 172.0,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   12
+  ],
+  "gold_answer_text": "172%",
+  "figure_ids": [
+   "ethswitch_10th-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethswitch_10th-q04",
+  "doc_key": "ethswitch_10th_2023_24",
+  "question": "How many personalized cards did EthSwitch deliver to member banks in 2023/24?",
+  "qtype": "lookup_number",
+  "gold_value": 380795.0,
+  "gold_value_raw": 380795.0,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   18
+  ],
+  "gold_answer_text": "380,795 cards",
+  "figure_ids": [
+   "ethswitch_10th-m04"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "ethiore_2019-q01",
+  "doc_key": "ethiore_2019",
+  "question": "According to the Ethiopian Reinsurance annual report (June 2019 file), what did the gross written premiums of the insurance industry reach as at 30 June 2017?",
+  "qtype": "lookup_number",
+  "gold_value": 7400000000.0,
+  "gold_value_raw": 7.4,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   9
+  ],
+  "gold_answer_text": "Birr 7.4 billion",
+  "figure_ids": [
+   "ethiore_2019-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_08-q01",
+  "doc_key": "cpi_2025_08",
+  "question": "What was the year-on-year general inflation rate for August EFY2017 in the CPI bulletin?",
+  "qtype": "lookup_number",
+  "gold_value": 13.6,
+  "gold_value_raw": 13.6,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "13.6",
+  "figure_ids": [
+   "cpi_2025_08-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_08-q02",
+  "doc_key": "cpi_2025_08",
+  "question": "According to the August EFY2017 CPI bulletin, what was the year-on-year general inflation rate a year earlier, in August EFY2016?",
+  "qtype": "lookup_number",
+  "gold_value": 17.2,
+  "gold_value_raw": 17.2,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "17.2",
+  "figure_ids": [
+   "cpi_2025_08-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_08-q03",
+  "doc_key": "cpi_2025_08",
+  "question": "What was the month-on-month general inflation rate in August EFY2017?",
+  "qtype": "lookup_number",
+  "gold_value": 1.1,
+  "gold_value_raw": 1.1,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "1.1",
+  "figure_ids": [
+   "cpi_2025_08-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_08-q04",
+  "doc_key": "cpi_2025_08",
+  "question": "What was year-on-year food inflation in August EFY2017?",
+  "qtype": "lookup_number",
+  "gold_value": 12.7,
+  "gold_value_raw": 12.7,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   2
+  ],
+  "gold_answer_text": "12.7",
+  "figure_ids": [
+   "cpi_2025_08-m04"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_08-q05",
+  "doc_key": "cpi_2025_08",
+  "question": "What was year-on-year non-food inflation in August EFY2017?",
+  "qtype": "lookup_number",
+  "gold_value": 15.1,
+  "gold_value_raw": 15.1,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   2
+  ],
+  "gold_answer_text": "15.1",
+  "figure_ids": [
+   "cpi_2025_08-m05"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_08-q06",
+  "doc_key": "cpi_2025_08",
+  "question": "What was the year-on-year inflation rate for Kenya in August EFY2017 according to this bulletin?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_03-q01",
+  "doc_key": "cpi_2025_03",
+  "question": "What was the year-on-year general inflation rate for March EFY2017 in the CPI bulletin?",
+  "qtype": "lookup_number",
+  "gold_value": 13.6,
+  "gold_value_raw": 13.6,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "13.6",
+  "figure_ids": [
+   "cpi_2025_03-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_03-q02",
+  "doc_key": "cpi_2025_03",
+  "question": "According to the March EFY2017 CPI bulletin, what was the year-on-year general inflation rate a year earlier, in March EFY2016?",
+  "qtype": "lookup_number",
+  "gold_value": 26.2,
+  "gold_value_raw": 26.2,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "26.2",
+  "figure_ids": [
+   "cpi_2025_03-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_03-q03",
+  "doc_key": "cpi_2025_03",
+  "question": "What was the month-on-month general inflation rate in March EFY2017?",
+  "qtype": "lookup_number",
+  "gold_value": 2.7,
+  "gold_value_raw": 2.7,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "2.7",
+  "figure_ids": [
+   "cpi_2025_03-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_03-q04",
+  "doc_key": "cpi_2025_03",
+  "question": "What was year-on-year food inflation in March EFY2017?",
+  "qtype": "lookup_number",
+  "gold_value": 11.9,
+  "gold_value_raw": 11.9,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   2
+  ],
+  "gold_answer_text": "11.9",
+  "figure_ids": [
+   "cpi_2025_03-m04"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_03-q05",
+  "doc_key": "cpi_2025_03",
+  "question": "What was year-on-year non-food inflation in March EFY2017?",
+  "qtype": "lookup_number",
+  "gold_value": 16.2,
+  "gold_value_raw": 16.2,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   2
+  ],
+  "gold_answer_text": "16.2",
+  "figure_ids": [
+   "cpi_2025_03-m05"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_03-q06",
+  "doc_key": "cpi_2025_03",
+  "question": "What was the year-on-year inflation rate for Kenya in March EFY2017 according to this bulletin?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_06-q01",
+  "doc_key": "cpi_2025_06",
+  "question": "What was the year-on-year general inflation rate for June EFY2017 in the CPI bulletin?",
+  "qtype": "lookup_number",
+  "gold_value": 13.9,
+  "gold_value_raw": 13.9,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "13.9",
+  "figure_ids": [
+   "cpi_2025_06-m01"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_06-q02",
+  "doc_key": "cpi_2025_06",
+  "question": "According to the June EFY2017 CPI bulletin, what was the year-on-year general inflation rate a year earlier, in June EFY2016?",
+  "qtype": "lookup_number",
+  "gold_value": 19.9,
+  "gold_value_raw": 19.9,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "19.9",
+  "figure_ids": [
+   "cpi_2025_06-m02"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_06-q03",
+  "doc_key": "cpi_2025_06",
+  "question": "What was the month-on-month general inflation rate in June EFY2017?",
+  "qtype": "lookup_number",
+  "gold_value": 0.5,
+  "gold_value_raw": 0.5,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   1
+  ],
+  "gold_answer_text": "0.5",
+  "figure_ids": [
+   "cpi_2025_06-m03"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_06-q04",
+  "doc_key": "cpi_2025_06",
+  "question": "What was year-on-year food inflation in June EFY2017?",
+  "qtype": "lookup_number",
+  "gold_value": 11.7,
+  "gold_value_raw": 11.7,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   2
+  ],
+  "gold_answer_text": "11.7",
+  "figure_ids": [
+   "cpi_2025_06-m04"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_06-q05",
+  "doc_key": "cpi_2025_06",
+  "question": "What was year-on-year non-food inflation in June EFY2017?",
+  "qtype": "lookup_number",
+  "gold_value": 17.3,
+  "gold_value_raw": 17.3,
+  "gold_is_percent": true,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [
+   2
+  ],
+  "gold_answer_text": "17.3",
+  "figure_ids": [
+   "cpi_2025_06-m05"
+  ],
+  "review": "draft"
+ },
+ {
+  "question_id": "cpi_2025_06-q06",
+  "doc_key": "cpi_2025_06",
+  "question": "What was the year-on-year inflation rate for Kenya in June EFY2017 according to this bulletin?",
+  "qtype": "unanswerable",
+  "gold_value": null,
+  "gold_value_raw": null,
+  "gold_is_percent": false,
+  "tolerance": 0.005,
+  "gold_items": [],
+  "gold_pages": [],
+  "gold_answer_text": "The document does not contain this; the system should say so.",
+  "figure_ids": [],
+  "review": "draft"
+ }
+]
