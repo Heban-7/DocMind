@@ -24,6 +24,17 @@ APP_ROLE = "docmind_app"
 _pool: ConnectionPool | None = None
 _checkpoint_pool: ConnectionPool | None = None
 _lock = threading.Lock()
+_atexit_registered = False
+
+
+def _close_at_exit() -> None:
+    """Close pools when a script ends; otherwise each worker thread stalls exit."""
+    global _atexit_registered
+    if not _atexit_registered:
+        import atexit
+
+        atexit.register(close_pool)
+        _atexit_registered = True
 
 
 def database_url() -> str:
@@ -47,6 +58,7 @@ def get_checkpoint_pool() -> ConnectionPool:
     global _checkpoint_pool
     with _lock:
         if _checkpoint_pool is None:
+            _close_at_exit()
             _checkpoint_pool = ConnectionPool(
                 database_url(),
                 min_size=1,
@@ -62,6 +74,7 @@ def get_pool() -> ConnectionPool:
     global _pool
     with _lock:
         if _pool is None:
+            _close_at_exit()
             _pool = ConnectionPool(
                 database_url(),
                 min_size=1,

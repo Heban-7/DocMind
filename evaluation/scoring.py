@@ -103,7 +103,10 @@ def score_figure(
 
 def page_coverage(pages: dict[int, str], n_pages: int, failed_pages: set[int] | None = None) -> dict:
     """Pages with real content, and pages explicitly flagged as failed."""
-    with_content = {p for p, t in pages.items() if len(re.sub(r"\s+", "", t)) >= MIN_PAGE_CHARS}
+    # Markers such as "<!-- page 3 failed: ... -->" are not content.
+    with_content = {
+        p for p, t in pages.items() if len(re.sub(r"\s+", "", re.sub(r"<!--.*?-->", "", t, flags=re.S))) >= MIN_PAGE_CHARS
+    }
     flagged = set(failed_pages or set()) - with_content
     silent = n_pages - len(with_content) - len(flagged)
     return {

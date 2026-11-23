@@ -107,6 +107,12 @@ def test_page_coverage_counts_silent_gaps():
     assert cov["with_content"] == 2 and cov["flagged_failed"] == 1 and cov["silently_missing"] == 2
 
 
+def test_failure_marker_is_not_page_content():
+    marker = "<!-- page 2 failed: no readable text on this page (image-only or blank) -->\n\n61/8105"
+    cov = page_coverage({1: "x" * 50, 2: marker}, n_pages=2, failed_pages={2})
+    assert cov["with_content"] == 1 and cov["flagged_failed"] == 1 and cov["silently_missing"] == 0
+
+
 def _q(**kw):
     base = dict(
         question_id="q1",

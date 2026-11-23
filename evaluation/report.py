@@ -219,7 +219,8 @@ def build_report(run_dir: Path, *, golden_version: str = "v1", name: str = "") -
 
     golden = load_golden(golden_version)
     meta_path = run_dir / "meta.json"
-    meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
+    # utf-8-sig: PowerShell 5 writes a byte-order mark into files it creates.
+    meta = json.loads(meta_path.read_text(encoding="utf-8-sig")) if meta_path.exists() else {}
     review = defaultdict(int)
     for f in golden.figures:
         review[f.review.value] += 1
