@@ -1,0 +1,252 @@
+[
+  {
+    "doc_key": "cbe_2023_24",
+    "file_name": "CBE ANNUAL REPORT 2023-24.pdf",
+    "sha256": "cafb11ca016fe4870c945fc2f8fe8b5fcc86bf6ee56da5327d4fd446456a7050",
+    "pages": 161,
+    "doc_class": "A_annual_report",
+    "language": "en",
+    "title": "the Commercial Bank of Ethiopia Annual Report 2023-24",
+    "notes": ""
+  },
+  {
+    "doc_key": "ethiore_2017",
+    "file_name": "Annual_Report_JUNE-2017.pdf",
+    "sha256": "b9807d59e9bae14a7d9224567cc0079c3eec5fc3a46745558bd5a6d2aace7e56",
+    "pages": 104,
+    "doc_class": "A_annual_report",
+    "language": "en",
+    "title": "the Ethiopian Reinsurance annual report (June 2017 file)",
+    "notes": ""
+  },
+  {
+    "doc_key": "ets_2023_24",
+    "file_name": "ETS-Annual-Report-2023_2024.pdf",
+    "sha256": "1dd73353d1c2166c2419023b209a9abd90fcd03233283c1d2a2fd3311de6cf20",
+    "pages": 92,
+    "doc_class": "A_annual_report",
+    "language": "en",
+    "title": "the EthSwitch Annual Report 2023/2024",
+    "notes": ""
+  },
+  {
+    "doc_key": "ethswitch_10th_2023_24",
+    "file_name": "EthSwitch-10th-Annual-Report-202324.pdf",
+    "sha256": "2c3119f091e04b3588e38ffa8ba052dd27a763b83f39eeaf7d55ebae6b0f6ce4",
+    "pages": 80,
+    "doc_class": "A_annual_report",
+    "language": "en",
+    "title": "the EthSwitch 10th Annual Report 2023/24",
+    "notes": ""
+  },
+  {
+    "doc_key": "ethswitch_2021_22",
+    "file_name": "ETHSWITCH-Annual-Report-202122.pdf",
+    "sha256": "85414c5c7fd3607d6a4f43c51b48a228bef5a94a5e5ae7eff40a5784e207f104",
+    "pages": 84,
+    "doc_class": "A_annual_report",
+    "language": "en",
+    "title": "the EthSwitch Annual Report 2021/22",
+    "notes": ""
+  },
+  {
+    "doc_key": "cbe_2006_07",
+    "file_name": "CBE Annual Report 2006-7 .pdf",
+    "sha256": "cefbff4a0c5a04cf1f959ab234d06a0e93f5501cc12464dcbcd004b6e3b4f9e6",
+    "pages": 60,
+    "doc_class": "A_annual_report",
+    "language": "en",
+    "title": "the Commercial Bank of Ethiopia Annual Report 2006-07",
+    "notes": ""
+  },
+  {
+    "doc_key": "ethiore_profile_2024_25",
+    "file_name": "Company_Profile_2024_25.pdf",
+    "sha256": "7e20fe6fec83cd6b7b4ec00ce00a7e40ac1ac4c24fb883eb5856efddf9e8a7c0",
+    "pages": 24,
+    "doc_class": "A_annual_report",
+    "language": "en",
+    "title": "the Ethiopian Reinsurance Company Profile 2024/25",
+    "notes": ""
+  },
+  {
+    "doc_key": "dbe_audit_2023",
+    "file_name": "Audit Report - 2023.pdf",
+    "sha256": "62213e3af42b0198d66aa799a8b0df5eb9c6cc1473ff222b5268c72c8cd08ee0",
+    "pages": 95,
+    "doc_class": "B_scanned",
+    "language": "en",
+    "title": "the Development Bank of Ethiopia audit report 2023",
+    "notes": ""
+  },
+  {
+    "doc_key": "cbe_2010_11",
+    "file_name": "CBE Annual Report 2010-11.pdf",
+    "sha256": "355d1850668ed94339ec01ec5dab21de4f13224498c64f55b91b93b1f13b28d7",
+    "pages": 62,
+    "doc_class": "B_scanned",
+    "language": "en",
+    "title": "the Commercial Bank of Ethiopia Annual Report 2010-11",
+    "notes": ""
+  },
+  {
+    "doc_key": "cbe_2009_10",
+    "file_name": "CBE Annual Report 2009-10.pdf",
+    "sha256": "94949b83831cee4b80c0336bb5b482467386c2a3d06b629f7ed6766ab087f549",
+    "pages": 38,
+    "doc_class": "B_scanned",
+    "language": "en",
+    "title": "the Commercial Bank of Ethiopia Annual Report 2009-10",
+    "notes": ""
+  },
+  {
+    "doc_key": "ethswitch_2019",
+    "file_name": "EthSwitch-Annual-Report-2019.pdf",
+    "sha256": "d718b1abb5c93968aaa27294d4c156c8d97933261f6100cb78aebc5a6c814221",
+    "pages": 70,
+    "doc_class": "B_scanned",
+    "language": "en",
+    "title": "the EthSwitch Annual Report 2019",
+    "notes": ""
+  },
+  {
+    "doc_key": "audited_fs_2021",
+    "file_name": "2021_Audited_Financial_Statement_Report.pdf",
+    "sha256": "99ee3b8a9abdb4897ebea080f52161cc102f160f0e010eca209f28d48243cb6f",
+    "pages": 3,
+    "doc_class": "B_scanned",
+    "language": "en",
+    "title": "the 2021 audited financial statement report",
+    "notes": ""
+  },
+  {
+    "doc_key": "security_disclosure",
+    "file_name": "Security_Vulnerability_Disclosure_Standard_Procedure_1.pdf",
+    "sha256": "b181209be1ead5f4539c8551e326f23b83c204c7c91d9617549887f6fce3a502",
+    "pages": 15,
+    "doc_class": "B_scanned",
+    "language": "en",
+    "title": "the Security Vulnerability Disclosure Standard Procedure",
+    "notes": ""
+  },
+  {
+    "doc_key": "fta_survey_2022",
+    "file_name": "fta_performance_survey_final_report_2022.pdf",
+    "sha256": "4dcf8792cc25a98826f4c9d28da108716744c49e444273983e06a6d72bb90154",
+    "pages": 155,
+    "doc_class": "C_mixed_technical",
+    "language": "en",
+    "title": "the Financial Transparency and Accountability performance survey final report 2022",
+    "notes": ""
+  },
+  {
+    "doc_key": "pharma_2019",
+    "file_name": "20191010_Pharmaceutical-Manufacturing-Opportunites-in-Ethiopia_VF.pdf",
+    "sha256": "d0effa290ba25144ec6bd70009d086c319d39474f05afb15b4b5531fc05d3816",
+    "pages": 15,
+    "doc_class": "C_mixed_technical",
+    "language": "en",
+    "title": "the Pharmaceutical Manufacturing Opportunities in Ethiopia report",
+    "notes": ""
+  },
+  {
+    "doc_key": "ethiore_2019",
+    "file_name": "Annual_Report_JUNE-2019.pdf",
+    "sha256": "1f67d3555a328f6525043275e760a857a324d898109828d42b4e5d4b6b07a2d5",
+    "pages": 32,
+    "doc_class": "C_mixed_technical",
+    "language": "en",
+    "title": "the Ethiopian Reinsurance annual report (June 2019 file)",
+    "notes": ""
+  },
+  {
+    "doc_key": "cbe_2012_13",
+    "file_name": "CBE Annual Report 2012-13.pdf",
+    "sha256": "09538d60162b5f969ff5199e11c3a8dc1022982eb54e52003046f95a0774c6c9",
+    "pages": 20,
+    "doc_class": "C_mixed_technical",
+    "language": "en",
+    "title": "the Commercial Bank of Ethiopia Annual Report 2012-13",
+    "notes": ""
+  },
+  {
+    "doc_key": "tax_exp_2021_22",
+    "file_name": "tax_expenditure_ethiopia_2021_22.pdf",
+    "sha256": "212dc42370e200d430dcbd690970f879b0b82558edb1b5eaef04be9e1b51fa8a",
+    "pages": 60,
+    "doc_class": "D_table_heavy",
+    "language": "en",
+    "title": "the Ethiopia Import Tax Expenditure Report FY 2018/19-2020/21",
+    "notes": ""
+  },
+  {
+    "doc_key": "tax_exp_sample",
+    "file_name": "Sample - Ethiopia Tax Expenditure Report.pdf",
+    "sha256": "024ac46d88a7c263ffcfa7e32f74bc1478cd97dd9254bedf2a3e2c7b0567a498",
+    "pages": 20,
+    "doc_class": "D_table_heavy",
+    "language": "en",
+    "title": "the 20-page sample of the Ethiopia Import Tax Expenditure Report",
+    "notes": ""
+  },
+  {
+    "doc_key": "cpi_2025_08",
+    "file_name": "Consumer Price Index August 2025.pdf",
+    "sha256": "1ec244e90192469041816456ce65e7b1a96a69f40b62a03e20a89d6aec8ab90c",
+    "pages": 13,
+    "doc_class": "D_table_heavy",
+    "language": "en",
+    "title": "the Consumer Price Index bulletin for August 2025",
+    "notes": ""
+  },
+  {
+    "doc_key": "cpi_2025_03",
+    "file_name": "Consumer Price Index March 2025.pdf",
+    "sha256": "3c38829f163ba96b68bbc3e7201526f1eac38271d0706c7ff8e998de011808a3",
+    "pages": 12,
+    "doc_class": "D_table_heavy",
+    "language": "en",
+    "title": "the Consumer Price Index bulletin for March 2025",
+    "notes": ""
+  },
+  {
+    "doc_key": "cpi_2025_06",
+    "file_name": "Consumer Price Index June 2025.pdf",
+    "sha256": "c4adc09b7919325f373b8900b736c95c56b1803569380c26113cbf1b66de1f3e",
+    "pages": 13,
+    "doc_class": "D_table_heavy",
+    "language": "en",
+    "title": "the Consumer Price Index bulletin for June 2025",
+    "notes": ""
+  },
+  {
+    "doc_key": "am_audit_findings",
+    "file_name": "2013-E.C-Audit-finding-information.pdf",
+    "sha256": "7b8976e32efc895a1ab0f78fb4376f3e1431dfa432b4c61b4427b30b1e103ab8",
+    "pages": 3,
+    "doc_class": "E_amharic_scanned",
+    "language": "am",
+    "title": "the 2013 E.C. audit finding information document",
+    "notes": ""
+  },
+  {
+    "doc_key": "am_procurement",
+    "file_name": "2013-E.C-Procurement-information.pdf",
+    "sha256": "4a67ebdf892c8fce342935b5e109795989d03cfd0602781fb2ea586b2c8c1ca1",
+    "pages": 3,
+    "doc_class": "E_amharic_scanned",
+    "language": "am",
+    "title": "the 2013 E.C. procurement information document",
+    "notes": ""
+  },
+  {
+    "doc_key": "am_budget",
+    "file_name": "2013-E.C-Assigned-regular-budget-and-expense.pdf",
+    "sha256": "45bc9cf4ff5ce1ac41a5240e6cc71e9b9809a25e078259afced4ebfcd7014b85",
+    "pages": 3,
+    "doc_class": "E_amharic_scanned",
+    "language": "am",
+    "title": "the 2013 E.C. assigned regular budget and expense document",
+    "notes": ""
+  }
+]

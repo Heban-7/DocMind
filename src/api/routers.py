@@ -7,7 +7,8 @@ import logging
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
-from src.api.dependencies import get_current_user_id
+from src.api.dependencies import get_current_user_id, get_user_id_header_or_query
+from src.api.ownership import AccessDeniedError
 
 from src.api.schemas import (
     ChatRequest,
@@ -85,38 +86,30 @@ def get_documents(user_id: str = Depends(get_current_user_id)) -> DocumentListRe
         ) from exc
 
 
-from typing import Optional
-from fastapi import Query, Header
-from src.api.auth_utils import decode_access_token
-
 @upload_router.get("/documents/{doc_id}/pdf")
 def get_pdf(
     doc_id: str,
-    token: Optional[str] = Query(None),
-    authorization: Optional[str] = Header(None),
+    user_id: str = Depends(get_user_id_header_or_query),
 ):
-    """Serve raw PDF file for document_id (supports token in query param or header)."""
-    raw_token = token
-    if not raw_token and authorization and authorization.startswith("Bearer "):
-        raw_token = authorization.split("Bearer ", 1)[1]
+    """Serve the raw PDF of a document the caller owns.
 
-    if raw_token:
-        try:
-            decode_access_token(raw_token)
-        except Exception as exc:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token.",
-            ) from exc
-
+    Login is required. The token may come from the Authorization header or,
+    for the in-browser viewer, a ``token`` query parameter (to be replaced by
+    short-lived signed URLs in milestone M9). Documents the caller does not own
+    return 404, exactly like documents that do not exist.
+    """
     try:
-        pdf_path = get_pdf_file_path(doc_id)
+        pdf_path = get_pdf_file_path(doc_id, user_id=user_id)
         return FileResponse(
             path=str(pdf_path),
             media_type="application/pdf",
             content_disposition_type="inline",
         )
-
+    except AccessDeniedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        ) from exc
     except FileNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -135,6 +128,11 @@ def chat(payload: ChatRequest, user_id: str = Depends(get_current_user_id)) -> C
     """Ask the Query Agent (memory via thread_id; optional document pin)."""
     try:
         return run_chat(payload, user_id=user_id)
+    except AccessDeniedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Thread or document not found.",
+        ) from exc
     except RuntimeError as exc:
         # Missing LLM keys / misconfigured providers.
         raise HTTPException(
@@ -158,7 +156,17 @@ def chat(payload: ChatRequest, user_id: str = Depends(get_current_user_id)) -> C
 def chat_stream(payload: ChatRequest, user_id: str = Depends(get_current_user_id)):
     """Stream Query Agent response token by token via Server-Sent Events."""
     from starlette.responses import StreamingResponse
-    from src.api.services import run_chat_stream
+    from src.api.services import authorize_chat, run_chat_stream
+
+    # Access is checked before the stream starts: once a 200 and the SSE
+    # headers are sent, an error can no longer become a proper status code.
+    try:
+        authorize_chat(payload, user_id=user_id)
+    except AccessDeniedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Thread or document not found.",
+        ) from exc
 
     try:
         return StreamingResponse(
@@ -182,6 +190,11 @@ def history(thread_id: str, user_id: str = Depends(get_current_user_id)) -> Hist
     """Return prior turns for a conversation thread from the checkpointer."""
     try:
         return fetch_history(thread_id, user_id=user_id)
+    except AccessDeniedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Thread not found.",
+        ) from exc
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

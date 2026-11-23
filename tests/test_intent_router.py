@@ -142,9 +142,11 @@ def test_agent_route_then_retrieve_corpus(tmp_path: Path):
         CorpusDocument(document_id="taxdoc", document_name="tax.pdf"),
         CorpusDocument(document_id="spacedoc", document_name="mars.pdf"),
     ]
-    # No forced doc_id => router LLM runs first, then plan, then synthesize.
+    # No forced doc_id => intent classifier, then the router LLM, then plan,
+    # then synthesize.
     llm = _ScriptedLLM(
         [
+            '{"intent":"document_query"}',
             '{"document_id":null,"confidence":0.8,"rationale":"general question"}',
             '{"calls":[{"tool":"semantic_search","args":{"query":"import tax","top_k":5}}]}',
             (
@@ -167,7 +169,7 @@ def test_agent_route_then_retrieve_corpus(tmp_path: Path):
     answer = agent.ask("What was import tax expenditure?")
     assert "120.7" in answer.answer
     assert not answer.provenance.is_empty
-    assert len(llm.calls) == 3
+    assert len(llm.calls) == 4
 
 
 def test_list_corpus_documents_reads_profiles():

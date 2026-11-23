@@ -14,6 +14,14 @@ from uuid import uuid4
 from fastapi import UploadFile
 
 from src.agents.query_agent import QueryAgent, build_query_agent
+from src.api.ownership import (
+    can_access_document,
+    claim_thread,
+    record_document_owner,
+    require_document_access,
+    require_thread_access,
+    threads_owned_by,
+)
 from src.api.schemas import (
     ChatRequest,
     ChatResponse,
@@ -81,6 +89,8 @@ def process_upload(
             "yes",
         }
 
+    if not user_id:
+        raise ValueError("An authenticated user is required to upload.")
     saved = save_upload(file)
     logger.info("upload saved path=%s user=%s", saved, user_id)
     try:
@@ -91,6 +101,7 @@ def process_upload(
         raise
 
     profile = result.profile
+    record_document_owner(profile.doc_id, user_id)
     status = "indexed" if result.phase4 is not None else "chunked"
     if result.phase4 is not None and skip_embed:
         status = "indexed_no_embed"
@@ -149,13 +160,15 @@ def save_thread_document(thread_id: str, document_id: str | None = None, user_id
         _init_thread_doc_db()
         conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
         doc_id = document_id or ""
+        # Ownership lives in src.api.ownership.thread_owners; this table only
+        # remembers which document a thread is pinned to. The owner column is
+        # written once and never overwritten (it used to be last-writer-wins).
         conn.execute(
             """
             INSERT INTO thread_documents (thread_id, document_id, user_id)
             VALUES (?, ?, ?)
             ON CONFLICT(thread_id) DO UPDATE SET
                 document_id = CASE WHEN excluded.document_id != '' THEN excluded.document_id ELSE thread_documents.document_id END,
-                user_id = CASE WHEN excluded.user_id != '' THEN excluded.user_id ELSE thread_documents.user_id END,
                 updated_at = CURRENT_TIMESTAMP
             """,
             (thread_id, doc_id, user_id),
@@ -204,13 +217,25 @@ def get_document_info(document_id: str) -> DocumentInfo | None:
     return None
 
 
+def authorize_chat(payload: ChatRequest, *, user_id: str) -> None:
+    """Check thread and document access before any work (or streaming) starts.
+
+    The first user to write to a thread owns it; anyone else gets "not found".
+    """
+    claim_thread(payload.thread_id, user_id)
+    if payload.document_id:
+        require_document_access(payload.document_id, user_id)
+
+
 def run_chat(payload: ChatRequest, *, user_id: str = "") -> ChatResponse:
     """Invoke the LangGraph Query Agent and return answer + provenance."""
     thread_id = payload.thread_id
-    # Always record thread ownership for tenant isolation
+    authorize_chat(payload, user_id=user_id)
     save_thread_document(thread_id, payload.document_id, user_id=user_id)
 
     bound_doc_id = get_thread_document(thread_id)
+    if bound_doc_id and not can_access_document(bound_doc_id, user_id):
+        bound_doc_id = None
     doc_pin = None if payload.federated_search else (payload.document_id or bound_doc_id)
 
     agent = _agent_for_chat(doc_pin, model=payload.model)
@@ -261,23 +286,8 @@ def fetch_history(thread_id: str, *, user_id: str = "") -> HistoryResponse:
     if not tid:
         raise ValueError("thread_id must be a non-empty string.")
 
-    # Enforce tenant isolation for thread history if user_id is passed
-    if user_id:
-        _init_thread_doc_db()
-        try:
-            conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
-            cursor = conn.execute(
-                "SELECT user_id FROM thread_documents WHERE thread_id = ?",
-                (tid,),
-            )
-            row = cursor.fetchone()
-            conn.close()
-            if row and row[0] and row[0] != user_id:
-                raise ValueError("Access denied: thread belongs to another user.")
-        except ValueError:
-            raise
-        except Exception:
-            pass
+    # Fail closed: unknown threads and other users' threads look the same.
+    require_thread_access(tid, user_id)
     agent = build_query_agent(None, enable_memory=True)
     messages = [
         HistoryMessage(role=m.role.value, content=m.content)
@@ -305,17 +315,9 @@ def list_threads(*, user_id: str = "") -> ThreadListResponse:
         )
         all_thread_ids = [row[0] for row in cursor.fetchall() if row[0]]
 
-        # Filter threads strictly by user_id
-        if user_id:
-            _init_thread_doc_db()
-            cursor2 = conn.execute(
-                "SELECT thread_id FROM thread_documents WHERE user_id = ?",
-                (user_id,),
-            )
-            user_thread_ids = {row[0] for row in cursor2.fetchall()}
-            thread_ids = [tid for tid in all_thread_ids if tid in user_thread_ids]
-        else:
-            thread_ids = all_thread_ids
+        # Only the caller's own threads, never everyone's.
+        user_thread_ids = threads_owned_by(user_id) if user_id else set()
+        thread_ids = [tid for tid in all_thread_ids if tid in user_thread_ids]
 
         conn.close()
     except Exception:
@@ -358,6 +360,8 @@ def list_documents(*, user_id: str = "") -> DocumentListResponse:
     for p in PROFILES_DIR.glob("*.json"):
         try:
             data = json.loads(p.read_text(encoding="utf-8"))
+            if not can_access_document(data.get("doc_id", p.stem), user_id):
+                continue
             docs.append(
                 DocumentInfo(
                     document_id=data.get("doc_id", p.stem),
@@ -375,8 +379,13 @@ def list_documents(*, user_id: str = "") -> DocumentListResponse:
     return DocumentListResponse(documents=docs)
 
 
-def get_pdf_file_path(doc_id: str) -> Path:
-    """Resolve PDF file path for a document_id or raise FileNotFoundError."""
+def get_pdf_file_path(doc_id: str, *, user_id: str) -> Path:
+    """Resolve the PDF for a document the user may see, else raise.
+
+    Raises AccessDeniedError for documents the user does not own, and
+    FileNotFoundError when the file itself is missing.
+    """
+    require_document_access(doc_id, user_id)
     path = resolve_pdf_path(doc_id)
     if path is None or not path.exists():
         raise FileNotFoundError(f"PDF for document_id={doc_id} not found.")

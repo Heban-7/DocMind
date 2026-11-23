@@ -28,3 +28,6 @@ notes.txt
 
 # Generated pipeline data and local databases (never commit)
 .refinery/
+
+# Evaluation run outputs (raw system outputs, local data)
+evaluation/runs/

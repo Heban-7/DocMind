@@ -22,6 +22,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.api.auth_utils import jwt_secret
 from src.api.routers import chat_router, health_router, upload_router
 from src.api.routes.auth import auth_router, _init_users_table
 from src.config import RAW_DIR
@@ -45,6 +46,8 @@ def _cors_origins() -> list[str]:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    # Refuse to start with a missing or publicly known signing secret.
+    jwt_secret()
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     _init_users_table()
     logger.info("DocMind API ready (raw_dir=%s)", RAW_DIR)

@@ -12,23 +12,29 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-# Load a local .env file if python-dotenv is available, so API keys can be set
-# in a file instead of the shell. Optional: absence is fine.
-try:  # pragma: no cover - convenience only
-    from dotenv import load_dotenv
-
-    load_dotenv()
-except Exception:  # pragma: no cover
-    pass
-
 # --- Paths (resolved from this file, so they work from any working dir) -----
 # src/config.py -> parents[1] is the project root.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+# Load the project's .env (if python-dotenv is available) so API keys and
+# secrets can live in a file instead of the shell. The path is explicit so the
+# same file is found whatever the working directory is. Tests set
+# DOCMIND_SKIP_DOTENV=1 so they never pick up real keys or secrets.
+if os.getenv("DOCMIND_SKIP_DOTENV", "").lower() not in {"1", "true", "yes"}:
+    try:  # pragma: no cover - convenience only
+        from dotenv import load_dotenv
+
+        load_dotenv(PROJECT_ROOT / ".env")
+    except Exception:  # pragma: no cover
+        pass
+
 RAW_DIR = Path(os.getenv("DOCMIND_RAW_DIR", str(PROJECT_ROOT / "data" / "raw")))
 DATA_DIR = PROJECT_ROOT / "data" / "data"
 DEFAULT_SAMPLE_PDF = DATA_DIR / "sample.pdf"
 
-REFINERY_DIR = PROJECT_ROOT / ".refinery"
+# Root for all generated pipeline data (profiles, extractions, chunks, indexes,
+# local databases). Never committed; override for tests and deployments.
+REFINERY_DIR = Path(os.getenv("DOCMIND_REFINERY_DIR", str(PROJECT_ROOT / ".refinery")))
 PROFILES_DIR = REFINERY_DIR / "profiles"
 EXTRACTIONS_DIR = REFINERY_DIR / "extractions"
 CHUNKS_DIR = REFINERY_DIR / "chunks"

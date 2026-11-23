@@ -107,6 +107,7 @@ def run_offline_demo(work_dir: Path | None = None) -> dict:
 
     ask_llm = ScriptedLLM(
         [
+            '{"intent":"document_query"}',
             (
                 '{"calls":[{"tool":"semantic_search",'
                 '"args":{"query":"import tax expenditures","top_k":3}},'
