@@ -14,6 +14,8 @@ The rest of the pipeline just asks the router for "the right engine" and calls
 
 from __future__ import annotations
 
+import os
+
 from src.extraction.base import BaseExtractionEngine
 from src.extraction.fast_text import FastTextEngine
 from src.extraction.layout_selector import LayoutStrategySelector
@@ -28,7 +30,16 @@ class ExtractionRouter:
         self._layout_selector = LayoutStrategySelector()
 
     def get_engine(self, profile: DocumentProfile) -> BaseExtractionEngine:
-        """Inspect the profile's strategy tier and return the matching engine."""
+        """Return the extraction engine for this document.
+
+        V2 (default) routes every page on its own inside one engine, so the
+        document-level tier no longer decides what is read. Set
+        ``DOCMIND_EXTRACTOR=v1`` to get the original per-document switch.
+        """
+        if os.getenv("DOCMIND_EXTRACTOR", "v2").lower() != "v1":
+            from src.extraction.structured import StructuredExtractionEngine
+
+            return StructuredExtractionEngine()
         tier = profile.strategy_tier
 
         if tier == ExtractionCost.FAST_TEXT_SUFFICIENT:

@@ -120,9 +120,14 @@ def cmd_score(args) -> None:
 
 def _system(name: str):
     if name == "v1":
+        os.environ["DOCMIND_EXTRACTOR"] = "v1"
         from evaluation.systems import v1
 
         return v1
+    if name == "v2":
+        from evaluation.systems import v2
+
+        return v2
     raise SystemExit(f"unknown system {name!r}")
 
 

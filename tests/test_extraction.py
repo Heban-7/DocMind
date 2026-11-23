@@ -171,14 +171,27 @@ def test_selector_falls_back_to_docling_when_mineru_absent(monkeypatch):
 
 
 # --- Router -----------------------------------------------------------------
-def test_router_fast_text_tier():
+# The V1 per-document switch is still available with DOCMIND_EXTRACTOR=v1.
+@pytest.fixture()
+def v1_router(monkeypatch):
+    monkeypatch.setenv("DOCMIND_EXTRACTOR", "v1")
+
+
+def test_router_defaults_to_v2_structured_engine():
+    from src.extraction.structured import StructuredExtractionEngine
+
+    for tier in ExtractionCost:
+        assert isinstance(ExtractionRouter().get_engine(_make_profile(tier)), StructuredExtractionEngine)
+
+
+def test_router_fast_text_tier(v1_router):
     engine = ExtractionRouter().get_engine(
         _make_profile(ExtractionCost.FAST_TEXT_SUFFICIENT)
     )
     assert isinstance(engine, FastTextEngine)
 
 
-def test_router_layout_tier_uses_selector(monkeypatch):
+def test_router_layout_tier_uses_selector(monkeypatch, v1_router):
     monkeypatch.setattr(MinerULayoutEngine, "is_available", staticmethod(lambda: False))
     engine = ExtractionRouter().get_engine(
         _make_profile(ExtractionCost.NEEDS_LAYOUT_MODEL)
@@ -186,7 +199,7 @@ def test_router_layout_tier_uses_selector(monkeypatch):
     assert isinstance(engine, DoclingLayoutEngine)
 
 
-def test_router_vision_tier():
+def test_router_vision_tier(v1_router):
     engine = ExtractionRouter().get_engine(
         _make_profile(ExtractionCost.NEEDS_VISION_MODEL)
     )
