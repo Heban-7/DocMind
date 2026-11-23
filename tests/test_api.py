@@ -1,4 +1,7 @@
-"""Offline smoke tests for the DocMind FastAPI gateway."""
+"""Offline smoke tests for the DocMind FastAPI gateway (services mocked, no database).
+
+Real register/login and the isolation guarantees are in tests/test_api_security.py.
+"""
 
 from __future__ import annotations
 
@@ -6,15 +9,21 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from src.api.dependencies import get_current_user_id, get_user_id_header_or_query
+from src.api.dependencies import get_principal, get_principal_header_or_query
 from src.api.main import create_app
 from src.api.schemas import ChatResponse, HistoryResponse, UploadResponse
+from src.db.repos import Principal
+
+_PRINCIPAL = Principal(
+    user_id="00000000-0000-4000-8000-000000000001",
+    tenant_id="00000000-0000-4000-8000-0000000000aa",
+)
 
 
 def _client() -> TestClient:
     app = create_app()
-    app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
-    app.dependency_overrides[get_user_id_header_or_query] = lambda: "test-user-123"
+    app.dependency_overrides[get_principal] = lambda: _PRINCIPAL
+    app.dependency_overrides[get_principal_header_or_query] = lambda: _PRINCIPAL
     return TestClient(app)
 
 
@@ -39,47 +48,6 @@ def test_protected_endpoints_require_auth():
     assert client.get("/documents").status_code == 401
     assert client.get("/documents/any/pdf").status_code == 401
     assert client.post("/chat/stream", json={"message": "hi", "thread_id": "t1"}).status_code == 401
-
-
-def test_auth_register_and_login(tmp_path):
-    from uuid import uuid4
-    client = _unauth_client()
-    unique_email = f"test_{uuid4().hex[:8]}@example.com"
-    
-    # Register user
-    reg_res = client.post(
-        "/api/auth/register",
-        json={"email": unique_email, "password": "password123"},
-    )
-    assert reg_res.status_code == 201
-    user_data = reg_res.json()
-    assert user_data["email"] == unique_email
-    assert "id" in user_data
-
-    # Duplicate registration fails
-    dup_res = client.post(
-        "/api/auth/register",
-        json={"email": unique_email, "password": "password123"},
-    )
-    assert dup_res.status_code == 409
-
-    # Login user
-    login_res = client.post(
-        "/api/auth/login",
-        json={"email": unique_email, "password": "password123"},
-    )
-    assert login_res.status_code == 200
-    token_data = login_res.json()
-    assert "access_token" in token_data
-    token = token_data["access_token"]
-
-    # Access /api/auth/me with Bearer token
-    me_res = client.get(
-        "/api/auth/me",
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert me_res.status_code == 200
-    assert me_res.json()["email"] == unique_email
 
 
 def test_upload_rejects_non_pdf():
@@ -189,20 +157,36 @@ def test_cors_headers_for_localhost():
     assert res.headers.get("access-control-allow-origin") == "http://localhost:3000"
 
 
-def test_save_upload_writes_pdf(tmp_path):
-    from src.api.services import save_upload
-
-    upload = MagicMock()
-    upload.filename = "My Report!.pdf"
-    upload.content_type = "application/pdf"
-    upload.file = MagicMock()
+def _upload(name: str, data: bytes, content_type: str = "application/pdf"):
     from io import BytesIO
 
-    upload.file = BytesIO(b"%PDF-1.4 content")
-    path = save_upload(upload, destination_dir=tmp_path)
+    upload = MagicMock()
+    upload.filename = name
+    upload.content_type = content_type
+    upload.file = BytesIO(data)
+    return upload
+
+
+def test_spool_upload_writes_pdf(tmp_path):
+    from src.api.services import _spool_upload
+
+    path = _spool_upload(_upload("My Report!.pdf", b"%PDF-1.4 content"), tmp_path)
     assert path.exists()
-    assert path.suffix.lower() == ".pdf"
     assert path.read_bytes().startswith(b"%PDF")
+
+
+def test_spool_upload_rejects_empty_fake_and_oversized(tmp_path, monkeypatch):
+    import pytest
+
+    from src.api.services import _spool_upload
+
+    with pytest.raises(ValueError, match="empty"):
+        _spool_upload(_upload("a.pdf", b""), tmp_path)
+    with pytest.raises(ValueError, match="not a PDF"):
+        _spool_upload(_upload("a.pdf", b"<html>not a pdf</html>"), tmp_path)
+    monkeypatch.setenv("DOCMIND_MAX_UPLOAD_MB", "0.001")
+    with pytest.raises(ValueError, match="larger than"):
+        _spool_upload(_upload("a.pdf", b"%PDF-" + b"x" * 5000), tmp_path)
 
 
 def test_threads_endpoint_mocked():

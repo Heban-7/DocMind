@@ -13,10 +13,12 @@ import re
 from dataclasses import dataclass
 
 from src.chunking.models import DocumentChunk
+from typing import TYPE_CHECKING
+
 from src.facts.models import FactRecord
-from src.facts.store import FactStore
-from src.pageindex.builder import load_chunks_jsonl
-from src.config import CHUNKS_DIR
+
+if TYPE_CHECKING:  # src.stores imports src.facts.models; avoid the cycle at runtime
+    from src.stores.base import FactStore
 
 logger = logging.getLogger("docmind.facts")
 
@@ -307,13 +309,12 @@ def extract_and_store(
     chunks: list[DocumentChunk],
     *,
     doc_id: str,
+    store: FactStore,
     document_name: str = "",
-    store: FactStore | None = None,
     use_llm: bool = False,
     llm_client=None,
 ) -> FactExtractResult:
     """Extract facts from LDUs and replace the FactTable rows for ``doc_id``."""
-    store = store or FactStore()
     all_facts: list[FactRecord] = []
     for chunk in chunks:
         all_facts.extend(
@@ -351,28 +352,4 @@ def extract_and_store(
         doc_id=doc_id,
         facts_written=written,
         facts_total_for_doc=store.count(doc_id),
-    )
-
-
-def extract_and_store_from_chunks_file(
-    doc_id: str,
-    *,
-    document_name: str = "",
-    chunks_dir=None,
-    store: FactStore | None = None,
-    use_llm: bool = False,
-    llm_client=None,
-) -> FactExtractResult:
-    """Load ``.refinery/chunks/{doc_id}.jsonl`` and populate the FactTable."""
-    from pathlib import Path
-
-    path = Path(chunks_dir or CHUNKS_DIR) / f"{doc_id}.jsonl"
-    chunks = load_chunks_jsonl(path)
-    return extract_and_store(
-        chunks,
-        doc_id=doc_id,
-        document_name=document_name,
-        store=store,
-        use_llm=use_llm,
-        llm_client=llm_client,
     )

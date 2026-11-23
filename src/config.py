@@ -28,24 +28,16 @@ if os.getenv("DOCMIND_SKIP_DOTENV", "").lower() not in {"1", "true", "yes"}:
     except Exception:  # pragma: no cover
         pass
 
-RAW_DIR = Path(os.getenv("DOCMIND_RAW_DIR", str(PROJECT_ROOT / "data" / "raw")))
 DATA_DIR = PROJECT_ROOT / "data" / "data"
 DEFAULT_SAMPLE_PDF = DATA_DIR / "sample.pdf"
 
-# Root for all generated pipeline data (profiles, extractions, chunks, indexes,
-# local databases). Never committed; override for tests and deployments.
+# Root for local generated files: stored PDFs and document models
+# (``storage/``, see src/storage/blobs.py) and the V1 extraction stack's
+# profiles. Never committed; override for tests and deployments. Documents,
+# chunks, vectors, facts, page indexes, users and chat memory live in Postgres
+# (DOCMIND_DATABASE_URL, see src/db/pool.py).
 REFINERY_DIR = Path(os.getenv("DOCMIND_REFINERY_DIR", str(PROJECT_ROOT / ".refinery")))
 PROFILES_DIR = REFINERY_DIR / "profiles"
-EXTRACTIONS_DIR = REFINERY_DIR / "extractions"
-CHUNKS_DIR = REFINERY_DIR / "chunks"
-
-# --- Phase 4 persistence (query / retrieval / facts) ------------------------
-PAGEINDEX_DIR = REFINERY_DIR / "pageindex"
-CHROMA_DIR = Path(os.getenv("DOCMIND_CHROMA_DIR", str(REFINERY_DIR / "chroma")))
-FACTS_DB_PATH = Path(os.getenv("DOCMIND_FACTS_DB", str(REFINERY_DIR / "facts.db")))
-CHECKPOINTS_DB_PATH = Path(
-    os.getenv("DOCMIND_CHECKPOINTS_DB", str(REFINERY_DIR / "checkpoints.sqlite"))
-)
 
 # --- Phase 4 retrieval depth (how many LDUs / citations reach the answer) ---
 # Semantic search previously defaulted to 5 and the synthesizer often kept only
@@ -158,7 +150,10 @@ class VisionConfig:
 
 # --- Embeddings (Phase 4 vector search) -------------------------------------
 class EmbeddingConfig:
-    """OpenAI embedding settings for ChromaDB ingestion + semantic search.
+    """OpenAI embedding settings for chunk ingestion + semantic search.
+
+    The ``chunks.embedding`` column is vector(1536), the native size of
+    text-embedding-3-small; a model with another size needs a migration.
 
     Uses the same OPENAI_API_KEY as the LLM layer. Default model is the
     current cost-efficient OpenAI embedding model (text-embedding-3-small).
@@ -174,8 +169,6 @@ class EmbeddingConfig:
     )
     # How many LDU texts to embed per OpenAI request (batch for cost/latency).
     BATCH_SIZE: int = int(os.getenv("DOCMIND_EMBEDDING_BATCH", "64"))
-    # Chroma collection name (one collection; filter by doc_id at query time).
-    COLLECTION_NAME: str = os.getenv("DOCMIND_CHROMA_COLLECTION", "docmind_ldus")
 
 
 # --- Triage heuristic thresholds --------------------------------------------

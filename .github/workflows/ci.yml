@@ -13,6 +13,24 @@ jobs:
     name: Backend tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: docmind
+          POSTGRES_PASSWORD: docmind-ci-only
+          POSTGRES_DB: docmind_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U docmind -d docmind_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DOCMIND_TEST_DATABASE_URL: postgresql://docmind:docmind-ci-only@localhost:5432/docmind_test
+      # Database tests fail (instead of skipping) when Postgres is missing.
+      DOCMIND_REQUIRE_DB: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -22,7 +40,8 @@ jobs:
           enable-cache: true
 
       # Tests run offline: tests/conftest.py ignores .env, removes provider
-      # keys, and points every store at a temporary folder.
+      # keys, points stored files at a temporary folder and uses the
+      # docmind_test database of the service above.
       - name: Install dependencies
         run: uv sync --frozen
 

@@ -1,0 +1,26 @@
+# Local development services. Production compose arrives in milestone M10.
+#
+#   docker compose -f docker-compose.dev.yml up -d db
+#
+# Postgres 17 with pgvector, on host port 5433 so it does not clash with a
+# native Postgres on 5432. The credentials are for local development only.
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: docmind-db
+    environment:
+      POSTGRES_USER: docmind
+      POSTGRES_PASSWORD: docmind-dev-only
+      POSTGRES_DB: docmind
+    ports:
+      - "5433:5432"
+    volumes:
+      - docmind-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docmind -d docmind"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  docmind-db:

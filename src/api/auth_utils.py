@@ -69,29 +69,32 @@ def _expiry_hours() -> int:
     return int(os.getenv("JWT_EXPIRY_HOURS", "24"))
 
 
-def create_access_token(user_id: str) -> str:
-    """Create a signed JWT with ``sub=user_id`` and an expiry timestamp."""
+def create_access_token(user_id: str, tenant_id: str) -> str:
+    """Create a signed JWT: ``sub`` = user id, ``tid`` = tenant id, with expiry."""
     now = datetime.now(timezone.utc)
     payload = {
         "sub": user_id,
+        "tid": tenant_id,
         "iat": now,
         "exp": now + timedelta(hours=_expiry_hours()),
     }
     return jwt.encode(payload, jwt_secret(), algorithm=_ALGORITHM)
 
 
-def decode_access_token(token: str) -> str:
-    """Decode a JWT and return the ``user_id`` (``sub`` claim).
+def decode_access_token(token: str) -> tuple[str, str]:
+    """Decode a JWT and return ``(user_id, tenant_id)``.
 
-    Raises ``jwt.InvalidTokenError`` on any validation failure.
+    Raises ``jwt.InvalidTokenError`` on any validation failure, including
+    tokens issued before tenants existed (no ``tid`` claim).
     """
     payload = jwt.decode(
         token,
         jwt_secret(),
         algorithms=[_ALGORITHM],
-        options={"require": ["exp", "sub"]},
+        options={"require": ["exp", "sub", "tid"]},
     )
-    user_id: str | None = payload.get("sub")
-    if not user_id:
-        raise jwt.InvalidTokenError("Token missing 'sub' claim")
-    return user_id
+    user_id = payload.get("sub")
+    tenant_id = payload.get("tid")
+    if not user_id or not tenant_id:
+        raise jwt.InvalidTokenError("Token missing 'sub' or 'tid' claim")
+    return str(user_id), str(tenant_id)

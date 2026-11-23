@@ -13,14 +13,13 @@ from src.agents.query_agent import (
 )
 from src.chunking.models import DocumentChunk
 from src.facts.extractor import extract_and_store
-from src.facts.store import FactStore
 from src.llm.base import LLMClient, LLMResult
 from src.models.provenance import ProvenanceChain
 from src.models.query import QueryAnswer, ToolName
-from src.pageindex.builder import build_page_index, save_page_index
+from src.pageindex.builder import build_page_index
 from src.query.evidence import EvidenceHit
 from src.retrieval.ingest import ingest_chunks
-from src.retrieval.vector_store import ChromaLDUStore
+from src.stores.memory import memory_stores
 
 
 class _FakeEmbedder:
@@ -116,17 +115,14 @@ def test_query_agent_offline_end_to_end(tmp_path: Path):
         chunks, doc_id="qdoc", source_filename="sample.pdf",
         summarize=True, llm_client=None,
     )
-    save_page_index(index, directory=tmp_path / "pageindex")
-
-    chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="qdoc")
+    stores = memory_stores()
+    stores.pageindex.save(index)
     embedder = _FakeEmbedder()
     ingest_chunks(
         chunks, doc_id="qdoc", document_name="sample.pdf",
-        store=chroma, embedder=embedder,
+        store=stores.chunks, embedder=embedder,
     )
-
-    facts = FactStore(tmp_path / "facts.db")
-    extract_and_store(chunks, doc_id="qdoc", document_name="sample.pdf", store=facts)
+    extract_and_store(chunks, doc_id="qdoc", document_name="sample.pdf", store=stores.facts)
 
     plan_json = (
         '{"calls":['
@@ -151,12 +147,10 @@ def test_query_agent_offline_end_to_end(tmp_path: Path):
     agent = QueryAgent(
         QueryAgentDeps(
             llm=llm,
+            stores=stores,
             doc_id="qdoc",
             pdf_path=None,
-            pageindex_dir=tmp_path / "pageindex",
-            chroma_store=chroma,
             embedder=embedder,
-            fact_store=facts,
             max_tool_calls=3,
         )
     )
@@ -181,16 +175,13 @@ def test_query_agent_refusal_when_no_evidence(tmp_path: Path):
             '{"answer":"Unverifiable / Source Not Found","cite_indices":[],"refusal":true,"follow_ups":[]}',
         ]
     )
-    chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="empty")
     agent = QueryAgent(
         QueryAgentDeps(
             llm=llm,
             doc_id="missing",
             pdf_path=None,
-            pageindex_dir=tmp_path / "pageindex",
-            chroma_store=chroma,
+            stores=memory_stores(),
             embedder=_FakeEmbedder(),
-            fact_store=FactStore(tmp_path / "facts.db"),
         )
     )
     answer = agent.ask("What was revenue on Mars?")
@@ -200,16 +191,13 @@ def test_query_agent_refusal_when_no_evidence(tmp_path: Path):
 def test_greeting_without_document(tmp_path: Path):
     """Greeting with no active document → welcome message, zero retrieval cost."""
     llm = _ScriptedLLM([])  # No LLM calls expected (regex fast-path)
-    chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="greet")
     agent = QueryAgent(
         QueryAgentDeps(
             llm=llm,
             doc_id=None,
             pdf_path=None,
-            pageindex_dir=tmp_path / "pageindex",
-            chroma_store=chroma,
+            stores=memory_stores(),
             embedder=_FakeEmbedder(),
-            fact_store=FactStore(tmp_path / "facts.db"),
         )
     )
     answer = agent.ask("Hello!")
@@ -222,16 +210,13 @@ def test_greeting_without_document(tmp_path: Path):
 def test_greeting_with_document(tmp_path: Path):
     """Greeting with an active document → warm doc-aware response."""
     llm = _ScriptedLLM([])  # No LLM calls expected (regex fast-path)
-    chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="greet_doc")
     agent = QueryAgent(
         QueryAgentDeps(
             llm=llm,
             doc_id="annual_report",
             pdf_path=None,
-            pageindex_dir=tmp_path / "pageindex",
-            chroma_store=chroma,
+            stores=memory_stores(),
             embedder=_FakeEmbedder(),
-            fact_store=FactStore(tmp_path / "facts.db"),
         )
     )
     answer = agent.ask("Hi!")

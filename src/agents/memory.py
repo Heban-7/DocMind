@@ -1,45 +1,59 @@
-"""
-LangGraph conversation checkpointer (STEP 1 -- Patient File).
+"""Conversation memory: LangGraph checkpoints in Postgres.
 
-Persists graph state (including ``messages``) to SQLite keyed by ``thread_id``.
+The checkpoint tables carry no tenant column, so they are reached only with a
+key built from the caller's tenant and an already-authorised thread id:
+``<tenant_id>:<thread_id>``. Two tenants using the same thread id therefore
+never share a conversation, even if an ownership check were skipped.
 """
 
 from __future__ import annotations
 
-import sqlite3
-from pathlib import Path
+import threading
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from langgraph.checkpoint.sqlite import SqliteSaver
 
-from src.config import CHECKPOINTS_DB_PATH
+from src.models.conversation import ConversationMessage, MessageRole
 
-
-def build_sqlite_checkpointer(
-    db_path: str | Path | None = None,
-) -> SqliteSaver:
-    """Open (or create) a SQLite checkpointer and ensure its schema exists.
-
-    Keeps a long-lived connection with ``check_same_thread=False`` so the
-    agent can be called from CLI / web workers safely.
-    """
-    path = Path(db_path) if db_path is not None else CHECKPOINTS_DB_PATH
-    conn_str = ":memory:" if str(path) == ":memory:" else str(path)
-    if conn_str != ":memory:":
-        Path(conn_str).parent.mkdir(parents=True, exist_ok=True)
-
-    conn = sqlite3.connect(conn_str, check_same_thread=False)
-    saver = SqliteSaver(conn)
-    saver.setup()
-    return saver
+_saver: BaseCheckpointSaver | None = None
+_lock = threading.Lock()
 
 
-def ensure_checkpointer(
-    checkpointer: BaseCheckpointSaver | None = None,
-    *,
-    db_path: str | Path | None = None,
-) -> BaseCheckpointSaver:
-    """Return the given checkpointer, or build the default SQLite one."""
-    if checkpointer is not None:
-        return checkpointer
-    return build_sqlite_checkpointer(db_path)
+def checkpoint_key(tenant_id: str, thread_id: str) -> str:
+    return f"{tenant_id}:{thread_id}"
+
+
+def postgres_checkpointer() -> BaseCheckpointSaver:
+    """The process-wide PostgresSaver (tables are created by ``src.db.migrate``)."""
+    global _saver
+    with _lock:
+        # A closed pool (app shutdown, tests) means a new pool and a new saver.
+        if _saver is None or getattr(_saver.conn, "closed", False):
+            from langgraph.checkpoint.postgres import PostgresSaver
+
+            from src.db.pool import get_checkpoint_pool
+
+            _saver = PostgresSaver(get_checkpoint_pool())
+        return _saver
+
+
+def reset_checkpointer() -> None:
+    global _saver
+    with _lock:
+        _saver = None
+
+
+def read_messages(saver: BaseCheckpointSaver, key: str) -> list[ConversationMessage]:
+    """The stored turns of one conversation, without building an agent."""
+    tup = saver.get_tuple({"configurable": {"thread_id": key, "checkpoint_ns": ""}})
+    if tup is None:
+        return []
+    raw = list((tup.checkpoint.get("channel_values") or {}).get("messages") or [])
+    out: list[ConversationMessage] = []
+    for msg in raw:
+        content = str(getattr(msg, "content", "") or "").strip()
+        if not content:
+            continue
+        mtype = getattr(msg, "type", "")
+        role = {"human": MessageRole.USER, "ai": MessageRole.ASSISTANT}.get(mtype, MessageRole.SYSTEM)
+        out.append(ConversationMessage(role=role, content=content))
+    return out

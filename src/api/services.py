@@ -1,27 +1,25 @@
-"""API service helpers: upload ingest + chat / history against the Query Agent."""
+"""API service helpers: upload ingest, chat and history, scoped to the caller.
+
+Every function takes the caller's ``Principal``. Documents are reached
+through the tenant's Postgres rows (row-level security), chat threads through
+the ``threads`` table (one owner each), and conversation memory through a
+checkpoint key that includes the tenant.
+"""
 
 from __future__ import annotations
 
 import json
 import logging
 import os
-import re
 import shutil
-import sqlite3
+import tempfile
+import time
 from pathlib import Path
-from uuid import uuid4
 
 from fastapi import UploadFile
 
+from src.agents.memory import checkpoint_key, postgres_checkpointer, read_messages
 from src.agents.query_agent import QueryAgent, build_query_agent
-from src.api.ownership import (
-    can_access_document,
-    claim_thread,
-    record_document_owner,
-    require_document_access,
-    require_thread_access,
-    threads_owned_by,
-)
 from src.api.schemas import (
     ChatRequest,
     ChatResponse,
@@ -33,217 +31,192 @@ from src.api.schemas import (
     ThreadSummary,
     UploadResponse,
 )
-from src.config import CHECKPOINTS_DB_PATH, PROFILES_DIR, RAW_DIR
+from src.db import repos
+from src.db.repos import AccessDeniedError, DocumentRow, Principal, ThreadRow
 from src.llm.factory import get_text_client
-from src.pipeline.ingest import ingest_pdf
-from src.pipeline.phase4 import resolve_pdf_path
-
+from src.models.intent import CorpusDocument
+from src.pipeline.ingest import ingest_document
+from src.storage.blobs import get_blob_store
+from src.stores.pg import as_uuid, pg_stores
 
 logger = logging.getLogger("docmind.api")
 
-_SAFE_NAME = re.compile(r"[^A-Za-z0-9._-]+")
+__all__ = ["AccessDeniedError"]
 
 
-def _safe_filename(name: str) -> str:
-    base = Path(name or "upload.pdf").name
-    cleaned = _SAFE_NAME.sub("_", base).strip("._") or "upload.pdf"
-    if not cleaned.lower().endswith(".pdf"):
-        cleaned = f"{cleaned}.pdf"
-    return cleaned
+def _max_upload_bytes() -> int:
+    return int(float(os.getenv("DOCMIND_MAX_UPLOAD_MB", "50")) * 1024 * 1024)
 
 
-def save_upload(file: UploadFile, *, destination_dir: Path | None = None) -> Path:
-    """Persist an uploaded PDF under ``data/raw/`` with a collision-safe name."""
+def _skip_embed() -> bool:
+    return os.getenv("DOCMIND_API_SKIP_EMBED", "").lower() in {"1", "true", "yes"}
+
+
+def _status_label(doc: DocumentRow | str) -> str:
+    """The frontend's word for a ready document is still ``indexed``."""
+    status = doc if isinstance(doc, str) else doc.status
+    return "indexed" if status == "ready" else status
+
+
+def _engines_label(engines: dict) -> str:
+    return "page_level" if engines else "standard"
+
+
+def _doc_info(doc: DocumentRow) -> DocumentInfo:
+    return DocumentInfo(
+        document_id=doc.id,
+        file_name=doc.file_name,
+        page_count=doc.page_count,
+        strategy_tier=_engines_label((doc.stats or {}).get("engines") or {}),
+        status=_status_label(doc),
+        pages_needing_review=doc.pages_needing_review,
+    )
+
+
+# --- Upload ------------------------------------------------------------------
+
+
+def _spool_upload(file: UploadFile, folder: Path) -> Path:
+    """Copy the upload to a private temp file, enforcing type and size."""
     if not file.filename:
         raise ValueError("Uploaded file has no filename.")
-    lowered = file.filename.lower()
     content_type = (file.content_type or "").lower()
-    if not lowered.endswith(".pdf") and "pdf" not in content_type:
+    if not file.filename.lower().endswith(".pdf") and "pdf" not in content_type:
         raise ValueError("Only PDF uploads are supported.")
-
-    dest_dir = destination_dir or RAW_DIR
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    safe = _safe_filename(file.filename)
-    target = dest_dir / f"{uuid4().hex[:10]}_{safe}"
-
+    target = folder / "upload.pdf"
+    limit = _max_upload_bytes()
+    written = 0
     with target.open("wb") as out:
-        shutil.copyfileobj(file.file, out)
-
-    if target.stat().st_size == 0:
-        target.unlink(missing_ok=True)
+        while True:
+            block = file.file.read(1 << 20)
+            if not block:
+                break
+            written += len(block)
+            if written > limit:
+                raise ValueError(f"PDF is larger than {limit // (1024 * 1024)} MB.")
+            out.write(block)
+    if written == 0:
         raise ValueError("Uploaded PDF is empty.")
+    with target.open("rb") as fh:
+        if fh.read(5) != b"%PDF-":
+            raise ValueError("The file is not a PDF.")
     return target
 
 
-def process_upload(
-    file: UploadFile,
-    *,
-    user_id: str = "",
-    skip_embed: bool | None = None,
-) -> UploadResponse:
-    """Save PDF, run Phases 1-4 indexing, return an UploadResponse."""
-    if skip_embed is None:
-        skip_embed = os.getenv("DOCMIND_API_SKIP_EMBED", "").lower() in {
-            "1",
-            "true",
-            "yes",
-        }
+def _display_name(name: str) -> str:
+    base = Path(name or "upload.pdf").name.strip() or "upload.pdf"
+    return base[:255]
 
-    if not user_id:
-        raise ValueError("An authenticated user is required to upload.")
-    saved = save_upload(file)
-    logger.info("upload saved path=%s user=%s", saved, user_id)
+
+def process_upload(file: UploadFile, *, principal: Principal) -> UploadResponse:
+    """Store the PDF and index it for the caller's tenant."""
+    folder = Path(tempfile.mkdtemp(prefix="docmind-upload-"))
     try:
-        result = ingest_pdf(saved, skip_phase4=False, skip_embed=skip_embed)
-    except Exception:
-        # Keep the raw file for debugging; re-raise for HTTP mapping.
-        logger.exception("ingest failed for %s", saved)
-        raise
-
-    profile = result.profile
-    record_document_owner(profile.doc_id, user_id)
-    status = "indexed" if result.phase4 is not None else "chunked"
-    if result.phase4 is not None and skip_embed:
-        status = "indexed_no_embed"
-
+        path = _spool_upload(file, folder)
+        result = ingest_document(
+            path,
+            principal=principal,
+            file_name=_display_name(file.filename or ""),
+            embed=not _skip_embed(),
+        )
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
     return UploadResponse(
-        document_id=profile.doc_id,
-        file_name=profile.source_filename,
-        page_count=profile.page_count,
-        strategy_tier=profile.strategy_tier.value,
-        status=status,
+        document_id=result.document_id,
+        file_name=result.file_name,
+        page_count=result.page_count,
+        strategy_tier=_engines_label(result.engines or (result.stats or {}).get("engines") or {}),
+        status=_status_label(result.status),
+        pages_needing_review=result.pages_needing_review,
+        deduplicated=result.deduplicated,
     )
 
 
-def _agent_for_chat(document_id: str | None, model: str | None = None) -> QueryAgent:
-    """Build a memory-backed Query Agent, optionally pinned to one document and model."""
-    pdf_path = resolve_pdf_path(document_id) if document_id else None
-    llm_client = get_text_client(model=model) if model else None
-    return build_query_agent(
-        document_id,
-        pdf_path=pdf_path,
-        llm=llm_client,
-        enable_memory=True,
-    )
+# --- Documents ---------------------------------------------------------------
 
 
-def _init_thread_doc_db():
+def list_documents(*, principal: Principal) -> DocumentListResponse:
+    return DocumentListResponse(documents=[_doc_info(d) for d in repos.list_documents(principal.tenant_id)])
+
+
+def get_pdf_file_path(doc_id: str, *, principal: Principal) -> Path:
+    """Local path of the stored PDF of a document in the caller's tenant.
+
+    Raises AccessDeniedError for documents of other tenants (and malformed
+    ids), and FileNotFoundError when the stored file itself is missing.
+    """
+    doc = repos.require_document(principal.tenant_id, doc_id)
     try:
-        if not CHECKPOINTS_DB_PATH.parent.exists():
-            CHECKPOINTS_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS thread_documents (
-                thread_id TEXT PRIMARY KEY,
-                document_id TEXT NOT NULL,
-                user_id TEXT NOT NULL DEFAULT '',
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        # Ensure user_id column exists (migration for existing DBs)
+        return get_blob_store().local_path(doc.storage_key)
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(f"PDF for document_id={doc_id} not found.") from exc
+
+
+def _pdf_resolver(tenant_id: str):
+    blobs = get_blob_store()
+
+    def resolve(doc_id: str) -> Path | None:
+        doc = repos.get_document(tenant_id, doc_id)
+        if doc is None:
+            return None
         try:
-            conn.execute("SELECT user_id FROM thread_documents LIMIT 1")
-        except sqlite3.OperationalError:
-            conn.execute("ALTER TABLE thread_documents ADD COLUMN user_id TEXT NOT NULL DEFAULT ''")
-        conn.commit()
-        conn.close()
-    except Exception as exc:
-        logger.warning("Failed to init thread_documents db: %s", exc)
+            return blobs.local_path(doc.storage_key)
+        except FileNotFoundError:
+            return None
+
+    return resolve
 
 
-def save_thread_document(thread_id: str, document_id: str | None = None, user_id: str = "") -> None:
-    if not thread_id:
-        return
-    try:
-        _init_thread_doc_db()
-        conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
-        doc_id = document_id or ""
-        # Ownership lives in src.api.ownership.thread_owners; this table only
-        # remembers which document a thread is pinned to. The owner column is
-        # written once and never overwritten (it used to be last-writer-wins).
-        conn.execute(
-            """
-            INSERT INTO thread_documents (thread_id, document_id, user_id)
-            VALUES (?, ?, ?)
-            ON CONFLICT(thread_id) DO UPDATE SET
-                document_id = CASE WHEN excluded.document_id != '' THEN excluded.document_id ELSE thread_documents.document_id END,
-                updated_at = CURRENT_TIMESTAMP
-            """,
-            (thread_id, doc_id, user_id),
+def _corpus(tenant_id: str) -> list[CorpusDocument]:
+    return [
+        CorpusDocument(
+            document_id=d.id,
+            document_name=d.file_name,
+            domain_hint=d.domain_hint,
+            page_count=d.page_count,
         )
-        conn.commit()
-        conn.close()
-    except Exception as exc:
-        logger.warning("Failed to save thread_document: %s", exc)
+        for d in repos.list_documents(tenant_id, ready_only=True)
+    ]
 
 
-def get_thread_document(thread_id: str) -> str | None:
-    if not thread_id or not CHECKPOINTS_DB_PATH.exists():
-        return None
-    try:
-        conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
-        cursor = conn.execute(
-            "SELECT document_id FROM thread_documents WHERE thread_id = ?",
-            (thread_id,),
-        )
-        row = cursor.fetchone()
-        conn.close()
-        return row[0] if row else None
-    except Exception:
-        return None
+# --- Chat --------------------------------------------------------------------
 
 
-def get_document_info(document_id: str) -> DocumentInfo | None:
-    if not document_id or not PROFILES_DIR.exists():
-        return None
-    for p in PROFILES_DIR.glob("*.json"):
-        try:
-            data = json.loads(p.read_text(encoding="utf-8"))
-            did = data.get("doc_id", p.stem)
-            if did == document_id:
-                return DocumentInfo(
-                    document_id=did,
-                    file_name=data.get("source_filename", p.name),
-                    page_count=data.get("page_count", 0),
-                    strategy_tier=data.get("estimated_cost", {}).get("value", "standard")
-                    if isinstance(data.get("estimated_cost"), dict)
-                    else str(data.get("estimated_cost", "standard")),
-                    status="indexed",
-                )
-        except Exception:
-            continue
-    return None
-
-
-def authorize_chat(payload: ChatRequest, *, user_id: str) -> None:
+def authorize_chat(payload: ChatRequest, *, principal: Principal) -> ThreadRow:
     """Check thread and document access before any work (or streaming) starts.
 
     The first user to write to a thread owns it; anyone else gets "not found".
     """
-    claim_thread(payload.thread_id, user_id)
     if payload.document_id:
-        require_document_access(payload.document_id, user_id)
+        repos.require_document(principal.tenant_id, payload.document_id)
+    return repos.claim_thread(principal, payload.thread_id, payload.document_id)
 
 
-def run_chat(payload: ChatRequest, *, user_id: str = "") -> ChatResponse:
+def _agent_for_chat(principal: Principal, document_id: str | None, model: str | None) -> QueryAgent:
+    llm_client = get_text_client(model=model) if model else None
+    return build_query_agent(
+        document_id,
+        stores=pg_stores(principal.tenant_id),
+        llm=llm_client,
+        pdf_resolver=_pdf_resolver(principal.tenant_id),
+        checkpointer=postgres_checkpointer(),
+        corpus=_corpus(principal.tenant_id),
+    )
+
+
+def run_chat(payload: ChatRequest, *, principal: Principal) -> ChatResponse:
     """Invoke the LangGraph Query Agent and return answer + provenance."""
-    thread_id = payload.thread_id
-    authorize_chat(payload, user_id=user_id)
-    save_thread_document(thread_id, payload.document_id, user_id=user_id)
+    thread = authorize_chat(payload, principal=principal)
+    bound = thread.document_id
+    if bound and repos.get_document(principal.tenant_id, bound) is None:
+        bound = None
+    doc_pin = None if payload.federated_search else (as_uuid(payload.document_id) or bound)
 
-    bound_doc_id = get_thread_document(thread_id)
-    if bound_doc_id and not can_access_document(bound_doc_id, user_id):
-        bound_doc_id = None
-    doc_pin = None if payload.federated_search else (payload.document_id or bound_doc_id)
-
-    agent = _agent_for_chat(doc_pin, model=payload.model)
+    agent = _agent_for_chat(principal, doc_pin, payload.model)
     if payload.audit_mode:
-        logger.info("Chat invoked under Zero-Trust Audit Mode for thread_id=%s", thread_id)
-    if payload.model:
-        logger.info("Chat requested model=%s for thread_id=%s", payload.model, thread_id)
-    answer = agent.ask(payload.message, thread_id=thread_id)
+        logger.info("Chat invoked under audit mode thread_id=%s", payload.thread_id)
+    answer = agent.ask(payload.message, thread_id=checkpoint_key(principal.tenant_id, payload.thread_id))
+    repos.record_turn(principal, payload.thread_id, question=payload.message)
 
     provenance = []
     for c in answer.provenance.citations:
@@ -254,139 +227,63 @@ def run_chat(payload: ChatRequest, *, user_id: str = "") -> ChatResponse:
 
     return ChatResponse(
         response=answer.answer,
-        thread_id=thread_id,
+        thread_id=payload.thread_id,
         provenance=provenance,
         follow_ups=list(answer.follow_ups) if answer.follow_ups else [],
     )
 
 
-def run_chat_stream(payload: ChatRequest, *, user_id: str = ""):
+def run_chat_stream(payload: ChatRequest, *, principal: Principal):
     """Stream response tokens followed by metadata JSON as Server-Sent Events."""
-    import time
-    res = run_chat(payload, user_id=user_id)
-    text = res.response
-    words = text.split(" ")
+    res = run_chat(payload, principal=principal)
+    words = res.response.split(" ")
     for i, word in enumerate(words):
         chunk = word if i == len(words) - 1 else word + " "
-        evt = {"type": "token", "token": chunk}
-        yield f"data: {json.dumps(evt)}\n\n"
+        yield f"data: {json.dumps({'type': 'token', 'token': chunk})}\n\n"
         time.sleep(0.012)
-
-    done_evt = {
-        "type": "done",
-        "provenance": res.provenance,
-        "follow_ups": res.follow_ups,
-    }
+    done_evt = {"type": "done", "provenance": res.provenance, "follow_ups": res.follow_ups}
     yield f"data: {json.dumps(done_evt)}\n\n"
 
 
-def fetch_history(thread_id: str, *, user_id: str = "") -> HistoryResponse:
-    """Load persisted conversation turns for ``thread_id``."""
+# --- Threads and history -----------------------------------------------------
+
+
+def _doc_info_or_none(tenant_id: str, doc_id: str | None) -> DocumentInfo | None:
+    if not doc_id:
+        return None
+    doc = repos.get_document(tenant_id, doc_id)
+    return _doc_info(doc) if doc else None
+
+
+def fetch_history(thread_id: str, *, principal: Principal) -> HistoryResponse:
+    """Load persisted conversation turns for one of the caller's threads."""
     tid = (thread_id or "").strip()
     if not tid:
         raise ValueError("thread_id must be a non-empty string.")
-
-    # Fail closed: unknown threads and other users' threads look the same.
-    require_thread_access(tid, user_id)
-    agent = build_query_agent(None, enable_memory=True)
+    thread = repos.get_thread(principal, tid)  # fail closed: others' threads are "not found"
     messages = [
         HistoryMessage(role=m.role.value, content=m.content)
-        for m in agent.get_messages(tid)
+        for m in read_messages(postgres_checkpointer(), checkpoint_key(principal.tenant_id, tid))
     ]
-    doc_id = get_thread_document(tid)
-    doc_info = get_document_info(doc_id) if doc_id else None
     return HistoryResponse(
         thread_id=tid,
         messages=messages,
-        document_id=doc_id,
-        document_info=doc_info,
+        document_id=thread.document_id,
+        document_info=_doc_info_or_none(principal.tenant_id, thread.document_id),
     )
 
 
-def list_threads(*, user_id: str = "") -> ThreadListResponse:
-    """Return all active thread_ids ordered by most recent activity for the user."""
-    if not CHECKPOINTS_DB_PATH.exists():
-        return ThreadListResponse(threads=[])
-
-    try:
-        conn = sqlite3.connect(str(CHECKPOINTS_DB_PATH))
-        cursor = conn.execute(
-            "SELECT thread_id, MAX(rowid) AS last_active FROM checkpoints GROUP BY thread_id ORDER BY last_active DESC"
-        )
-        all_thread_ids = [row[0] for row in cursor.fetchall() if row[0]]
-
-        # Only the caller's own threads, never everyone's.
-        user_thread_ids = threads_owned_by(user_id) if user_id else set()
-        thread_ids = [tid for tid in all_thread_ids if tid in user_thread_ids]
-
-        conn.close()
-    except Exception:
-        logger.exception("Failed to query checkpoints DB")
-        return ThreadListResponse(threads=[])
-
-    agent = build_query_agent(None, enable_memory=True)
-    summaries: list[ThreadSummary] = []
-    for tid in thread_ids:
-        msgs = agent.get_messages(tid)
-        if not msgs:
-            continue
-        user_msgs = [m for m in msgs if m.role.value == "user"]
-        first_text = user_msgs[0].content if user_msgs else "Conversation"
-        title = first_text[:60] + ("..." if len(first_text) > 60 else "")
-        doc_id = get_thread_document(tid)
-        doc_info = get_document_info(doc_id) if doc_id else None
-        summaries.append(
+def list_threads(*, principal: Principal) -> ThreadListResponse:
+    """The caller's own threads, most recent first."""
+    return ThreadListResponse(
+        threads=[
             ThreadSummary(
-                thread_id=tid,
-                title=title,
-                message_count=len(msgs),
-                document_id=doc_id,
-                document_info=doc_info,
+                thread_id=t.id,
+                title=t.title or "Conversation",
+                message_count=t.message_count,
+                document_id=t.document_id,
+                document_info=_doc_info_or_none(principal.tenant_id, t.document_id),
             )
-        )
-    return ThreadListResponse(threads=summaries)
-
-
-
-
-
-
-def list_documents(*, user_id: str = "") -> DocumentListResponse:
-    """Return all ingested document profiles from PROFILES_DIR."""
-    if not PROFILES_DIR.exists():
-        return DocumentListResponse(documents=[])
-
-    docs: list[DocumentInfo] = []
-    for p in PROFILES_DIR.glob("*.json"):
-        try:
-            data = json.loads(p.read_text(encoding="utf-8"))
-            if not can_access_document(data.get("doc_id", p.stem), user_id):
-                continue
-            docs.append(
-                DocumentInfo(
-                    document_id=data.get("doc_id", p.stem),
-                    file_name=data.get("source_filename", p.name),
-                    page_count=data.get("page_count", 0),
-                    strategy_tier=data.get("estimated_cost", {}).get("value", "standard")
-                    if isinstance(data.get("estimated_cost"), dict)
-                    else str(data.get("estimated_cost", "standard")),
-                    status="indexed",
-                )
-            )
-        except Exception:
-            continue
-
-    return DocumentListResponse(documents=docs)
-
-
-def get_pdf_file_path(doc_id: str, *, user_id: str) -> Path:
-    """Resolve the PDF for a document the user may see, else raise.
-
-    Raises AccessDeniedError for documents the user does not own, and
-    FileNotFoundError when the file itself is missing.
-    """
-    require_document_access(doc_id, user_id)
-    path = resolve_pdf_path(doc_id)
-    if path is None or not path.exists():
-        raise FileNotFoundError(f"PDF for document_id={doc_id} not found.")
-    return path
+            for t in repos.list_threads(principal)
+        ]
+    )

@@ -1,13 +1,5 @@
-"""Phase 4 pipeline helpers (indexing / query glue) + shared ingest."""
+"""Ingest pipeline: extract -> chunk -> index into a tenant's stores."""
 
-from src.pipeline.ingest import IngestResult, ingest_pdf
-from src.pipeline.phase4 import Phase4IndexResult, build_query_indexes, resolve_pdf_path
+from src.pipeline.ingest import IndexResult, IngestResult, index_document, ingest_document, sha256_file
 
-__all__ = [
-    "IngestResult",
-    "Phase4IndexResult",
-    "build_query_indexes",
-    "ingest_pdf",
-    "resolve_pdf_path",
-]
-
+__all__ = ["IndexResult", "IngestResult", "index_document", "ingest_document", "sha256_file"]

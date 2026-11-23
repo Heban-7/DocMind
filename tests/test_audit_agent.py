@@ -7,12 +7,11 @@ from pathlib import Path
 from src.agents.audit_agent import AuditAgent, AuditAgentDeps
 from src.chunking.models import DocumentChunk
 from src.facts.extractor import extract_and_store
-from src.facts.store import FactStore
 from src.llm.base import LLMClient, LLMResult
 from src.models.query import AuditStatus, AuditVerdict
-from src.pageindex.builder import build_page_index, save_page_index
+from src.pageindex.builder import build_page_index
 from src.retrieval.ingest import ingest_chunks
-from src.retrieval.vector_store import ChromaLDUStore
+from src.stores.memory import memory_stores
 
 
 class _FakeEmbedder:
@@ -67,20 +66,19 @@ def _build_stores(tmp_path: Path):
         chunks, doc_id="adoc", source_filename="sample.pdf",
         summarize=True, llm_client=None,
     )
-    save_page_index(index, directory=tmp_path / "pageindex")
-    chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="adoc")
+    stores = memory_stores()
+    stores.pageindex.save(index)
     embedder = _FakeEmbedder()
     ingest_chunks(
         chunks, doc_id="adoc", document_name="sample.pdf",
-        store=chroma, embedder=embedder,
+        store=stores.chunks, embedder=embedder,
     )
-    facts = FactStore(tmp_path / "facts.db")
-    extract_and_store(chunks, doc_id="adoc", document_name="sample.pdf", store=facts)
-    return chroma, embedder, facts
+    extract_and_store(chunks, doc_id="adoc", document_name="sample.pdf", store=stores.facts)
+    return stores, embedder
 
 
 def test_audit_verified_offline(tmp_path: Path):
-    chroma, embedder, facts = _build_stores(tmp_path)
+    stores, embedder = _build_stores(tmp_path)
     llm = _ScriptedLLM(
         [
             (
@@ -94,11 +92,9 @@ def test_audit_verified_offline(tmp_path: Path):
         AuditAgentDeps(
             llm=llm,
             doc_id="adoc",
+            stores=stores,
             pdf_path=None,
-            pageindex_dir=tmp_path / "pageindex",
-            chroma_store=chroma,
             embedder=embedder,
-            fact_store=facts,
             use_planner=False,
         )
     )
@@ -112,7 +108,7 @@ def test_audit_verified_offline(tmp_path: Path):
 
 
 def test_audit_unverifiable_offline(tmp_path: Path):
-    chroma, embedder, facts = _build_stores(tmp_path)
+    stores, embedder = _build_stores(tmp_path)
     llm = _ScriptedLLM(
         [
             (
@@ -126,11 +122,9 @@ def test_audit_unverifiable_offline(tmp_path: Path):
         AuditAgentDeps(
             llm=llm,
             doc_id="adoc",
+            stores=stores,
             pdf_path=None,
-            pageindex_dir=tmp_path / "pageindex",
-            chroma_store=chroma,
             embedder=embedder,
-            fact_store=facts,
             use_planner=False,
         )
     )
@@ -141,7 +135,7 @@ def test_audit_unverifiable_offline(tmp_path: Path):
 
 
 def test_audit_forces_unverifiable_without_cites(tmp_path: Path):
-    chroma, embedder, facts = _build_stores(tmp_path)
+    stores, embedder = _build_stores(tmp_path)
     # Model wrongly says verified with empty cites -> agent must demote.
     llm = _ScriptedLLM(
         [
@@ -152,11 +146,9 @@ def test_audit_forces_unverifiable_without_cites(tmp_path: Path):
         AuditAgentDeps(
             llm=llm,
             doc_id="adoc",
+            stores=stores,
             pdf_path=None,
-            pageindex_dir=tmp_path / "pageindex",
-            chroma_store=chroma,
             embedder=embedder,
-            fact_store=facts,
             use_planner=False,
         )
     )
@@ -168,7 +160,7 @@ def test_audit_forces_unverifiable_without_cites(tmp_path: Path):
 def test_audit_empty_claim_no_llm():
     llm = _ScriptedLLM(["should not be called"])
     agent = AuditAgent(
-        AuditAgentDeps(llm=llm, doc_id="x", use_planner=False)
+        AuditAgentDeps(llm=llm, stores=memory_stores(), doc_id="x", use_planner=False)
     )
     verdict = agent.audit("   ")
     assert verdict.status is AuditStatus.UNVERIFIABLE

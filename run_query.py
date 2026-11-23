@@ -1,21 +1,18 @@
 """
-DocMind | Query / Audit CLI (Phase 4).
+DocMind | Query / Audit CLI, over the documents of the local CLI account.
 
-Usage:
+Usage (ingest first with run_pipeline.py, which prints the document id):
     # Ask (pin one document)
-    uv run python run_query.py "What was import tax expenditure?" --doc 212dc42370e2
+    uv run python run_query.py "What was import tax expenditure?" --doc <document-id>
 
-    # Ask across the whole corpus (IntentRouter decides / federates)
+    # Ask across all documents of the account (IntentRouter decides / federates)
     uv run python run_query.py "What was import tax expenditure?"
 
     # Audit a claim
-    uv run python run_query.py --audit "Revenue was $4.2B in Q3" --doc 212dc42370e2
+    uv run python run_query.py --audit "Revenue was $4.2B in Q3" --doc <document-id>
 
-    # Conversational memory
-    uv run python run_query.py "..." --doc 212dc42370e2 --thread demo-1
-
-    # One-time index existing chunks
-    uv run python run_query.py --index-only --embed --doc 212dc42370e2 --name sample.pdf
+    # Conversational memory (Postgres checkpointer)
+    uv run python run_query.py "..." --doc <document-id> --thread demo-1
 """
 
 from __future__ import annotations
@@ -23,9 +20,6 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
-
-from src.config import DEFAULT_SAMPLE_PDF
-from src.pipeline.phase4 import build_query_indexes, resolve_pdf_path
 
 
 def _print_answer(answer, *, as_json: bool) -> None:
@@ -80,29 +74,6 @@ def _print_verdict(verdict, *, as_json: bool) -> None:
     print("=" * 72)
 
 
-def cmd_index(doc_id: str, *, embed: bool, document_name: str) -> int:
-    result = build_query_indexes(
-        doc_id,
-        document_name=document_name or doc_id,
-        embed=embed,
-        pageindex_llm_client=None,
-    )
-    print("=" * 72)
-    print("DocMind | Index")
-    print("=" * 72)
-    print(f"Doc ID         : {result.doc_id}")
-    print(f"PageIndex      : {result.pageindex_path} "
-          f"({result.pageindex_sections} sections)")
-    print(f"Facts written  : {result.facts_written}")
-    if result.embedded:
-        print(f"Chroma upsert  : {result.chunks_embedded} "
-              f"(collection total={result.chroma_total})")
-    else:
-        print("Chroma         : skipped (pass --embed to ingest vectors)")
-    print("=" * 72)
-    return 0
-
-
 def cmd_ask(
     question: str,
     *,
@@ -110,27 +81,61 @@ def cmd_ask(
     pdf: Path | None,
     as_json: bool,
     thread_id: str | None = None,
-    enable_memory: bool = False,
 ) -> int:
+    from src.agents.memory import checkpoint_key, postgres_checkpointer
     from src.agents.query_agent import build_query_agent
 
+    principal, resolver, corpus = _context()
     agent = build_query_agent(
         doc_id,
+        stores=_stores(principal),
         pdf_path=pdf,
-        enable_memory=enable_memory or bool(thread_id),
+        pdf_resolver=resolver,
+        corpus=corpus,
+        checkpointer=postgres_checkpointer() if thread_id else None,
     )
-    answer = agent.ask(question, thread_id=thread_id)
+    key = checkpoint_key(principal.tenant_id, thread_id) if thread_id else None
+    answer = agent.ask(question, thread_id=key)
     _print_answer(answer, as_json=as_json)
-    if (enable_memory or thread_id) and not as_json:
-        tid = thread_id or "default"
-        print(f"Thread   : {tid} (resume with --thread {tid})")
+    if thread_id and not as_json:
+        print(f"Thread   : {thread_id} (resume with --thread {thread_id})")
     return 0
+
+
+def _context():
+    from src.db import repos
+    from src.db.local import local_principal
+    from src.models.intent import CorpusDocument
+    from src.storage.blobs import get_blob_store
+
+    principal = local_principal()
+    blobs = get_blob_store()
+
+    def resolver(doc_id: str) -> Path | None:
+        doc = repos.get_document(principal.tenant_id, doc_id)
+        try:
+            return blobs.local_path(doc.storage_key) if doc else None
+        except FileNotFoundError:
+            return None
+
+    corpus = [
+        CorpusDocument(document_id=d.id, document_name=d.file_name, domain_hint=d.domain_hint, page_count=d.page_count)
+        for d in repos.list_documents(principal.tenant_id, ready_only=True)
+    ]
+    return principal, resolver, corpus
+
+
+def _stores(principal):
+    from src.stores.pg import pg_stores
+
+    return pg_stores(principal.tenant_id)
 
 
 def cmd_audit(claim: str, *, doc_id: str, pdf: Path | None, as_json: bool) -> int:
     from src.agents.audit_agent import build_audit_agent
 
-    agent = build_audit_agent(doc_id, pdf_path=pdf)
+    principal, resolver, _ = _context()
+    agent = build_audit_agent(doc_id, stores=_stores(principal), pdf_path=pdf or resolver(doc_id))
     verdict = agent.audit(claim)
     _print_verdict(verdict, as_json=as_json)
     return 0 if verdict.status.value == "verified" else 2
@@ -159,24 +164,9 @@ def main(argv: list[str] | None = None) -> int:
         help="Treat TEXT as a claim to audit instead of a question.",
     )
     parser.add_argument(
-        "--index-only",
-        action="store_true",
-        help="Build PageIndex + FactTable (and optional Chroma) then exit.",
-    )
-    parser.add_argument(
-        "--embed",
-        action="store_true",
-        help="With --index-only: also embed chunks into Chroma (API cost).",
-    )
-    parser.add_argument(
         "--pdf",
         default=None,
-        help="Source PDF for page bboxes (defaults to triage profile / sample.pdf).",
-    )
-    parser.add_argument(
-        "--name",
-        default="",
-        help="Document display name for indexing (default: doc id or profile name).",
+        help="Source PDF for page bboxes (defaults to the stored copy of --doc).",
     )
     parser.add_argument(
         "--json",
@@ -184,14 +174,9 @@ def main(argv: list[str] | None = None) -> int:
         help="Print the typed result as JSON.",
     )
     parser.add_argument(
-        "--memory",
-        action="store_true",
-        help="Persist conversation via SqliteSaver (.refinery/checkpoints.sqlite).",
-    )
-    parser.add_argument(
         "--thread",
         default=None,
-        help="Conversation thread_id (implies --memory). Same id resumes history.",
+        help="Conversation thread id; the same id resumes the conversation.",
     )
     parser.add_argument(
         "--no-tracing",
@@ -208,23 +193,13 @@ def main(argv: list[str] | None = None) -> int:
         pass
 
     doc_id = (args.doc or "").strip() or None
-    if args.index_only:
-        if not doc_id:
-            parser.error("--doc is required with --index-only.")
-        name = args.name
-        if not name:
-            pdf_guess = resolve_pdf_path(doc_id, args.pdf)
-            name = pdf_guess.name if pdf_guess else doc_id
-        return cmd_index(doc_id, embed=args.embed, document_name=name)
-
     if not args.text or not str(args.text).strip():
-        parser.error("TEXT is required unless --index-only is set.")
+        parser.error("TEXT is required.")
 
-    pdf = resolve_pdf_path(doc_id, args.pdf) if doc_id else None
-    if pdf is None and args.pdf:
+    pdf = Path(args.pdf) if args.pdf else None
+    if pdf is not None and not pdf.exists():
         print(f"Warning: --pdf path not found: {args.pdf}", file=sys.stderr)
-    if pdf is None and doc_id:
-        pdf = DEFAULT_SAMPLE_PDF if DEFAULT_SAMPLE_PDF.exists() else None
+        pdf = None
 
     if args.audit:
         if not doc_id:
@@ -236,7 +211,6 @@ def main(argv: list[str] | None = None) -> int:
         pdf=pdf,
         as_json=args.json,
         thread_id=args.thread,
-        enable_memory=args.memory,
     )
 
 

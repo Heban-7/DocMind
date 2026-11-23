@@ -1,13 +1,16 @@
 """Run a DocMind version against the golden set and score it.
 
-    python -m evaluation.run extract --system v1 --run runs/v1-baseline
-    python -m evaluation.run qa      --system v1 --run runs/v1-baseline
-    python -m evaluation.run score   --run runs/v1-baseline --name "V1 baseline"
+    python -m evaluation.run extract --run runs/m3
+    python -m evaluation.run qa      --run runs/m3
+    python -m evaluation.run score   --run runs/m3 --name "M3"
 
 ``extract`` and ``qa`` write raw outputs under the run folder (git-ignored);
 ``score`` turns them into ``report.json`` and ``report.md``. Every run folder
-is self-contained: it carries its own ``.refinery`` data, so a run never
-touches the developer's local data.
+keeps its own files (stored PDFs, document models) and its own account in
+Postgres, so a run never touches the developer's local data.
+
+The only system in the tree is ``current`` (the product as it ships). The V1
+baseline and the M2 run used systems ``v1`` and ``v2`` at commit 9d8509f.
 """
 
 from __future__ import annotations
@@ -27,6 +30,8 @@ PROJECT_ROOT = EVAL_ROOT.parent
 def _prepare_env(run_dir: Path) -> None:
     """Point the system under test at the run folder before it is imported."""
     os.environ["DOCMIND_REFINERY_DIR"] = str(run_dir / "refinery")
+    os.environ.pop("DOCMIND_STORAGE_DIR", None)  # stored files go under the run folder
+    os.environ.setdefault("DOCMIND_EVAL_ACCOUNT", f"eval-{run_dir.name}")
     os.environ["LANGSMITH_TRACING"] = "false"  # no third-party tracing of benchmark data
 
 
@@ -119,15 +124,12 @@ def cmd_score(args) -> None:
 
 
 def _system(name: str):
-    if name == "v1":
-        os.environ["DOCMIND_EXTRACTOR"] = "v1"
-        from evaluation.systems import v1
+    if name == "current":
+        from evaluation.systems import current
 
-        return v1
-    if name == "v2":
-        from evaluation.systems import v2
-
-        return v2
+        return current
+    if name in {"v1", "v2"}:
+        raise SystemExit(f"system {name!r} was removed in M3; check out commit 9d8509f to run it")
     raise SystemExit(f"unknown system {name!r}")
 
 
@@ -145,7 +147,7 @@ def main(argv: list[str] | None = None) -> None:
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ("extract", "qa"):
         p = sub.add_parser(name)
-        p.add_argument("--system", default="v1")
+        p.add_argument("--system", default="current")
         p.add_argument("--run", required=True)
         p.add_argument("--golden", default="v1")
         p.add_argument("--docs", default="", help="comma-separated doc_keys (default: all)")

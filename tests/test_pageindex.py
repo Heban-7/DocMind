@@ -5,11 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from src.chunking.models import DocumentChunk
-from src.pageindex.builder import (
-    build_page_index,
-    load_page_index,
-    save_page_index,
-)
+from src.pageindex.builder import build_page_index
+from src.stores.memory import MemoryPageIndexStore
 from src.pageindex.navigate import navigate, score_section
 
 
@@ -71,15 +68,19 @@ def test_build_tree_hierarchy_and_page_spans():
     assert logistics.summary  # extractive fallback filled
 
 
-def test_save_and_load_roundtrip(tmp_path: Path):
+def test_save_and_load_roundtrip():
     index = build_page_index(
         _sample_chunks(), doc_id="roundtrip", summarize=False, llm_client=None
     )
-    path = save_page_index(index, directory=tmp_path)
-    loaded = load_page_index("roundtrip", directory=tmp_path)
+    store = MemoryPageIndexStore()
+    store.save(index)
+    loaded = store.load("roundtrip")
     assert loaded.doc_id == "roundtrip"
     assert len(loaded.iter_nodes()) == len(index.iter_nodes())
-    assert path.exists()
+    # What Postgres stores (jsonb) must rebuild the same tree.
+    from src.models.page_index import PageIndex
+
+    assert PageIndex.model_validate(index.model_dump(mode="json")) == index
 
 
 def test_navigate_returns_top_relevant_sections():

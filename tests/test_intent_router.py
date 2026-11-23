@@ -1,17 +1,17 @@
-"""Offline tests for STEP 2 IntentRouter + federated Chroma filtering."""
+"""Offline tests for STEP 2 IntentRouter + federated (corpus-wide) search."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from src.agents.intent_router import _heuristic_route, list_corpus_documents, route_intent
+from src.agents.intent_router import _heuristic_route, route_intent
 from src.agents.query_agent import QueryAgent, QueryAgentDeps
 from src.chunking.models import DocumentChunk
-from src.facts.store import FactStore
 from src.llm.base import LLMClient, LLMResult
 from src.models.intent import CorpusDocument, IntentRouter, SearchScope
 from src.retrieval.ingest import ingest_chunks
-from src.retrieval.vector_store import ChromaLDUStore
+from src.stores.base import Stores
+from src.stores.memory import MemoryChunkStore, MemoryFactStore, MemoryPageIndexStore
 
 
 class _FakeEmbedder:
@@ -88,8 +88,8 @@ def test_forced_document_skips_llm():
     assert llm.calls == []
 
 
-def test_chroma_metadata_filter_vs_corpus(tmp_path: Path):
-    store = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="fed")
+def test_document_filter_vs_corpus(tmp_path: Path):
+    store = MemoryChunkStore()
     embedder = _FakeEmbedder()
     ingest_chunks(
         [_chunk("Alpha revenue was 10.", ["A"], [1])],
@@ -122,7 +122,7 @@ def test_chroma_metadata_filter_vs_corpus(tmp_path: Path):
 
 
 def test_agent_route_then_retrieve_corpus(tmp_path: Path):
-    store = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="fed2")
+    store = MemoryChunkStore()
     embedder = _FakeEmbedder()
     ingest_chunks(
         [_chunk("Import tax expenditures were ETB 120.7 billion.", ["Exec"], [4])],
@@ -158,11 +158,9 @@ def test_agent_route_then_retrieve_corpus(tmp_path: Path):
     agent = QueryAgent(
         QueryAgentDeps(
             llm=llm,
+            stores=Stores(chunks=store, facts=MemoryFactStore(), pageindex=MemoryPageIndexStore()),
             doc_id=None,
-            chroma_store=store,
             embedder=embedder,
-            fact_store=FactStore(tmp_path / "facts.db"),
-            pageindex_dir=tmp_path / "pageindex",
             corpus=corpus,
         )
     )
@@ -171,8 +169,3 @@ def test_agent_route_then_retrieve_corpus(tmp_path: Path):
     assert not answer.provenance.is_empty
     assert len(llm.calls) == 4
 
-
-def test_list_corpus_documents_reads_profiles():
-    docs = list_corpus_documents()
-    # May be empty in CI without profiles; just ensure it returns a list.
-    assert isinstance(docs, list)

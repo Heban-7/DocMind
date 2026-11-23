@@ -6,13 +6,12 @@ from pathlib import Path
 
 from src.chunking.models import DocumentChunk
 from src.facts.extractor import extract_and_store
-from src.facts.store import FactStore
 from src.models.page_index import PageIndex, SectionNode
 from src.models.query import ToolName
-from src.pageindex.builder import build_page_index, save_page_index
+from src.pageindex.builder import build_page_index
 from src.query.tools import pageindex_navigate, semantic_search, structured_query
 from src.retrieval.ingest import ingest_chunks
-from src.retrieval.vector_store import ChromaLDUStore
+from src.stores.memory import MemoryChunkStore, MemoryFactStore, MemoryPageIndexStore
 
 
 class _FakeEmbedder:
@@ -49,10 +48,11 @@ def test_pageindex_navigate_returns_sections(tmp_path: Path):
         chunks, doc_id="t1", source_filename="sample.pdf",
         summarize=True, llm_client=None,
     )
-    save_page_index(index, directory=tmp_path)
+    store = MemoryPageIndexStore()
+    store.save(index)
 
     result = pageindex_navigate(
-        "logistics throughput", doc_id="t1", pageindex_dir=tmp_path
+        "logistics throughput", doc_id="t1", store=store
     )
     assert result.tool is ToolName.PAGEINDEX_NAVIGATE
     assert not result.is_empty
@@ -62,7 +62,7 @@ def test_pageindex_navigate_returns_sections(tmp_path: Path):
 
 
 def test_semantic_search_tool(tmp_path: Path):
-    store = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="tools")
+    store = MemoryChunkStore()
     embedder = _FakeEmbedder()
     chunks = [
         _chunk(
@@ -90,7 +90,7 @@ def test_semantic_search_tool(tmp_path: Path):
 
 
 def test_structured_query_filters(tmp_path: Path):
-    store = FactStore(db_path=tmp_path / "facts.db")
+    store = MemoryFactStore()
     chunk = DocumentChunk.create(
         "Import tax expenditures were ETB 120.7 billion in FY 2020/21.",
         parent_hierarchy=["Executive summary"],
@@ -111,24 +111,21 @@ def test_structured_query_filters(tmp_path: Path):
     assert "tax" in result.hits[0].title.lower() or "Import" in result.hits[0].title
 
 
-def test_structured_query_select_sql(tmp_path: Path):
-    store = FactStore(db_path=tmp_path / "facts2.db")
-    chunk = DocumentChunk.create(
-        "Revenue was ETB 10.5 billion in FY 2019/20.",
-        parent_hierarchy=["Financials"],
-        page_numbers=[2],
-    )
-    extract_and_store([chunk], doc_id="docB", document_name="b.pdf", store=store)
-    result = structured_query(
-        sql="SELECT * FROM facts WHERE doc_id = 'docB'",
-        store=store,
-    )
-    assert result.hits
-    assert result.hits[0].doc_id == "docB"
+def test_structured_query_has_no_sql_path():
+    """The planner is an LLM reading document text; it must not write SQL."""
+    import inspect
+
+    assert "sql" not in inspect.signature(structured_query).parameters
+
+
+def test_pageindex_navigate_without_index_is_empty():
+    result = pageindex_navigate("anything", doc_id="nope", store=MemoryPageIndexStore())
+    assert result.is_empty
+    assert "no page index" in result.trace.summary
 
 
 def test_empty_inputs_return_empty_evidence():
     assert pageindex_navigate("", doc_id="x", index=PageIndex(doc_id="x")).is_empty
     # semantic_search with empty query should not call embedder
-    result = semantic_search("", embedder=_FakeEmbedder())
+    result = semantic_search("", store=MemoryChunkStore(), embedder=_FakeEmbedder())
     assert result.is_empty

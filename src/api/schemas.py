@@ -77,6 +77,8 @@ class UploadResponse(BaseModel):
     page_count: int
     strategy_tier: str
     status: str
+    pages_needing_review: int = 0
+    deduplicated: bool = Field(default=False, description="Same file was already in this account")
 
 
 class HistoryMessage(BaseModel):
@@ -110,6 +112,7 @@ class DocumentInfo(BaseModel):
     page_count: int
     strategy_tier: str
     status: str
+    pages_needing_review: int = 0
 
 
 class DocumentListResponse(BaseModel):

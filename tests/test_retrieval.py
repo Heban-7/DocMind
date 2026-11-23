@@ -1,4 +1,4 @@
-"""Unit tests for OpenAI embedding wiring + Chroma LDU ingest (offline fakes)."""
+"""Unit tests for embedding wiring + chunk ingest and search (offline fakes)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pytest
 from src.chunking.models import DocumentChunk
 from src.retrieval.embeddings import OpenAIEmbeddingClient
 from src.retrieval.ingest import ingest_chunks, semantic_search
-from src.retrieval.vector_store import ChromaLDUStore
+from src.stores.memory import MemoryChunkStore
 
 
 class _FakeEmbedder:
@@ -45,7 +45,7 @@ def test_openai_client_requires_api_key(monkeypatch):
 
 
 def test_ingest_and_search_roundtrip(tmp_path: Path):
-    store = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="test_ldus")
+    store = MemoryChunkStore()
     embedder = _FakeEmbedder()
     chunks = [
         _chunk(
@@ -73,7 +73,7 @@ def test_ingest_and_search_roundtrip(tmp_path: Path):
         embedder=embedder,
     )
     assert result.chunks_ingested == 3
-    assert store.count == 3
+    assert store.count() == 3
 
     # Re-ingest same doc_id must replace, not duplicate.
     result2 = ingest_chunks(
@@ -84,7 +84,7 @@ def test_ingest_and_search_roundtrip(tmp_path: Path):
         embedder=embedder,
     )
     assert result2.chunks_ingested == 2
-    assert store.count == 2
+    assert store.count() == 2
 
     hits = semantic_search(
         "import tax expenditures ETB",
@@ -102,7 +102,7 @@ def test_ingest_and_search_roundtrip(tmp_path: Path):
 
 
 def test_search_scoped_by_doc_id(tmp_path: Path):
-    store = ChromaLDUStore(persist_dir=tmp_path / "chroma2", collection_name="scoped")
+    store = MemoryChunkStore()
     embedder = _FakeEmbedder()
     ingest_chunks(
         [_chunk("Alpha revenue grew in Q3.", [1], ["Financials"])],

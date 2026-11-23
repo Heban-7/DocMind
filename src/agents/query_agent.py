@@ -8,13 +8,14 @@ Graph (one pass, cost-conscious):
     plan -> execute_tools -> synthesize -> finalize -> END
 
 STEP 1 adds a Patient File: conversation ``messages`` persisted via a LangGraph
-SqliteSaver checkpointer keyed by ``thread_id``.
+checkpointer (Postgres in the API) keyed by ``thread_id``.
 """
 
 from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Annotated, Any, Literal, TypedDict
@@ -24,7 +25,7 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 
-from src.agents.intent_router import list_corpus_documents, route_intent
+from src.agents.intent_router import route_intent
 from src.agents.json_util import extract_json
 from src.agents.query_prompts import (
     CLASSIFIER_SYSTEM,
@@ -36,20 +37,17 @@ from src.agents.query_prompts import (
     rewriter_user_prompt,
     synthesizer_user_prompt,
 )
-from src.config import DEFAULT_SAMPLE_PDF, PAGEINDEX_DIR
-from src.facts.store import FactStore
 from src.llm.base import LLMClient
 from src.llm.factory import get_text_client
 from src.models.conversation import ConversationMessage, MessageRole, SessionConfig
 from src.models.intent import CorpusDocument, IntentRouter
 from src.models.provenance import ProvenanceChain
 from src.models.query import QueryAnswer, ToolName, ToolTrace
-from src.pipeline.phase4 import resolve_pdf_path
 from src.query.evidence import EvidenceHit, ToolResult
 from src.query.provenance import assemble_provenance
 from src.query.tools import pageindex_navigate, semantic_search, structured_query
 from src.retrieval.embeddings import EmbeddingClient
-from src.retrieval.vector_store import ChromaLDUStore
+from src.stores.base import Stores
 
 logger = logging.getLogger("docmind.query_agent")
 
@@ -87,19 +85,28 @@ class QueryState(TypedDict, total=False):
     error: str | None
 
 
+def _resolve_pdf(deps: "QueryAgentDeps", doc_id: str | None) -> Path | None:
+    if not doc_id or deps.pdf_resolver is None:
+        return None
+    try:
+        return deps.pdf_resolver(doc_id)
+    except Exception:  # a missing file only costs page labels and boxes
+        return None
+
+
 @dataclass
 class QueryAgentDeps:
     """Injectable stores / clients so unit tests stay offline and free."""
 
     llm: LLMClient
+    stores: Stores
     doc_id: str | None = None  # forced pin; None => IntentRouter decides
     pdf_path: str | Path | None = None
-    pageindex_dir: Path | None = None
-    chroma_store: ChromaLDUStore | None = None
+    # document id -> local PDF path (page labels and citation boxes)
+    pdf_resolver: Callable[[str], Path | None] | None = None
     embedder: EmbeddingClient | None = None
-    fact_store: FactStore | None = None
     checkpointer: BaseCheckpointSaver | None = None
-    corpus: list[CorpusDocument] | None = None
+    corpus: list[CorpusDocument] = field(default_factory=list)
     max_tool_calls: int = 3
     semantic_top_k: int = 7
     pageindex_top_k: int = 5
@@ -261,25 +268,24 @@ def _run_one_tool(
             str(args.get("topic") or active_doc_id),
             doc_id=active_doc_id,
             top_k=int(args.get("top_k") or deps.pageindex_top_k),
-            pageindex_dir=deps.pageindex_dir or PAGEINDEX_DIR,
+            store=deps.stores.pageindex,
         )
     if tool is ToolName.SEMANTIC_SEARCH:
-        # IntentRouter output: concrete id => Chroma metadata filter;
-        # None => federated corpus search.
+        # IntentRouter output: concrete id => document filter;
+        # None => federated corpus search (still within one tenant).
         return semantic_search(
             str(args.get("query") or ""),
             doc_id=active_doc_id,
             top_k=int(args.get("top_k") or deps.semantic_top_k),
-            store=deps.chroma_store,
+            store=deps.stores.chunks,
             embedder=deps.embedder,
         )
     return structured_query(
         doc_id=active_doc_id,
         metric_contains=args.get("metric_contains"),
         period_contains=args.get("period_contains"),
-        sql=args.get("sql"),
         limit=int(args.get("limit") or 20),
-        store=deps.fact_store,
+        store=deps.stores.facts,
     )
 
 
@@ -333,10 +339,7 @@ class QueryAgent:
             if active:
                 # Try to find document name from corpus or profile.
                 doc_name = active
-                corpus = deps.corpus
-                if corpus is None:
-                    corpus = list_corpus_documents()
-                for d in (corpus or []):
+                for d in deps.corpus:
                     if d.document_id == active:
                         doc_name = d.document_name or active
                         break
@@ -413,19 +416,16 @@ class QueryAgent:
         def route_node(state: QueryState) -> QueryState:
             """IntentRouter before retrieval: pin one doc or search the corpus."""
             question = state["question"]
-            corpus = deps.corpus
-            if corpus is None:
-                corpus = list_corpus_documents()
             intent = route_intent(
                 question,
-                corpus=corpus,
+                corpus=deps.corpus,
                 llm=None if deps.doc_id else deps.llm,
                 forced_document_id=deps.doc_id,
             )
             active = intent.document_id
             pdf = deps.pdf_path
             if active and pdf is None:
-                pdf = resolve_pdf_path(active)
+                pdf = _resolve_pdf(deps, active)
             return {
                 "intent": intent.model_dump(mode="json"),
                 "active_doc_id": active,
@@ -518,8 +518,17 @@ class QueryAgent:
             pdf = state.get("pdf_path") or deps.pdf_path
             from src.query.page_map import enrich_hit_printed_page
 
+            pdf_cache: dict[str, Path | None] = {}
+
+            def _pdf_for(hit: EvidenceHit):
+                if pdf:
+                    return pdf
+                if hit.doc_id not in pdf_cache:
+                    pdf_cache[hit.doc_id] = _resolve_pdf(deps, hit.doc_id)
+                return pdf_cache[hit.doc_id]
+
             hits = [
-                enrich_hit_printed_page(h, pdf_path=pdf) for h in hits
+                enrich_hit_printed_page(h, pdf_path=_pdf_for(h)) for h in hits
             ]
             return {
                 "hits": [h.model_dump(mode="json") for h in hits],
@@ -620,7 +629,7 @@ class QueryAgent:
             else:
                 pdf_for_cite = state.get("pdf_path") or deps.pdf_path
                 if not pdf_for_cite and selected and selected[0].doc_id:
-                    pdf_for_cite = resolve_pdf_path(selected[0].doc_id)
+                    pdf_for_cite = _resolve_pdf(deps, selected[0].doc_id)
                 provenance = assemble_provenance(
                     selected,
                     pdf_path=pdf_for_cite,
@@ -814,37 +823,27 @@ class QueryAgent:
 def build_query_agent(
     doc_id: str | None = None,
     *,
+    stores: Stores,
     llm: LLMClient | None = None,
     pdf_path: str | Path | None = None,
-    pageindex_dir: Path | None = None,
-    chroma_store: ChromaLDUStore | None = None,
+    pdf_resolver: Callable[[str], Path | None] | None = None,
     embedder: EmbeddingClient | None = None,
-    fact_store: FactStore | None = None,
     checkpointer: BaseCheckpointSaver | None = None,
-    enable_memory: bool = False,
-    checkpoints_db: str | Path | None = None,
     corpus: list[CorpusDocument] | None = None,
     max_tool_calls: int = 3,
 ) -> QueryAgent:
     """Factory: uses ``get_text_client()`` when ``llm`` is omitted.
 
     Pass ``doc_id`` to pin one document. Omit it to let IntentRouter choose
-    single-doc vs corpus-wide search.
-
-    Set ``enable_memory=True`` (or pass ``checkpointer=``) to persist sessions
-    under ``.refinery/checkpoints.sqlite`` (override with ``checkpoints_db``).
+    single-doc vs corpus-wide search over ``corpus``. Pass a ``checkpointer``
+    to keep conversation memory per ``thread_id``.
     """
-    from src.agents.memory import build_sqlite_checkpointer
-
     client = llm if llm is not None else get_text_client()
     if client is None:
         raise RuntimeError(
             "No LLM client available. Set OPENAI_API_KEY (or another provider "
             "key) in .env, or pass llm= explicitly."
         )
-    saver = checkpointer
-    if saver is None and enable_memory:
-        saver = build_sqlite_checkpointer(checkpoints_db)
 
     from src.config import (
         MAX_CITATIONS,
@@ -856,16 +855,13 @@ def build_query_agent(
     return QueryAgent(
         QueryAgentDeps(
             llm=client,
+            stores=stores,
             doc_id=doc_id,
-            pdf_path=pdf_path if pdf_path is not None else (
-                DEFAULT_SAMPLE_PDF if doc_id else None
-            ),
-            pageindex_dir=pageindex_dir,
-            chroma_store=chroma_store,
+            pdf_path=pdf_path,
+            pdf_resolver=pdf_resolver,
             embedder=embedder,
-            fact_store=fact_store,
-            checkpointer=saver,
-            corpus=corpus,
+            checkpointer=checkpointer,
+            corpus=list(corpus or []),
             max_tool_calls=max_tool_calls,
             semantic_top_k=SEMANTIC_TOP_K,
             pageindex_top_k=PAGEINDEX_TOP_K,

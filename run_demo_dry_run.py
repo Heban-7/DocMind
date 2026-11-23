@@ -1,8 +1,9 @@
 """
 DocMind | Phase 4 offline demo dry-run (no live API calls).
 
-Exercises the full query path with FakeLLM + FakeEmbedder:
-  chunks -> PageIndex + FactTable + Chroma -> ask + audit
+Exercises the full query path with FakeLLM + FakeEmbedder and in-memory
+stores (no database needed):
+  chunks -> PageIndex + FactTable + vectors -> ask + audit
 
 Usage:
     uv run python run_demo_dry_run.py
@@ -15,13 +16,13 @@ from pathlib import Path
 from src.agents.audit_agent import AuditAgent, AuditAgentDeps
 from src.agents.query_agent import QueryAgent, QueryAgentDeps
 from src.chunking.models import DocumentChunk
-from src.config import CHUNKS_DIR, DEFAULT_SAMPLE_PDF, PROJECT_ROOT
-from src.facts.store import FactStore
+from src.config import DEFAULT_SAMPLE_PDF
+from src.facts.extractor import extract_and_store
 from src.llm.base import LLMClient, LLMResult
 from src.models.query import AuditStatus
-from src.pageindex.builder import load_chunks_jsonl
-from src.pipeline.phase4 import build_query_indexes
-from src.retrieval.vector_store import ChromaLDUStore
+from src.pageindex.builder import build_page_index
+from src.retrieval.ingest import ingest_chunks
+from src.stores.memory import memory_stores
 
 
 class FakeEmbedder:
@@ -66,41 +67,17 @@ DEMO_CHUNKS = [
 ]
 
 
-def _load_or_seed_chunks(work: Path) -> tuple[str, str, Path]:
-    """Prefer a tiny seeded corpus so the dry-run stays fast and deterministic."""
-    doc_id = "demo_offline"
-    name = "demo.pdf"
-    chunks_dir = work / "chunks"
-    chunks_dir.mkdir(parents=True, exist_ok=True)
-    path = chunks_dir / f"{doc_id}.jsonl"
-    path.write_text(
-        "\n".join(c.model_dump_json() for c in DEMO_CHUNKS) + "\n",
-        encoding="utf-8",
-    )
-    return doc_id, name, chunks_dir
-
-
-def run_offline_demo(work_dir: Path | None = None) -> dict:
+def run_offline_demo(work_dir: Path | None = None) -> dict:  # noqa: ARG001 (kept for the old signature)
     """Run ask + audit offline. Returns a small result dict for tests/printing."""
-    work = work_dir or (PROJECT_ROOT / ".refinery" / "_demo_offline")
-    work.mkdir(parents=True, exist_ok=True)
-
-    doc_id, document_name, chunks_dir = _load_or_seed_chunks(work)
-    chroma = ChromaLDUStore(
-        persist_dir=work / "chroma", collection_name="demo_offline"
-    )
-    facts = FactStore(work / "facts.db")
+    doc_id, document_name = "demo_offline", "demo.pdf"
+    stores = memory_stores()
     embedder = FakeEmbedder()
-
-    index_result = build_query_indexes(
-        doc_id,
-        document_name=document_name,
-        chunks_dir=chunks_dir,
-        embed=True,
-        pageindex_llm_client=None,
-        chroma_store=chroma,
-        fact_store=facts,
-        embedder=embedder,
+    stores.pageindex.save(
+        build_page_index(DEMO_CHUNKS, doc_id=doc_id, source_filename=document_name, summarize=True, llm_client=None)
+    )
+    facts = extract_and_store(DEMO_CHUNKS, doc_id=doc_id, document_name=document_name, store=stores.facts)
+    embedded = ingest_chunks(
+        DEMO_CHUNKS, doc_id=doc_id, document_name=document_name, store=stores.chunks, embedder=embedder
     )
 
     pdf_path = DEFAULT_SAMPLE_PDF if DEFAULT_SAMPLE_PDF.exists() else None
@@ -123,14 +100,10 @@ def run_offline_demo(work_dir: Path | None = None) -> dict:
     query_agent = QueryAgent(
         QueryAgentDeps(
             llm=ask_llm,
+            stores=stores,
             doc_id=doc_id,
             pdf_path=pdf_path,
-            pageindex_dir=index_result.pageindex_path.parent
-            if index_result.pageindex_path
-            else None,
-            chroma_store=chroma,
             embedder=embedder,
-            fact_store=facts,
         )
     )
     question = "What was import tax expenditure in FY 2020/21?"
@@ -153,14 +126,10 @@ def run_offline_demo(work_dir: Path | None = None) -> dict:
     audit_agent = AuditAgent(
         AuditAgentDeps(
             llm=audit_llm,
+            stores=stores,
             doc_id=doc_id,
             pdf_path=pdf_path,
-            pageindex_dir=index_result.pageindex_path.parent
-            if index_result.pageindex_path
-            else None,
-            chroma_store=chroma,
             embedder=embedder,
-            fact_store=facts,
             use_planner=False,
         )
     )
@@ -169,22 +138,15 @@ def run_offline_demo(work_dir: Path | None = None) -> dict:
     )
     unverifiable = audit_agent.audit("Revenue on Mars was $4.2B in Q3.")
 
-    # Optional: confirm real sample chunks exist (informational only).
-    sample_chunks = CHUNKS_DIR / "212dc42370e2.jsonl"
-    sample_ready = sample_chunks.exists()
-    sample_n = len(load_chunks_jsonl(sample_chunks)) if sample_ready else 0
-
     return {
         "doc_id": doc_id,
-        "chunks_embedded": index_result.chunks_embedded,
-        "facts_written": index_result.facts_written,
+        "chunks_embedded": embedded.chunks_ingested,
+        "facts_written": facts.facts_written,
         "answer": answer.answer,
         "answer_citations": len(answer.provenance),
         "verified_status": verified.status.value,
         "verified_citations": len(verified.provenance),
         "unverifiable_status": unverifiable.status.value,
-        "sample_corpus_ready": sample_ready,
-        "sample_chunk_count": sample_n,
         "ok": (
             "120.7" in answer.answer
             and len(answer.provenance) >= 1
@@ -206,11 +168,6 @@ def main() -> int:
     print(f"Audit true     : {result['verified_status']} "
           f"({result['verified_citations']} cites)")
     print(f"Audit false    : {result['unverifiable_status']}")
-    if result["sample_corpus_ready"]:
-        print(
-            f"Live corpus    : 212dc42370e2 ready "
-            f"({result['sample_chunk_count']} chunks on disk)"
-        )
     print("-" * 72)
     if result["ok"]:
         print("DRY-RUN OK")

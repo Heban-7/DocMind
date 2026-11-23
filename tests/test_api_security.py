@@ -1,24 +1,31 @@
-"""Security regression tests for milestone M0 (audit findings P0-1, P0-3, P1-9).
+"""Security and isolation tests through the HTTP API (needs Postgres).
 
-Each test exercises the real auth dependency with real signed tokens; nothing
-here overrides ``get_current_user_id``.
+Every test uses real registration, real signed tokens and the real Postgres
+stores. Only the paid or slow parts are faked: PDF extraction returns a fixed
+document model, embeddings are a local hash, and the LLM answers from a
+script while recording every prompt it is shown (so a test can prove that
+another tenant's text never reached it).
+
+Covers audit findings P0-1 (PDF access), P0-2 (no tenant isolation), P0-3
+(default signing secret) and P1-9 (thread takeover).
 """
 
 from __future__ import annotations
 
-import json
+import zlib
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from uuid import uuid4
 
 import jwt
 import pytest
 from fastapi.testclient import TestClient
 
-from src import config
-from src.api import ownership
+from src.agents.intent_router import ROUTER_SYSTEM
+from src.agents.query_prompts import CLASSIFIER_SYSTEM, PLANNER_SYSTEM, REWRITER_SYSTEM
 from src.api.auth_utils import InsecureSecretError, create_access_token, jwt_secret
 from src.api.main import create_app
+from src.document.model import Block, BlockType, DocumentModel, Page, PageQuality
+from src.llm.base import LLMClient, LLMResult
 
 _MINIMAL_PDF = (
     b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
@@ -28,125 +35,247 @@ _MINIMAL_PDF = (
 )
 
 
-def _auth(user_id: str) -> dict[str, str]:
-    return {"Authorization": f"Bearer {create_access_token(user_id)}"}
+# --- fakes -------------------------------------------------------------------
 
 
-def _make_document(tmp_path: Path, owner: str | None) -> str:
-    """Write a profile + PDF the API can resolve; optionally record an owner."""
-    doc_id = uuid4().hex[:12]
-    pdf = tmp_path / f"{doc_id}.pdf"
-    pdf.write_bytes(_MINIMAL_PDF)
-    config.PROFILES_DIR.mkdir(parents=True, exist_ok=True)
-    (config.PROFILES_DIR / f"{doc_id}.json").write_text(
-        json.dumps(
-            {
-                "doc_id": doc_id,
-                "source_path": str(pdf),
-                "source_filename": pdf.name,
-                "page_count": 1,
-            }
-        ),
-        encoding="utf-8",
+class _HashEmbedder:
+    model = "hash-1536"
+
+    def embed(self, texts):
+        out = []
+        for text in texts:
+            v = [0.0] * 1536
+            for word in text.lower().split():
+                v[zlib.crc32(word.encode()) % 1536] += 1.0
+            norm = sum(x * x for x in v) ** 0.5 or 1.0
+            out.append([x / norm for x in v])
+        return out
+
+
+class _RecordingLLM(LLMClient):
+    provider = "fake"
+    prompts: list[str] = []
+
+    def __init__(self):
+        super().__init__(model="fake")
+
+    def chat(self, messages, *, response_format=None, temperature=None, max_tokens=None):
+        system = next((m["content"] for m in messages if m.get("role") == "system"), "")
+        text = "\n".join(str(m.get("content") or "") for m in messages)
+        _RecordingLLM.prompts.append(text)
+        if system == CLASSIFIER_SYSTEM:
+            out = '{"intent":"document_query"}'
+        elif system == ROUTER_SYSTEM:
+            out = '{"document_id":null,"confidence":0.5,"rationale":"corpus"}'
+        elif system == REWRITER_SYSTEM:
+            out = messages[-1]["content"][-200:]
+        elif system == PLANNER_SYSTEM:
+            out = '{"calls":[{"tool":"semantic_search","args":{"query":"revenue","top_k":5}}]}'
+        else:  # synthesizer
+            out = '{"answer":"Revenue is stated in the evidence.","cite_indices":[0],"refusal":false}'
+        return LLMResult(text=out, model=self.model, provider=self.provider)
+
+
+def _model_with(text: str) -> DocumentModel:
+    page = Page(
+        number=1,
+        width=200,
+        height=200,
+        blocks=[
+            Block(block_id="p1-b0", type=BlockType.HEADING, text="Summary"),
+            Block(block_id="p1-b1", type=BlockType.TEXT, text=text),
+        ],
+        quality=PageQuality(engine="text_layer", confidence=0.95),
     )
-    if owner:
-        ownership.record_document_owner(doc_id, owner)
-    return doc_id
+    return DocumentModel(doc_id="x", file_name="x.pdf", sha256="x", page_count=1, pages=[page])
 
 
 @pytest.fixture()
-def client() -> TestClient:
+def client(pg, monkeypatch):
+    _RecordingLLM.prompts = []
+    texts: dict[bytes, str] = {}
+
+    def fake_extract(pdf_path, **_kw):
+        data = open(pdf_path, "rb").read()
+        return _model_with(texts.get(data, "Revenue was ETB 1 billion."))
+
+    monkeypatch.setattr("src.document.extract.extract_document", fake_extract)
+    monkeypatch.setattr("src.retrieval.ingest.build_embedding_client", lambda: _HashEmbedder())
+    monkeypatch.setattr("src.agents.query_agent.get_text_client", lambda *a, **k: _RecordingLLM())
     with TestClient(create_app()) as c:
+        c.pdf_texts = texts  # tests register the text a given PDF "contains"
         yield c
 
 
-# --- P0-1: PDF downloads need a login and ownership ---------------------------
+def _account(client) -> dict:
+    email = f"{uuid4().hex[:10]}@example.com"
+    assert client.post("/api/auth/register", json={"email": email, "password": "pass-1234"}).status_code == 201
+    token = client.post("/api/auth/login", json={"email": email, "password": "pass-1234"}).json()["access_token"]
+    return {"email": email, "token": token, "h": {"Authorization": f"Bearer {token}"}}
 
 
-def test_pdf_requires_a_token(client, tmp_path):
-    doc_id = _make_document(tmp_path, owner="alice")
-    assert client.get(f"/documents/{doc_id}/pdf").status_code == 401
+def _upload(client, account, text: str, *, data: bytes | None = None) -> dict:
+    data = data or (_MINIMAL_PDF + f"%{uuid4().hex}\n".encode())
+    client.pdf_texts[data] = text
+    res = client.post("/upload", headers=account["h"], files={"file": ("report.pdf", data, "application/pdf")})
+    assert res.status_code == 201, res.text
+    return res.json()
 
 
-def test_pdf_rejects_a_bad_token(client, tmp_path):
-    doc_id = _make_document(tmp_path, owner="alice")
-    res = client.get(f"/documents/{doc_id}/pdf", params={"token": "not-a-jwt"})
-    assert res.status_code == 401
+def _chat(client, account, thread, message="What was revenue?", **extra):
+    return client.post("/chat", headers=account["h"], json={"message": message, "thread_id": thread, **extra})
 
 
-def test_owner_can_download_pdf_by_header_and_by_query_token(client, tmp_path):
-    doc_id = _make_document(tmp_path, owner="alice")
-    res = client.get(f"/documents/{doc_id}/pdf", headers=_auth("alice"))
-    assert res.status_code == 200
-    assert res.content.startswith(b"%PDF")
-    res = client.get(
-        f"/documents/{doc_id}/pdf", params={"token": create_access_token("alice")}
-    )
-    assert res.status_code == 200
+# --- accounts ----------------------------------------------------------------
 
 
-def test_other_user_gets_not_found_for_pdf(client, tmp_path):
-    doc_id = _make_document(tmp_path, owner="alice")
-    res = client.get(f"/documents/{doc_id}/pdf", headers=_auth("mallory"))
-    assert res.status_code == 404
+def test_register_login_me_and_bad_credentials(client):
+    a = _account(client)
+    assert client.get("/api/auth/me", headers=a["h"]).json()["email"] == a["email"]
+    dup = client.post("/api/auth/register", json={"email": a["email"].upper(), "password": "pass-1234"})
+    assert dup.status_code == 409
+    assert client.post("/api/auth/login", json={"email": a["email"], "password": "wrong"}).status_code == 401
+    assert client.post("/api/auth/login", json={"email": "nobody@example.com", "password": "x"}).status_code == 401
 
 
-def test_legacy_unowned_documents_are_hidden_by_default(client, tmp_path, monkeypatch):
-    doc_id = _make_document(tmp_path, owner=None)
-    assert client.get(f"/documents/{doc_id}/pdf", headers=_auth("alice")).status_code == 404
-    monkeypatch.setenv("DOCMIND_LEGACY_SHARED_DOCS", "1")
-    assert client.get(f"/documents/{doc_id}/pdf", headers=_auth("alice")).status_code == 200
+def test_every_new_account_gets_its_own_tenant(client):
+    a, b = _account(client), _account(client)
+    ta = jwt.decode(a["token"], options={"verify_signature": False})["tid"]
+    tb = jwt.decode(b["token"], options={"verify_signature": False})["tid"]
+    assert ta != tb
 
 
-def test_document_list_shows_only_own_documents(client, tmp_path):
-    mine = _make_document(tmp_path, owner="alice")
-    theirs = _make_document(tmp_path, owner="bob")
-    ids = {d["document_id"] for d in client.get("/documents", headers=_auth("alice")).json()["documents"]}
-    assert mine in ids
-    assert theirs not in ids
+# --- P0-1 and P0-2: documents ---------------------------------------------------
 
 
-def test_chat_on_someone_elses_document_is_not_found(client, tmp_path):
-    theirs = _make_document(tmp_path, owner="bob")
-    res = client.post(
-        "/chat",
-        headers=_auth("alice"),
-        json={"message": "hi there", "thread_id": f"t-{uuid4().hex}", "document_id": theirs},
-    )
-    assert res.status_code == 404
+def test_pdf_needs_a_valid_token(client):
+    a = _account(client)
+    doc = _upload(client, a, "Alpha revenue")["document_id"]
+    assert client.get(f"/documents/{doc}/pdf").status_code == 401
+    assert client.get(f"/documents/{doc}/pdf", params={"token": "not-a-jwt"}).status_code == 401
 
 
-# --- P1-9: threads cannot be taken over or read by another user ---------------
+def test_owner_downloads_pdf_by_header_and_query_token(client):
+    a = _account(client)
+    doc = _upload(client, a, "Alpha revenue")["document_id"]
+    res = client.get(f"/documents/{doc}/pdf", headers=a["h"])
+    assert res.status_code == 200 and res.content.startswith(b"%PDF")
+    assert client.get(f"/documents/{doc}/pdf", params={"token": a["token"]}).status_code == 200
 
 
-def test_thread_cannot_be_hijacked_or_read(client):
-    thread = f"t-{uuid4().hex}"
-    ownership.claim_thread(thread, "alice")
+def test_other_tenant_gets_not_found_for_pdf_and_bad_ids_are_not_errors(client):
+    a, b = _account(client), _account(client)
+    doc = _upload(client, a, "Alpha revenue")["document_id"]
+    assert client.get(f"/documents/{doc}/pdf", headers=b["h"]).status_code == 404
+    assert client.get("/documents/not-a-uuid/pdf", headers=a["h"]).status_code == 404
+    assert client.get(f"/documents/{uuid4()}/pdf", headers=a["h"]).status_code == 404
 
+
+def test_document_list_shows_only_own_documents(client):
+    a, b = _account(client), _account(client)
+    mine = _upload(client, a, "Alpha revenue")["document_id"]
+    theirs = _upload(client, b, "Beta revenue")["document_id"]
+    ids = {d["document_id"] for d in client.get("/documents", headers=a["h"]).json()["documents"]}
+    assert mine in ids and theirs not in ids
+
+
+def test_same_file_is_processed_once_per_tenant(client):
+    a, b = _account(client), _account(client)
+    data = _MINIMAL_PDF + b"%same-file\n"
+    first = _upload(client, a, "Alpha revenue", data=data)
+    again = _upload(client, a, "Alpha revenue", data=data)
+    assert again["deduplicated"] is True and again["document_id"] == first["document_id"]
+    other = _upload(client, b, "Alpha revenue", data=data)
+    assert other["deduplicated"] is False and other["document_id"] != first["document_id"]
+
+
+def test_chat_on_another_tenants_document_is_not_found(client):
+    a, b = _account(client), _account(client)
+    doc = _upload(client, a, "Alpha revenue")["document_id"]
     for path in ("/chat", "/chat/stream"):
-        res = client.post(
-            path,
-            headers=_auth("mallory"),
-            json={"message": "what did alice ask?", "thread_id": thread},
-        )
+        res = client.post(path, headers=b["h"], json={"message": "hi there", "thread_id": f"t-{uuid4().hex}", "document_id": doc})
         assert res.status_code == 404, path
-
-    assert client.get(f"/history/{thread}", headers=_auth("mallory")).status_code == 404
-    assert ownership.thread_owner(thread) == "alice"
-
-
-def test_unknown_thread_history_fails_closed(client):
-    res = client.get(f"/history/t-{uuid4().hex}", headers=_auth("alice"))
+    res = _chat(client, b, f"t-{uuid4().hex}", document_id="not-a-uuid")
     assert res.status_code == 404
 
 
-# --- P0-3: the signing secret cannot be a default ------------------------------
+def test_corpus_wide_search_never_reaches_another_tenants_text(client):
+    a, b = _account(client), _account(client)
+    _upload(client, a, "Alpha confidential revenue was ETB 777 billion.")
+    _upload(client, b, "Beta public revenue was ETB 5 billion.")
+    _RecordingLLM.prompts = []
+    res = _chat(client, b, f"t-{uuid4().hex}", message="What was revenue?", federated_search=True)
+    assert res.status_code == 200, res.text
+    seen = "\n".join(_RecordingLLM.prompts)
+    assert "Beta public revenue" in seen  # B's own evidence reached the model
+    assert "777" not in seen and "Alpha confidential" not in seen
+    assert all("777" not in (c.get("excerpt") or "") for c in res.json()["provenance"])
 
 
-@pytest.mark.parametrize(
-    "value",
-    ["", "short", "docmind-dev-secret-change-me-in-production"],
-)
+def test_pinned_chat_cites_the_document(client):
+    a = _account(client)
+    doc = _upload(client, a, "Alpha revenue was ETB 9 billion.")["document_id"]
+    res = _chat(client, a, f"t-{uuid4().hex}", document_id=doc)
+    assert res.status_code == 200, res.text
+    cites = res.json()["provenance"]
+    assert cites and all(c["doc_id"] == doc for c in cites)
+
+
+# --- P1-9: threads ----------------------------------------------------------------
+
+
+def test_thread_memory_persists_and_is_listed(client):
+    a = _account(client)
+    doc = _upload(client, a, "Alpha revenue was ETB 9 billion.")["document_id"]
+    thread = f"t-{uuid4().hex}"
+    assert _chat(client, a, thread, message="What was revenue?", document_id=doc).status_code == 200
+    assert _chat(client, a, thread, message="And in words?").status_code == 200
+    history = client.get(f"/history/{thread}", headers=a["h"]).json()
+    assert [m["role"] for m in history["messages"]] == ["user", "assistant", "user", "assistant"]
+    assert history["document_id"] == doc
+    threads = client.get("/threads", headers=a["h"]).json()["threads"]
+    mine = next(t for t in threads if t["thread_id"] == thread)
+    assert mine["message_count"] == 4 and mine["title"] == "What was revenue?"
+
+
+def test_thread_cannot_be_read_or_taken_over(client):
+    from src.db.pool import app_tx
+
+    a, b = _account(client), _account(client)
+    thread = f"t-{uuid4().hex}"
+    assert _chat(client, a, thread, message="Alpha private question").status_code == 200
+
+    # A colleague in A's own tenant: same tenant, different user.
+    tid = jwt.decode(a["token"], options={"verify_signature": False})["tid"]
+    with app_tx() as conn:
+        uid = conn.execute(
+            "INSERT INTO users (tenant_id, email, hashed_password) VALUES (%s, %s, 'x') RETURNING id",
+            (tid, f"{uuid4().hex[:8]}@example.com"),
+        ).fetchone()["id"]
+    colleague = {"Authorization": f"Bearer {create_access_token(str(uid), tid)}"}
+    for path in ("/chat", "/chat/stream"):
+        res = client.post(path, headers=colleague, json={"message": "what did they ask?", "thread_id": thread})
+        assert res.status_code == 404, path
+    assert client.get(f"/history/{thread}", headers=colleague).status_code == 404
+
+    # Another tenant reusing the id gets a new, empty thread of its own.
+    assert client.get(f"/history/{thread}", headers=b["h"]).status_code == 404
+    assert _chat(client, b, thread, message="Beta question").status_code == 200
+    contents = [m["content"] for m in client.get(f"/history/{thread}", headers=b["h"]).json()["messages"]]
+    assert "Alpha private question" not in contents and "Beta question" in contents
+    assert thread not in {t["thread_id"] for t in client.get("/threads", headers=colleague).json()["threads"]}
+
+
+def test_unknown_or_malformed_thread_history_fails_closed(client):
+    a = _account(client)
+    assert client.get(f"/history/t-{uuid4().hex}", headers=a["h"]).status_code == 404
+    assert client.get("/history/bad%20id", headers=a["h"]).status_code == 404
+
+
+# --- P0-3: tokens and the signing secret -----------------------------------------
+
+
+@pytest.mark.parametrize("value", ["", "short", "docmind-dev-secret-change-me-in-production"])
 def test_weak_or_public_secrets_are_refused(monkeypatch, value):
     monkeypatch.setenv("JWT_SECRET_KEY", value)
     with pytest.raises(InsecureSecretError):
@@ -160,18 +289,20 @@ def test_app_refuses_to_start_without_a_secret(monkeypatch):
             pass
 
 
-def test_token_signed_with_the_old_default_secret_is_rejected(client, tmp_path):
-    doc_id = _make_document(tmp_path, owner="alice")
-    forged = jwt.encode(
-        {"sub": "alice", "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
-        "docmind-dev-secret-change-me-in-production",
-        algorithm="HS256",
-    )
-    res = client.get(f"/documents/{doc_id}/pdf", headers={"Authorization": f"Bearer {forged}"})
-    assert res.status_code == 401
+def _forged(claims: dict, secret: str | None = None) -> dict:
+    return {"Authorization": f"Bearer {jwt.encode(claims, secret or jwt_secret(), algorithm='HS256')}"}
 
 
-def test_token_without_expiry_is_rejected(client):
-    no_exp = jwt.encode({"sub": "alice"}, jwt_secret(), algorithm="HS256")
-    res = client.get("/documents", headers={"Authorization": f"Bearer {no_exp}"})
-    assert res.status_code == 401
+def test_bad_tokens_are_rejected(client):
+    a = _account(client)
+    claims = jwt.decode(a["token"], options={"verify_signature": False})
+    later = datetime.now(timezone.utc) + timedelta(hours=1)
+    cases = {
+        "old default secret": _forged({**claims, "exp": later}, "docmind-dev-secret-change-me-in-production"),
+        "no expiry": _forged({"sub": claims["sub"], "tid": claims["tid"]}),
+        "no tenant (pre-M3 token)": _forged({"sub": claims["sub"], "exp": later}),
+        "tenant not a uuid": _forged({"sub": claims["sub"], "tid": "' OR 1=1", "exp": later}),
+        "expired": _forged({**claims, "exp": datetime.now(timezone.utc) - timedelta(minutes=1)}),
+    }
+    for name, headers in cases.items():
+        assert client.get("/documents", headers=headers).status_code == 401, name

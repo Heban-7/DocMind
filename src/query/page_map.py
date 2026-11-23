@@ -194,16 +194,7 @@ def enrich_hit_printed_page(
     if hit.printed_page is not None:
         return hit
 
-    path = pdf_path
-    if path is None and hit.doc_id:
-        try:
-            from src.pipeline.phase4 import resolve_pdf_path
-
-            path = resolve_pdf_path(hit.doc_id)
-        except Exception:  # pragma: no cover
-            path = None
-
-    printed = resolve_printed_page(path, hit.page_number)
+    printed = resolve_printed_page(pdf_path, hit.page_number)
     if printed is None:
         return hit
     return hit.model_copy(update={"printed_page": printed})

@@ -1,29 +1,24 @@
 """
 The three Query Agent tools (Phase 4 Step 5).
 
-Each function is a thin, testable wrapper over PageIndex / Chroma / FactTable.
-They return ``ToolResult`` evidence bundles -- never free-form answers.
+Each function is a thin, testable wrapper over the PageIndex, chunk and fact
+stores. They return ``ToolResult`` evidence bundles -- never free-form answers.
 
   1. pageindex_navigate  -- which sections look relevant?
   2. semantic_search     -- which LDUs match by meaning?
-  3. structured_query    -- which FactTable rows match filters / SQL?
+  3. structured_query    -- which FactTable rows match the filters?
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
-from src.config import PAGEINDEX_DIR
 from src.facts.models import FactRecord
-from src.facts.store import FactStore
 from src.models.page_index import PageIndex
 from src.models.query import ToolName, ToolTrace
-from src.pageindex.builder import load_page_index
 from src.pageindex.navigate import navigate
 from src.query.evidence import EvidenceHit, ToolResult
 from src.retrieval.embeddings import EmbeddingClient
-from src.retrieval.ingest import semantic_search as chroma_semantic_search
-from src.retrieval.vector_store import ChromaLDUStore, RetrievedChunk
+from src.retrieval.ingest import semantic_search as store_semantic_search
+from src.stores.base import ChunkStore, FactStore, PageIndexStore, RetrievedChunk
 
 
 def pageindex_navigate(
@@ -32,7 +27,7 @@ def pageindex_navigate(
     doc_id: str,
     top_k: int = 5,
     index: PageIndex | None = None,
-    pageindex_dir: Path | None = None,
+    store: PageIndexStore | None = None,
 ) -> ToolResult:
     """Traverse the PageIndex tree and return the top-K matching sections."""
     topic = (topic or "").strip()
@@ -46,7 +41,14 @@ def pageindex_navigate(
         )
         return ToolResult(tool=ToolName.PAGEINDEX_NAVIGATE, hits=[], trace=trace)
 
-    idx = index or load_page_index(doc_id, directory=pageindex_dir or PAGEINDEX_DIR)
+    idx = index or (store.load(doc_id) if store is not None else None)
+    if idx is None:
+        trace = ToolTrace(
+            tool=ToolName.PAGEINDEX_NAVIGATE,
+            arguments=args,
+            summary="no page index for this document",
+        )
+        return ToolResult(tool=ToolName.PAGEINDEX_NAVIGATE, hits=[], trace=trace)
     ranked = navigate(idx, topic, top_k=top_k)
 
     hits: list[EvidenceHit] = []
@@ -113,10 +115,10 @@ def tool_semantic_search(
     *,
     doc_id: str | None = None,
     top_k: int = 7,
-    store: ChromaLDUStore | None = None,
+    store: ChunkStore,
     embedder: EmbeddingClient | None = None,
 ) -> ToolResult:
-    """Embed ``query`` and return the nearest LDUs from Chroma."""
+    """Embed ``query`` and return the nearest LDUs from the chunk store."""
     query = (query or "").strip()
     args = {"query": query, "doc_id": doc_id, "top_k": top_k}
 
@@ -128,7 +130,7 @@ def tool_semantic_search(
         )
         return ToolResult(tool=ToolName.SEMANTIC_SEARCH, hits=[], trace=trace)
 
-    retrieved = chroma_semantic_search(
+    retrieved = store_semantic_search(
         query, doc_id=doc_id, top_k=top_k, store=store, embedder=embedder
     )
     hits = [_hit_from_retrieved(r) for r in retrieved]
@@ -172,61 +174,32 @@ def _hit_from_fact(fact: FactRecord) -> EvidenceHit:
 
 def structured_query(
     *,
+    store: FactStore,
     doc_id: str | None = None,
     metric_contains: str | None = None,
     period_contains: str | None = None,
-    sql: str | None = None,
     limit: int = 20,
-    store: FactStore | None = None,
 ) -> ToolResult:
-    """Query the FactTable via safe filters or a read-only SELECT.
+    """Look up FactTable rows by metric / period substring (parameterised).
 
-    Prefer ``metric_contains`` / ``period_contains`` for agent use. Pass ``sql``
-    only for explicit SELECT power queries (still blocked from writes).
+    The old free-form SQL path is gone: the planner is an LLM reading document
+    text, so letting it write SQL was an injection route.
     """
     args = {
         "doc_id": doc_id,
         "metric_contains": metric_contains,
         "period_contains": period_contains,
-        "sql": sql,
         "limit": limit,
     }
-    store = store or FactStore()
-
-    hits: list[EvidenceHit] = []
-    if sql and sql.strip():
-        rows = store.select(sql)
-        # Map raw SQL dict rows into EvidenceHits when columns match schema.
-        for row in rows[:limit]:
-            fact = FactRecord(
-                id=str(row.get("id") or ""),
-                doc_id=str(row.get("doc_id") or doc_id or ""),
-                document_name=str(row.get("document_name") or ""),
-                metric=str(row.get("metric") or ""),
-                value=row.get("value"),
-                value_text=str(row.get("value_text") or row.get("value") or ""),
-                unit=str(row.get("unit") or ""),
-                period=str(row.get("period") or ""),
-                page_number=int(row.get("page_number") or 1),
-                content_hash=str(row.get("content_hash") or ""),
-                chunk_id=str(row.get("chunk_id") or ""),
-                source_excerpt=str(row.get("source_excerpt") or ""),
-            )
-            if fact.metric or fact.value_text:
-                hits.append(_hit_from_fact(fact))
-        summary = f"sql returned {len(hits)} row(s)"
-    else:
-        facts = store.search(
-            doc_id=doc_id,
-            metric_contains=metric_contains,
-            period_contains=period_contains,
-            limit=limit,
-        )
-        hits = [_hit_from_fact(f) for f in facts]
-        summary = f"{len(hits)} fact row(s)"
-
+    facts = store.search(
+        doc_id=doc_id,
+        metric_contains=metric_contains,
+        period_contains=period_contains,
+        limit=limit,
+    )
+    hits = [_hit_from_fact(f) for f in facts]
     trace = ToolTrace(
-        tool=ToolName.STRUCTURED_QUERY, arguments=args, summary=summary
+        tool=ToolName.STRUCTURED_QUERY, arguments=args, summary=f"{len(hits)} fact row(s)"
     )
     return ToolResult(tool=ToolName.STRUCTURED_QUERY, hits=hits, trace=trace)
 

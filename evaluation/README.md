@@ -30,13 +30,16 @@ Every item starts as `draft`. Reviewed items become `confirmed`, `corrected` or 
 ## Running
 
 ```bash
-# raw outputs go to evaluation/runs/<name>/ (git-ignored), including its own .refinery data
-python -m evaluation.run extract --system v1 --run runs/v1-baseline
-python -m evaluation.run qa      --system v1 --run runs/v1-baseline
-python -m evaluation.run score   --run runs/v1-baseline --name "V1 baseline" --publish v1-baseline
+# needs the dev database: docker compose -f docker-compose.dev.yml up -d db
+# raw outputs go to evaluation/runs/<name>/ (git-ignored); each run has its own Postgres account
+python -m evaluation.run extract --run runs/m3
+python -m evaluation.run qa      --run runs/m3
+python -m evaluation.run score   --run runs/m3 --name "M3" --publish m3-postgres
 ```
 
-`--publish` copies the report to `reports/`. The corpus folder defaults to `data/data` (override with `DOCMIND_CORPUS_DIR`).
+`--publish` copies the report to `reports/`. The corpus folder defaults to `data/data` (override with `DOCMIND_CORPUS_DIR`). Set `DOCMIND_EVAL_REUSE_MODELS` to a folder of saved document models to skip extraction when only later stages changed (see `systems/current.py`).
+
+The V1 baseline (`reports/v1-baseline.*`) and the M2 run (`reports/m2-v2-extraction.*`) were produced with systems `v1` and `v2`, which were removed with the old storage in M3; check out commit `9d8509f` to rerun them.
 
 ## Metrics
 

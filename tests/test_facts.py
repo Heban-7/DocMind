@@ -13,7 +13,7 @@ from src.facts.extractor import (
     extract_facts_from_prose,
     extract_facts_from_table,
 )
-from src.facts.store import FactStore
+from src.stores.memory import MemoryFactStore
 
 
 def test_prose_extracts_etb_fact():
@@ -57,8 +57,8 @@ def test_table_extracts_numeric_cells():
     assert vat.page_number == 16
 
 
-def test_store_replace_and_search(tmp_path: Path):
-    store = FactStore(db_path=tmp_path / "facts.db")
+def test_store_replace_and_search():
+    store = MemoryFactStore()
     chunk = DocumentChunk.create(
         "Revenue was ETB 10.5 billion in FY 2019/20.",
         parent_hierarchy=["Financials"],
@@ -79,17 +79,6 @@ def test_store_replace_and_search(tmp_path: Path):
         [chunk], doc_id="docA", document_name="a.pdf", store=store
     )
     assert store.count("docA") == result2.facts_written
-
-    rows = store.select(
-        "SELECT metric, value_text FROM facts WHERE doc_id = ?", ("docA",)
-    )
-    assert rows and "metric" in rows[0]
-
-
-def test_select_rejects_non_select(tmp_path: Path):
-    store = FactStore(db_path=tmp_path / "facts2.db")
-    with pytest.raises(ValueError):
-        store.select("DELETE FROM facts")
 
 
 def test_extract_facts_from_chunk_combines_paths():

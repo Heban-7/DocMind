@@ -27,8 +27,6 @@ from src.agents.query_agent import (
     _run_one_tool,
 )
 from src.agents.query_prompts import PLANNER_SYSTEM, planner_user_prompt
-from src.config import DEFAULT_SAMPLE_PDF
-from src.facts.store import FactStore
 from src.llm.base import LLMClient
 from src.llm.factory import get_text_client
 from src.models.provenance import ProvenanceChain
@@ -36,7 +34,7 @@ from src.models.query import AuditStatus, AuditVerdict, ToolName, ToolTrace
 from src.query.evidence import EvidenceHit, ToolResult
 from src.query.provenance import assemble_provenance
 from src.retrieval.embeddings import EmbeddingClient
-from src.retrieval.vector_store import ChromaLDUStore
+from src.stores.base import Stores
 
 logger = logging.getLogger("docmind.audit_agent")
 
@@ -157,8 +155,9 @@ class AuditAgent:
                 traces.append(result.trace)
             from src.query.page_map import enrich_hit_printed_page
 
+            pdf = deps.pdf_path or (deps.pdf_resolver(deps.doc_id) if deps.pdf_resolver and deps.doc_id else None)
             hits = [
-                enrich_hit_printed_page(h, pdf_path=deps.pdf_path) for h in hits
+                enrich_hit_printed_page(h, pdf_path=pdf) for h in hits
             ]
             return {
                 "hits": [h.model_dump(mode="json") for h in hits],
@@ -346,12 +345,10 @@ class AuditAgent:
 def build_audit_agent(
     doc_id: str,
     *,
+    stores: Stores,
     llm: LLMClient | None = None,
     pdf_path: str | Path | None = None,
-    pageindex_dir: Path | None = None,
-    chroma_store: ChromaLDUStore | None = None,
     embedder: EmbeddingClient | None = None,
-    fact_store: FactStore | None = None,
     max_tool_calls: int = 3,
     use_planner: bool = False,
 ) -> AuditAgent:
@@ -365,12 +362,10 @@ def build_audit_agent(
     return AuditAgent(
         AuditAgentDeps(
             llm=client,
+            stores=stores,
             doc_id=doc_id,
-            pdf_path=pdf_path or DEFAULT_SAMPLE_PDF,
-            pageindex_dir=pageindex_dir,
-            chroma_store=chroma_store,
+            pdf_path=pdf_path,
             embedder=embedder,
-            fact_store=fact_store,
             max_tool_calls=max_tool_calls,
             use_planner=use_planner,
         )

@@ -15,7 +15,6 @@ from collections import defaultdict
 from pathlib import Path
 
 from src.chunking.models import DocumentChunk
-from src.config import CHUNKS_DIR, PAGEINDEX_DIR
 from src.models.page_index import PageIndex, SectionNode
 
 logger = logging.getLogger("docmind.pageindex")
@@ -192,40 +191,3 @@ def build_page_index(
 
     roots = _build_tree(buckets, summaries)
     return PageIndex(doc_id=doc_id, source_filename=source_filename, roots=roots)
-
-
-def save_page_index(index: PageIndex, directory: Path | None = None) -> Path:
-    """Persist PageIndex JSON under ``.refinery/pageindex/{doc_id}.json``."""
-    out_dir = directory or PAGEINDEX_DIR
-    out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"{index.doc_id}.json"
-    path.write_text(index.model_dump_json(indent=2), encoding="utf-8")
-    return path
-
-
-def load_page_index(doc_id: str, directory: Path | None = None) -> PageIndex:
-    """Load a previously saved PageIndex."""
-    path = (directory or PAGEINDEX_DIR) / f"{doc_id}.json"
-    return PageIndex.model_validate_json(path.read_text(encoding="utf-8"))
-
-
-def build_and_save_from_chunks_file(
-    doc_id: str,
-    *,
-    chunks_dir: Path | None = None,
-    source_filename: str = "",
-    summarize: bool = True,
-    llm_client=_AUTO,
-) -> tuple[PageIndex, Path]:
-    """Convenience: load ``{doc_id}.jsonl`` chunks, build, and save PageIndex."""
-    chunks_path = (chunks_dir or CHUNKS_DIR) / f"{doc_id}.jsonl"
-    chunks = load_chunks_jsonl(chunks_path)
-    index = build_page_index(
-        chunks,
-        doc_id=doc_id,
-        source_filename=source_filename,
-        summarize=summarize,
-        llm_client=llm_client,
-    )
-    path = save_page_index(index)
-    return index, path

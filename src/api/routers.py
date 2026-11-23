@@ -7,8 +7,8 @@ import logging
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
-from src.api.dependencies import get_current_user_id, get_user_id_header_or_query
-from src.api.ownership import AccessDeniedError
+from src.api.dependencies import get_principal, get_principal_header_or_query
+from src.db.repos import AccessDeniedError, Principal
 
 from src.api.schemas import (
     ChatRequest,
@@ -50,11 +50,11 @@ def health() -> HealthResponse:
 )
 async def upload_pdf(
     file: UploadFile = File(...),
-    user_id: str = Depends(get_current_user_id),
+    principal: Principal = Depends(get_principal),
 ) -> UploadResponse:
-    """Accept a PDF, run Triage -> Extract -> Chunk -> Index, return the profile."""
+    """Accept a PDF, extract, chunk and index it for the caller's account."""
     try:
-        return process_upload(file, user_id=user_id)
+        return process_upload(file, principal=principal)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -74,10 +74,10 @@ async def upload_pdf(
 
 
 @upload_router.get("/documents", response_model=DocumentListResponse)
-def get_documents(user_id: str = Depends(get_current_user_id)) -> DocumentListResponse:
-    """List all ingested document profiles."""
+def get_documents(principal: Principal = Depends(get_principal)) -> DocumentListResponse:
+    """List the documents in the caller's account."""
     try:
-        return list_documents(user_id=user_id)
+        return list_documents(principal=principal)
     except Exception as exc:
         logger.exception("list documents failed")
         raise HTTPException(
@@ -89,9 +89,9 @@ def get_documents(user_id: str = Depends(get_current_user_id)) -> DocumentListRe
 @upload_router.get("/documents/{doc_id}/pdf")
 def get_pdf(
     doc_id: str,
-    user_id: str = Depends(get_user_id_header_or_query),
+    principal: Principal = Depends(get_principal_header_or_query),
 ):
-    """Serve the raw PDF of a document the caller owns.
+    """Serve the stored PDF of a document in the caller's account.
 
     Login is required. The token may come from the Authorization header or,
     for the in-browser viewer, a ``token`` query parameter (to be replaced by
@@ -99,7 +99,7 @@ def get_pdf(
     return 404, exactly like documents that do not exist.
     """
     try:
-        pdf_path = get_pdf_file_path(doc_id, user_id=user_id)
+        pdf_path = get_pdf_file_path(doc_id, principal=principal)
         return FileResponse(
             path=str(pdf_path),
             media_type="application/pdf",
@@ -124,10 +124,10 @@ def get_pdf(
 
 
 @chat_router.post("/chat", response_model=ChatResponse)
-def chat(payload: ChatRequest, user_id: str = Depends(get_current_user_id)) -> ChatResponse:
+def chat(payload: ChatRequest, principal: Principal = Depends(get_principal)) -> ChatResponse:
     """Ask the Query Agent (memory via thread_id; optional document pin)."""
     try:
-        return run_chat(payload, user_id=user_id)
+        return run_chat(payload, principal=principal)
     except AccessDeniedError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -153,7 +153,7 @@ def chat(payload: ChatRequest, user_id: str = Depends(get_current_user_id)) -> C
 
 
 @chat_router.post("/chat/stream")
-def chat_stream(payload: ChatRequest, user_id: str = Depends(get_current_user_id)):
+def chat_stream(payload: ChatRequest, principal: Principal = Depends(get_principal)):
     """Stream Query Agent response token by token via Server-Sent Events."""
     from starlette.responses import StreamingResponse
     from src.api.services import authorize_chat, run_chat_stream
@@ -161,7 +161,7 @@ def chat_stream(payload: ChatRequest, user_id: str = Depends(get_current_user_id
     # Access is checked before the stream starts: once a 200 and the SSE
     # headers are sent, an error can no longer become a proper status code.
     try:
-        authorize_chat(payload, user_id=user_id)
+        authorize_chat(payload, principal=principal)
     except AccessDeniedError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -170,7 +170,7 @@ def chat_stream(payload: ChatRequest, user_id: str = Depends(get_current_user_id
 
     try:
         return StreamingResponse(
-            run_chat_stream(payload, user_id=user_id),
+            run_chat_stream(payload, principal=principal),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
@@ -186,10 +186,10 @@ def chat_stream(payload: ChatRequest, user_id: str = Depends(get_current_user_id
 
 
 @chat_router.get("/history/{thread_id}", response_model=HistoryResponse)
-def history(thread_id: str, user_id: str = Depends(get_current_user_id)) -> HistoryResponse:
-    """Return prior turns for a conversation thread from the checkpointer."""
+def history(thread_id: str, principal: Principal = Depends(get_principal)) -> HistoryResponse:
+    """Return prior turns for one of the caller's conversation threads."""
     try:
-        return fetch_history(thread_id, user_id=user_id)
+        return fetch_history(thread_id, principal=principal)
     except AccessDeniedError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -209,10 +209,10 @@ def history(thread_id: str, user_id: str = Depends(get_current_user_id)) -> Hist
 
 
 @chat_router.get("/threads", response_model=ThreadListResponse)
-def get_threads(user_id: str = Depends(get_current_user_id)) -> ThreadListResponse:
-    """List active thread IDs and summary titles from SQLite checkpointer."""
+def get_threads(principal: Principal = Depends(get_principal)) -> ThreadListResponse:
+    """List the caller's conversation threads, most recent first."""
     try:
-        return list_threads(user_id=user_id)
+        return list_threads(principal=principal)
     except Exception as exc:
         logger.exception("list threads failed")
         raise HTTPException(

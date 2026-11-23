@@ -8,7 +8,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 15+](https://img.shields.io/badge/Next.js-15.0+-black.svg?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-FF6F00.svg)](https://langchain-ai.github.io/langgraph/)
-[![ChromaDB](https://img.shields.io/badge/VectorDB-ChromaDB-blueviolet.svg)](https://www.trychroma.com/)
+[![Postgres + pgvector](https://img.shields.io/badge/Storage-Postgres%20%2B%20pgvector-336791.svg)](https://github.com/pgvector/pgvector)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/Heban-7/DocMind/actions/workflows/ci.yml/badge.svg)](https://github.com/Heban-7/DocMind/actions/workflows/ci.yml)
 
@@ -89,15 +89,15 @@ flowchart TD
     subgraph REFINERY ["STAGE 3 & 4: CHUNKING & PAGEINDEX"]
         D --> E[Semantic Chunker: Logical Document Units]
         E -->|Chunking Constitution| F[Hierarchical PageIndex Tree Builder]
-        F --> H1[(SQLite FactTable)]
-        F --> H2[(ChromaDB Vector Store)]
-        F --> H3[(PageIndex JSON)]
+        F --> H1[(Postgres: FactTable)]
+        F --> H2[(Postgres: pgvector chunks)]
+        F --> H3[(Postgres: PageIndex)]
     end
 
     subgraph QUERY ["STAGE 5: MULTI-TOOL QUERY AGENT (LangGraph)"]
         Q[User Query] --> I[Intent Classifier & Rewriter]
         I --> J[Adaptive Planner]
-        J --> K1[Tool: SQL FactTable]
+        J --> K1[Tool: FactTable lookup]
         J --> K2[Tool: Vector Semantic Search]
         J --> K3[Tool: PageIndex Tree Traversal]
         K1 & K2 & K3 --> L[Evidence Synthesizer]
@@ -130,7 +130,7 @@ flowchart TD
 - **Section Shortlisting**: Lets the Query Agent shortlist sections by their headings before reading chunks.
 
 ### 5. Structured FactTable & SQL Query Execution
-- **Fact Lookup**: Numeric facts extracted from tables are stored in SQLite and looked up by metric and period.
+- **Fact Lookup**: Numeric facts extracted from tables are stored in Postgres and looked up by metric and period with parameterised queries (the model never writes SQL).
 - **Coming in V2 (milestone M5)**: Typed values with sign, unit and scale, and arithmetic done in SQL instead of by the LLM.
 
 ### 6. Zero-Trust Audit Mode (Anti-Hallucination Guardrail)
@@ -142,8 +142,8 @@ flowchart TD
 - **PDF Evidence Viewer**: Clicking a citation opens the source PDF at the cited page.
 
 ### 8. Conversational State Memory & Multi-Tenant Data Isolation
-- **LangGraph Session Checkpointing**: Conversational memory backed by SQLite checkpoints for multi-turn questions.
-- **Ownership Checks**: Each document and chat thread is visible only to the user who created it. Database-level tenant isolation arrives in V2 (milestone M3).
+- **LangGraph Session Checkpointing**: Conversational memory in Postgres (LangGraph `PostgresSaver`), keyed by tenant and thread.
+- **Tenant Isolation in the Database**: Every account is a tenant. Documents, pages, chunks, vectors, facts, page indexes and chat threads carry a tenant id, and Postgres row-level security (forced, under a non-superuser role) returns only the caller's rows; a query without a tenant sees nothing. Links between rows use composite `(tenant_id, id)` keys, so a row can never point at another tenant's document. A chat thread has exactly one owner. `tests/test_db_isolation.py` and `tests/test_api_security.py` check this through the stores and through every endpoint.
 
 ---
 
@@ -165,25 +165,31 @@ The benchmark figures previously shown here were not produced by a reproducible 
 DocMind/
 ├── src/                     # Python backend (FastAPI + LangGraph)
 │   ├── agents/              # Triage, query agent, intent router, audit agent, prompts
-│   ├── api/                 # FastAPI app, routes, auth, ownership checks
+│   ├── api/                 # FastAPI app, routes, auth
 │   ├── chunking/            # Logical Document Unit chunker
-│   ├── extraction/          # Fast text, Docling, MinerU and vision engines
-│   ├── facts/               # FactTable extraction and SQLite store
+│   ├── db/                  # Postgres pool, migrations (row-level security), repositories
+│   ├── document/            # V2 structured document model and page-level extraction
+│   ├── extraction/          # V1 engines (Docling, MinerU, vision) kept for the CLI
+│   ├── facts/               # FactTable extraction
 │   ├── llm/                 # Provider clients and model registry
 │   ├── models/              # Pydantic schemas
 │   ├── pageindex/           # PageIndex builder and navigation
-│   ├── pipeline/            # Ingest pipeline glue
+│   ├── pipeline/            # Ingest: extract, chunk, index, mark ready
 │   ├── query/               # Retrieval tools and provenance assembly
-│   └── retrieval/           # Embeddings and ChromaDB store
+│   ├── retrieval/           # Embeddings and chunk search
+│   ├── storage/             # Blob storage for PDFs and document models
+│   └── stores/              # Chunk, fact and PageIndex stores (Postgres and in-memory)
 ├── frontend/                # Next.js web app
 ├── rubric/models.yaml       # Model registry
-├── tests/                   # Pytest suite (runs offline, never touches .refinery/)
+├── evaluation/              # Golden set, deterministic scoring, published reports
+├── tests/                   # Pytest suite (offline; database tests use their own docmind_test DB)
+├── docker-compose.dev.yml   # Local Postgres 17 + pgvector
 ├── run_pipeline.py          # CLI: ingest one PDF
 ├── run_query.py             # CLI: ask or audit
 └── pyproject.toml           # Python dependencies (uv)
 ```
 
-Generated data (profiles, extractions, chunks, indexes, local databases) is written to `.refinery/`, which is not committed.
+Documents, chunks, vectors, facts, page indexes, users and chat memory live in Postgres. Stored PDFs and document models are written to `.refinery/storage/` (one folder per tenant), which is not committed.
 
 ---
 
@@ -192,6 +198,7 @@ Generated data (profiles, extractions, chunks, indexes, local databases) is writ
 ### Prerequisites
 - **Python**: `3.13` or higher (managed via [`uv`](https://github.com/astral-sh/uv))
 - **Node.js**: `18.0+` & `npm`
+- **Docker**: for the local Postgres 17 + pgvector database
 
 ### Step 1: Clone Repository & Configure Environment
 ```bash
@@ -211,8 +218,14 @@ DOCMIND_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 ### Step 2: Initialize Backend (FastAPI)
 ```bash
+# Start Postgres 17 + pgvector on localhost:5433 (data kept in a Docker volume)
+docker compose -f docker-compose.dev.yml up -d db
+
 # Install Python dependencies via uv
 uv sync
+
+# The API applies database migrations when it starts. To apply them by hand:
+uv run python -m src.db.migrate
 
 # Launch FastAPI development server on port 8000
 uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
@@ -268,26 +281,16 @@ curl -X POST http://127.0.0.1:8000/chat/stream \
   }'
 ```
 
-### 4. Programmatic Python SDK Pipeline
-```python
-from pathlib import Path
-from src.agents.triage import DocumentTriageAgent
-from src.agents.chunker import SemanticChunker
-from src.agents.query_agent import QueryAgent
-from src.models.query import QueryAgentDeps
+### 4. Command line (a local account, no login)
+```bash
+# Ingest one PDF into the local CLI account; prints the document id
+uv run python run_pipeline.py data/data/sample.pdf
 
-# 1. Triage document
-triage = DocumentTriageAgent()
-profile = triage.profile_document(Path("data/sample.pdf"))
-print(f"Strategy Selected: {profile.recommended_strategy}")
+# Ask about it (or leave out --doc to search every document of the account)
+uv run python run_query.py "What was import tax expenditure in FY 2020/21?" --doc <document-id>
 
-# 2. Query document with spatial provenance
-agent = QueryAgent(deps=QueryAgentDeps(doc_id=profile.document_id, pdf_path=Path("data/sample.pdf")))
-answer = agent.ask("Summarize the balance sheet highlights.")
-
-print(f"Answer: {answer.answer}")
-for citation in answer.provenance.citations:
-    print(f"Verified on Page {citation.page_number} | BBox: {citation.bbox}")
+# Check a claim against the document
+uv run python run_query.py --audit "Revenue was ETB 4.2 billion" --doc <document-id>
 ```
 
 ---

@@ -1,19 +1,23 @@
-"""Offline tests for STEP 1 conversational memory (SqliteSaver + thread_id)."""
+"""Offline tests for STEP 1 conversational memory (checkpointer + thread_id).
+
+The Postgres checkpointer itself is covered by tests/test_db_isolation.py.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from src.agents.memory import build_sqlite_checkpointer
+from langgraph.checkpoint.memory import InMemorySaver
+
+from src.agents.memory import read_messages
 from src.agents.query_agent import QueryAgent, QueryAgentDeps
 from src.chunking.models import DocumentChunk
 from src.facts.extractor import extract_and_store
-from src.facts.store import FactStore
 from src.llm.base import LLMClient, LLMResult
 from src.models.conversation import MessageRole, SessionConfig
-from src.pageindex.builder import build_page_index, save_page_index
+from src.pageindex.builder import build_page_index
 from src.retrieval.ingest import ingest_chunks
-from src.retrieval.vector_store import ChromaLDUStore
+from src.stores.memory import memory_stores
 
 
 class _FakeEmbedder:
@@ -72,15 +76,14 @@ def test_memory_persists_across_turns(tmp_path: Path):
         chunks, doc_id="memdoc", source_filename="sample.pdf",
         summarize=True, llm_client=None,
     )
-    save_page_index(index, directory=tmp_path / "pageindex")
-    chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="memdoc")
+    stores = memory_stores()
+    stores.pageindex.save(index)
     embedder = _FakeEmbedder()
     ingest_chunks(
         chunks, doc_id="memdoc", document_name="sample.pdf",
-        store=chroma, embedder=embedder,
+        store=stores.chunks, embedder=embedder,
     )
-    facts = FactStore(tmp_path / "facts.db")
-    extract_and_store(chunks, doc_id="memdoc", document_name="sample.pdf", store=facts)
+    extract_and_store(chunks, doc_id="memdoc", document_name="sample.pdf", store=stores.facts)
 
     # Turn 1: classify, plan, synthesize. Turn 2 has history, so the query
     # rewriter runs too: classify, rewrite, plan, synthesize.
@@ -101,16 +104,14 @@ def test_memory_persists_across_turns(tmp_path: Path):
             ),
         ]
     )
-    checkpointer = build_sqlite_checkpointer(tmp_path / "checkpoints.sqlite")
+    checkpointer = InMemorySaver()
     agent = QueryAgent(
         QueryAgentDeps(
             llm=llm,
+            stores=stores,
             doc_id="memdoc",
             pdf_path=None,
-            pageindex_dir=tmp_path / "pageindex",
-            chroma_store=chroma,
             embedder=embedder,
-            fact_store=facts,
             checkpointer=checkpointer,
         )
     )
@@ -126,13 +127,15 @@ def test_memory_persists_across_turns(tmp_path: Path):
     assert len(history) >= 4  # user, assistant, user, assistant
     assert history[0].role is MessageRole.USER
     assert history[1].role is MessageRole.ASSISTANT
+    # The API reads history straight from the checkpointer, without an agent.
+    assert [m.content for m in read_messages(checkpointer, thread)] == [m.content for m in history]
 
     # Second LLM synthesize call should have seen prior conversation text.
     assert any("recent_conversation" in c for c in llm.calls)
 
 
 def test_different_threads_are_isolated(tmp_path: Path):
-    checkpointer = build_sqlite_checkpointer(tmp_path / "cp.sqlite")
+    checkpointer = InMemorySaver()
     llm = _ScriptedLLM(
         [
             '{"calls":[{"tool":"semantic_search","args":{"query":"x"}}]}',
@@ -141,16 +144,13 @@ def test_different_threads_are_isolated(tmp_path: Path):
             '{"answer":"I could not find that in the document.","cite_indices":[],"refusal":true}',
         ]
     )
-    chroma = ChromaLDUStore(persist_dir=tmp_path / "chroma", collection_name="iso")
     agent = QueryAgent(
         QueryAgentDeps(
             llm=llm,
+            stores=memory_stores(),
             doc_id="missing",
             checkpointer=checkpointer,
-            chroma_store=chroma,
             embedder=_FakeEmbedder(),
-            fact_store=FactStore(tmp_path / "facts.db"),
-            pageindex_dir=tmp_path / "pageindex",
         )
     )
     agent.ask("Hello from A", thread_id="thread-A")

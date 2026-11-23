@@ -8,13 +8,11 @@ Reads the user's question + a catalog of available documents, then decides:
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 from pathlib import Path
 
 from src.agents.json_util import extract_json
-from src.config import PROFILES_DIR
 from src.llm.base import LLMClient
 from src.models.intent import CorpusDocument, IntentRouter, SearchScope
 
@@ -35,35 +33,6 @@ Rules:
 - document_id MUST be either null or an id that appears in the catalog.
 - Prefer corpus-wide when unsure.
 """
-
-
-def list_corpus_documents(profiles_dir: Path | None = None) -> list[CorpusDocument]:
-    """Build a catalog from saved triage profiles under ``.refinery/profiles``."""
-    root = profiles_dir or PROFILES_DIR
-    if not root.exists():
-        return []
-    docs: list[CorpusDocument] = []
-    for path in sorted(root.glob("*.json")):
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        doc_id = str(data.get("doc_id") or path.stem).strip()
-        if not doc_id:
-            continue
-        docs.append(
-            CorpusDocument(
-                document_id=doc_id,
-                document_name=str(data.get("source_filename") or ""),
-                domain_hint=str(data.get("domain_hint") or ""),
-                page_count=(
-                    int(data["page_count"])
-                    if data.get("page_count") is not None
-                    else None
-                ),
-            )
-        )
-    return docs
 
 
 def _catalog_block(docs: list[CorpusDocument]) -> str:
@@ -141,13 +110,12 @@ def route_intent(
     corpus: list[CorpusDocument] | None = None,
     llm: LLMClient | None = None,
     forced_document_id: str | None = None,
-    profiles_dir: Path | None = None,
 ) -> IntentRouter:
     """Decide single-doc vs corpus scope for this question.
 
     ``forced_document_id`` (e.g. CLI ``--doc``) skips the LLM and pins scope.
     """
-    docs = corpus if corpus is not None else list_corpus_documents(profiles_dir)
+    docs = list(corpus or [])
     known_ids = {d.document_id for d in docs}
 
     if forced_document_id:
