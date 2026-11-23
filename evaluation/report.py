@@ -48,7 +48,8 @@ def _extraction(golden: GoldenSet, run_dir: Path) -> dict:
                 "error": raw.get("error"),
                 "coverage": cov,
                 "extract_seconds": round(extract.get("seconds", 0.0), 1),
-                "seconds_per_page": round(extract.get("seconds", 0.0) / doc.pages, 2) if doc.pages else None,
+                # per page actually extracted: a tier that skips pages must not look fast
+                "seconds_per_page": round(extract.get("seconds", 0.0) / max(1, cov["with_content"]), 2),
                 "total_seconds": raw.get("total_seconds"),
                 "chunks": raw.get("chunks"),
                 "facts": len(raw.get("facts") or []),
@@ -99,7 +100,9 @@ def _extraction(golden: GoldenSet, run_dir: Path) -> dict:
             e: {
                 "documents": len(ds),
                 "pages": sum(d["pages"] for d in ds),
-                "seconds_per_page": round(sum(d["extract_seconds"] for d in ds) / max(1, sum(d["pages"] for d in ds)), 2),
+                "seconds_per_page": round(
+                    sum(d["extract_seconds"] for d in ds) / max(1, sum(d["coverage"]["with_content"] for d in ds)), 2
+                ),
                 "devices": sorted({d["device"] or "?" for d in ds}),
             }
             for e, ds in sorted(engines.items())
@@ -258,14 +261,14 @@ def render_markdown(r: dict) -> str:
             f"| {cls} | {s['figures']} | {_fmt(s['intact_on_page_pct'], '%')} | {_fmt(s['split_digits_pct'], '%')} | "
             f"{_fmt(s['missing_pct'], '%')} | {_fmt(s['row_intact_pct'], '%')} | {_fmt(s['fact_correct_pct'], '%')} |"
         )
-    lines += ["", "**Speed by engine** (extraction stage only)", "", "| Engine | Documents | Pages | Seconds per page | Device |", "| --- | --- | --- | --- | --- |"]
+    lines += ["", "**Speed by engine** (extraction stage, per page that produced content)", "", "| Engine | Documents | Pages | Seconds per page | Device |", "| --- | --- | --- | --- | --- |"]
     for e, s in ex["speed_by_engine"].items():
         lines.append(f"| {e} | {s['documents']} | {s['pages']} | {s['seconds_per_page']} | {', '.join(s['devices'])} |")
     lines += [
         "",
         "**Per document**",
         "",
-        "| Document | Class | Pages | Engine | Content pages | Silently missing | Extract s | s/page | Facts | Cost $ |",
+        "| Document | Class | Pages | Engine | Content pages | Silently missing | Extract s | s per extracted page | Facts | Cost $ |",
         "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for d in ex["documents"]:

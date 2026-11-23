@@ -1,0 +1,597 @@
+{
+  "name": "V1 CPU 2-thread speed sample",
+  "golden_version": "v1",
+  "golden": {
+    "documents": 25,
+    "pages": 1237,
+    "figures_scored": 184,
+    "questions_scored": 142,
+    "figure_review_status": {
+      "draft": 184,
+      "rejected": 5
+    },
+    "confirmed_by_person": 0
+  },
+  "run": {
+    "generated_at": "2026-11-23T07:08:20+00:00",
+    "python": "3.13.1",
+    "machine": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "notes": "V1 extraction on CPU only, 2 threads (DOCMIND_DEVICE=cpu DOCMIND_NUM_THREADS=2) on an x86 laptop, to approximate the 2-core server; ARM cores are expected to be slower"
+  },
+  "extraction": {
+    "documents": [
+      {
+        "doc_key": "cbe_2023_24",
+        "status": "not run"
+      },
+      {
+        "doc_key": "ethiore_2017",
+        "status": "not run"
+      },
+      {
+        "doc_key": "ets_2023_24",
+        "status": "not run"
+      },
+      {
+        "doc_key": "ethswitch_10th_2023_24",
+        "status": "not run"
+      },
+      {
+        "doc_key": "ethswitch_2021_22",
+        "status": "not run"
+      },
+      {
+        "doc_key": "cbe_2006_07",
+        "status": "not run"
+      },
+      {
+        "doc_key": "ethiore_profile_2024_25",
+        "doc_class": "A_annual_report",
+        "pages": 24,
+        "engine": "layout_docling",
+        "tier": "needs_layout_model",
+        "device": "cpu",
+        "error": null,
+        "coverage": {
+          "pages": 24,
+          "with_content": 23,
+          "flagged_failed": 0,
+          "silently_missing": 1,
+          "accounted_ratio": 0.9583333333333334,
+          "content_ratio": 0.9583333333333334
+        },
+        "extract_seconds": 146.2,
+        "seconds_per_page": 6.36,
+        "total_seconds": 151.8,
+        "chunks": 47,
+        "facts": 12,
+        "cost_usd": 0.0002
+      },
+      {
+        "doc_key": "dbe_audit_2023",
+        "status": "not run"
+      },
+      {
+        "doc_key": "cbe_2010_11",
+        "status": "not run"
+      },
+      {
+        "doc_key": "cbe_2009_10",
+        "status": "not run"
+      },
+      {
+        "doc_key": "ethswitch_2019",
+        "status": "not run"
+      },
+      {
+        "doc_key": "audited_fs_2021",
+        "status": "not run"
+      },
+      {
+        "doc_key": "security_disclosure",
+        "status": "not run"
+      },
+      {
+        "doc_key": "fta_survey_2022",
+        "status": "not run"
+      },
+      {
+        "doc_key": "pharma_2019",
+        "status": "not run"
+      },
+      {
+        "doc_key": "ethiore_2019",
+        "status": "not run"
+      },
+      {
+        "doc_key": "cbe_2012_13",
+        "doc_class": "C_mixed_technical",
+        "pages": 20,
+        "engine": "layout_docling",
+        "tier": "needs_layout_model",
+        "device": "cpu",
+        "error": null,
+        "coverage": {
+          "pages": 20,
+          "with_content": 20,
+          "flagged_failed": 0,
+          "silently_missing": 0,
+          "accounted_ratio": 1.0,
+          "content_ratio": 1.0
+        },
+        "extract_seconds": 123.6,
+        "seconds_per_page": 6.18,
+        "total_seconds": 129.72,
+        "chunks": 25,
+        "facts": 160,
+        "cost_usd": 0.0002
+      },
+      {
+        "doc_key": "tax_exp_2021_22",
+        "status": "not run"
+      },
+      {
+        "doc_key": "tax_exp_sample",
+        "status": "not run"
+      },
+      {
+        "doc_key": "cpi_2025_08",
+        "doc_class": "D_table_heavy",
+        "pages": 13,
+        "engine": "layout_docling",
+        "tier": "needs_layout_model",
+        "device": "cpu",
+        "error": null,
+        "coverage": {
+          "pages": 13,
+          "with_content": 13,
+          "flagged_failed": 0,
+          "silently_missing": 0,
+          "accounted_ratio": 1.0,
+          "content_ratio": 1.0
+        },
+        "extract_seconds": 94.2,
+        "seconds_per_page": 7.25,
+        "total_seconds": 105.28,
+        "chunks": 18,
+        "facts": 166,
+        "cost_usd": 0.0002
+      },
+      {
+        "doc_key": "cpi_2025_03",
+        "status": "not run"
+      },
+      {
+        "doc_key": "cpi_2025_06",
+        "status": "not run"
+      },
+      {
+        "doc_key": "am_audit_findings",
+        "status": "not run"
+      },
+      {
+        "doc_key": "am_procurement",
+        "status": "not run"
+      },
+      {
+        "doc_key": "am_budget",
+        "status": "not run"
+      }
+    ],
+    "figures": {
+      "figures": 27,
+      "intact_on_page_pct": 100.0,
+      "split_digits_pct": 0.0,
+      "missing_pct": 0.0,
+      "wrong_page_pct": 0.0,
+      "row_intact_pct": 92.6,
+      "fact_correct_pct": 77.8,
+      "fact_present_but_wrong_pct": 7.4
+    },
+    "figures_by_class": {
+      "A_annual_report": {
+        "figures": 10,
+        "intact_on_page_pct": 100.0,
+        "split_digits_pct": 0.0,
+        "missing_pct": 0.0,
+        "wrong_page_pct": 0.0,
+        "row_intact_pct": 100.0,
+        "fact_correct_pct": 100.0,
+        "fact_present_but_wrong_pct": 0.0
+      },
+      "C_mixed_technical": {
+        "figures": 12,
+        "intact_on_page_pct": 100.0,
+        "split_digits_pct": 0.0,
+        "missing_pct": 0.0,
+        "wrong_page_pct": 0.0,
+        "row_intact_pct": 100.0,
+        "fact_correct_pct": 66.7,
+        "fact_present_but_wrong_pct": 0.0
+      },
+      "D_table_heavy": {
+        "figures": 5,
+        "intact_on_page_pct": 100.0,
+        "split_digits_pct": 0.0,
+        "missing_pct": 0.0,
+        "wrong_page_pct": 0.0,
+        "row_intact_pct": 60.0,
+        "fact_correct_pct": 60.0,
+        "fact_present_but_wrong_pct": 40.0
+      }
+    },
+    "figure_results": [
+      {
+        "figure_id": "ethiore_profile_2024_25-f01",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "ethiore_profile_2024_25-f02",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "ethiore_profile_2024_25-f03",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "ethiore_profile_2024_25-f04",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "ethiore_profile_2024_25-f05",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "ethiore_profile_2024_25-f06",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "ethiore_profile_2024_25-f07",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "ethiore_profile_2024_25-f08",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "ethiore_profile_2024_25-f09",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "ethiore_profile_2024_25-f10",
+        "doc_key": "ethiore_profile_2024_25",
+        "page": 10,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "A_annual_report",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f01",
+        "doc_key": "cbe_2012_13",
+        "page": 12,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f02",
+        "doc_key": "cbe_2012_13",
+        "page": 12,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f03",
+        "doc_key": "cbe_2012_13",
+        "page": 15,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f04",
+        "doc_key": "cbe_2012_13",
+        "page": 15,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f05",
+        "doc_key": "cbe_2012_13",
+        "page": 16,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": false,
+        "fact_present": false,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f06",
+        "doc_key": "cbe_2012_13",
+        "page": 16,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": false,
+        "fact_present": false,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f07",
+        "doc_key": "cbe_2012_13",
+        "page": 17,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": false,
+        "fact_present": false,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f08",
+        "doc_key": "cbe_2012_13",
+        "page": 17,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": false,
+        "fact_present": false,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f09",
+        "doc_key": "cbe_2012_13",
+        "page": 18,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-f10",
+        "doc_key": "cbe_2012_13",
+        "page": 18,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-c1",
+        "doc_key": "cbe_2012_13",
+        "page": 12,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cbe_2012_13-c2",
+        "doc_key": "cbe_2012_13",
+        "page": 12,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "C_mixed_technical",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cpi_2025_08-m01",
+        "doc_key": "cpi_2025_08",
+        "page": 1,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "D_table_heavy",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cpi_2025_08-m02",
+        "doc_key": "cpi_2025_08",
+        "page": 1,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": false,
+        "fact_present": true,
+        "doc_class": "D_table_heavy",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cpi_2025_08-m03",
+        "doc_key": "cpi_2025_08",
+        "page": 1,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": true,
+        "fact_correct": false,
+        "fact_present": true,
+        "doc_class": "D_table_heavy",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cpi_2025_08-m04",
+        "doc_key": "cpi_2025_08",
+        "page": 2,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": false,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "D_table_heavy",
+        "source": "text_layer"
+      },
+      {
+        "figure_id": "cpi_2025_08-m05",
+        "doc_key": "cpi_2025_08",
+        "page": 2,
+        "on_gold_page": "intact",
+        "on_any_page": "intact",
+        "found_on_page": null,
+        "row_intact": false,
+        "fact_correct": true,
+        "fact_present": true,
+        "doc_class": "D_table_heavy",
+        "source": "text_layer"
+      }
+    ],
+    "pages": {
+      "total": 57,
+      "with_content": 56,
+      "silently_missing": 1,
+      "flagged_failed": 0
+    },
+    "speed_by_engine": {
+      "layout_docling": {
+        "documents": 3,
+        "pages": 57,
+        "seconds_per_page": 6.5,
+        "devices": [
+          "cpu"
+        ]
+      }
+    },
+    "ingest_cost_usd": 0.0006,
+    "ingest_seconds": 386.8
+  },
+  "qa": null
+}
