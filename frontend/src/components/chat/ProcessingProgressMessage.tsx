@@ -7,6 +7,9 @@ interface ProcessingProgressMessageProps {
   fileSizeMb?: string | null;
   uploadState: "idle" | "uploading" | "processing" | "indexed" | "error";
   strategyTier?: string;
+  /** Real progress from the server (0-1) and a label such as "Reading page 4 of 20". */
+  progress?: number;
+  progressLabel?: string;
   onComplete?: () => void;
 }
 
@@ -15,6 +18,8 @@ export default function ProcessingProgressMessage({
   fileSizeMb,
   uploadState,
   strategyTier,
+  progress,
+  progressLabel,
 }: ProcessingProgressMessageProps) {
   const [progressPercent, setProgressPercent] = useState<number>(15);
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -24,20 +29,17 @@ export default function ProcessingProgressMessage({
       setProgressPercent(25);
       setCurrentStep(1);
     } else if (uploadState === "processing") {
-      setProgressPercent(45);
-      setCurrentStep(2);
-      const timer1 = setTimeout(() => {
-        setProgressPercent(75);
-        setCurrentStep(3);
-      }, 1000);
-      return () => clearTimeout(timer1);
+      // Real page progress from the server, not a timer.
+      const p = Math.round(30 + 65 * (progress ?? 0));
+      setProgressPercent(p);
+      setCurrentStep((progress ?? 0) >= 1 ? 4 : (progress ?? 0) > 0 ? 3 : 2);
     } else if (uploadState === "indexed") {
       setProgressPercent(100);
       setCurrentStep(4);
     } else if (uploadState === "error") {
       setProgressPercent(0);
     }
-  }, [uploadState]);
+  }, [uploadState, progress]);
 
   // SVG Circular Ring calculation
   const radius = 28;
@@ -46,9 +48,9 @@ export default function ProcessingProgressMessage({
 
   const steps = [
     { id: 1, label: "Uploading & Validating PDF File" },
-    { id: 2, label: "Automated Triage & Cost Classification" },
-    { id: 3, label: "Multi-Column Layout Extraction & Table Chunking" },
-    { id: 4, label: "PageIndex Tree & Vector Indexing in ChromaDB" },
+    { id: 2, label: "Queued for the reader" },
+    { id: 3, label: progressLabel && uploadState === "processing" ? progressLabel : "Reading pages: text, tables and scans" },
+    { id: 4, label: "Indexing for search (Postgres + pgvector)" },
   ];
 
   return (

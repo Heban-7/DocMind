@@ -1,33 +1,36 @@
 """Docling for the pages that need layout analysis: tables and scans.
 
-Only the selected pages are sent (as a small sub-PDF), the converter is built
-once per process and reused, and every Docling item keeps its box. On digital
-pages the caller replaces Docling's text with the PDF's own words inside each
-box, so numbers are never broken by Docling's parser.
+Only the selected pages are sent (as small sub-PDFs). Work is split into
+batches that several lanes take from one queue; each lane keeps its own
+converters (built once per process, reused for every document) and runs
+single-threaded, which on a small CPU box is faster than one lane with
+several threads. Every Docling item keeps its box. On digital pages the
+caller replaces Docling's text with the PDF's own words inside each box, so
+numbers are never broken by Docling's parser.
 """
 
 from __future__ import annotations
 
 import gc
 import logging
+import os
+import queue
 import shutil
 import tempfile
+import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from src.config import (
-    DOCLING_NUM_THREADS,
-    DOCLING_PAGE_BATCH_CPU,
-    DOCLING_PAGE_BATCH_GPU,
-    EXTRACTION_DEVICE,
-    OCR_LANGUAGES,
-)
+from src.config import OCR_LANGUAGES
+from src.document import device as _dev
 from src.document.model import BBox, Block, BlockType, Table, TableCell
 
 logger = logging.getLogger("docmind.document.docling")
 
-_CONVERTERS: dict[tuple[bool, str], object] = {}
+_CONVERTERS: dict[tuple[bool, str, int], object] = {}
+_CONVERTERS_LOCK = threading.Lock()
 
 _LABELS = {
     "title": BlockType.TITLE,
@@ -59,18 +62,19 @@ class DoclingPage:
 
 
 def _device():
-    from src.extraction._docling_support import _resolve_device
-
-    return _resolve_device(EXTRACTION_DEVICE)
+    return _dev.resolve_device()
 
 
-def _ocr_options(is_gpu: bool):
-    from docling.datamodel.pipeline_options import EasyOcrOptions, TesseractCliOcrOptions
+def tesseract_available() -> bool:
+    return shutil.which("tesseract") is not None
 
-    if shutil.which("tesseract"):
-        return TesseractCliOcrOptions(lang=list(OCR_LANGUAGES), force_full_page_ocr=True), "tesseract"
-    # Without Tesseract there is no Amharic OCR at all; pages are flagged by the caller.
-    return EasyOcrOptions(lang=["en"], force_full_page_ocr=True, use_gpu=is_gpu), "easyocr"
+
+def _ocr_options():
+    from docling.datamodel.pipeline_options import TesseractCliOcrOptions
+
+    # One Tesseract process per lane, one core each.
+    os.environ.setdefault("OMP_THREAD_LIMIT", "1")
+    return TesseractCliOcrOptions(lang=list(OCR_LANGUAGES), force_full_page_ocr=True)
 
 
 def table_mode() -> str:
@@ -89,52 +93,65 @@ def table_mode() -> str:
     return mode
 
 
-def converter(ocr: bool):
-    """One converter per (ocr, table mode), built on first use and kept."""
-    key = (ocr, table_mode())
-    if key in _CONVERTERS:
-        return _CONVERTERS[key]
-    from docling.datamodel.accelerator_options import AcceleratorOptions
-    from docling.datamodel.base_models import InputFormat
-    from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
-    from docling.document_converter import DocumentConverter, PdfFormatOption
+def converter(ocr: bool, lane: int = 0):
+    """One converter per (ocr, table mode, lane), built on first use and kept.
 
-    device, is_gpu = _device()
-    opts = PdfPipelineOptions()
-    opts.accelerator_options = AcceleratorOptions(device=device, num_threads=DOCLING_NUM_THREADS)
-    opts.do_ocr = ocr
-    opts.do_table_structure = True
-    opts.table_structure_options.mode = (
-        TableFormerMode.ACCURATE if key[1] == "accurate" else TableFormerMode.FAST
-    )
-    if ocr:
-        opts.ocr_options, engine = _ocr_options(is_gpu)
-        logger.info("docling OCR engine: %s", engine)
-    conv = DocumentConverter(format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=opts)})
-    _CONVERTERS[key] = conv
-    return conv
+    The PDF is read with pypdfium2 rather than docling-parse: the text Docling
+    reads is replaced by the text layer anyway, and on 2 CPU cores this backend
+    made table pages about 20% faster with the same tables.
+    """
+    key = (ocr, table_mode(), lane)
+    with _CONVERTERS_LOCK:
+        if key in _CONVERTERS:
+            return _CONVERTERS[key]
+        from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+        from docling.datamodel.accelerator_options import AcceleratorOptions
+        from docling.datamodel.base_models import InputFormat
+        from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
+        from docling.document_converter import DocumentConverter, PdfFormatOption
+
+        device, _ = _device()
+        opts = PdfPipelineOptions()
+        opts.accelerator_options = AcceleratorOptions(device=device, num_threads=_dev.threads_per_lane())
+        opts.do_ocr = ocr
+        opts.do_table_structure = True
+        opts.table_structure_options.mode = (
+            TableFormerMode.ACCURATE if key[1] == "accurate" else TableFormerMode.FAST
+        )
+        if ocr:
+            opts.ocr_options = _ocr_options()
+        conv = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=opts, backend=PyPdfiumDocumentBackend)
+            }
+        )
+        _CONVERTERS[key] = conv
+        return conv
 
 
 def ocr_engine_name() -> str:
-    return "tesseract" if shutil.which("tesseract") else "easyocr"
+    return "tesseract" if tesseract_available() else "none"
 
 
 def _batch_size() -> int:
+    """Pages per Docling call: larger calls are faster, smaller ones report progress sooner."""
     _, is_gpu = _device()
-    return max(1, DOCLING_PAGE_BATCH_GPU if is_gpu else DOCLING_PAGE_BATCH_CPU)
+    return max(1, int(os.getenv("DOCMIND_PAGE_BATCH", "8" if is_gpu else "4")))
 
 
 def _write_subset(src: Path, pages: list[int], out: Path) -> None:
     import pypdfium2 as pdfium
+    from docling.utils.locks import pypdfium2_lock  # pdfium is not thread-safe
 
-    doc = pdfium.PdfDocument(str(src))
-    new = pdfium.PdfDocument.new()
-    try:
-        new.import_pages(doc, [p - 1 for p in pages])
-        new.save(str(out))
-    finally:
-        new.close()
-        doc.close()
+    with pypdfium2_lock:
+        doc = pdfium.PdfDocument(str(src))
+        new = pdfium.PdfDocument.new()
+        try:
+            new.import_pages(doc, [p - 1 for p in pages])
+            new.save(str(out))
+        finally:
+            new.close()
+            doc.close()
 
 
 def _to_top_left(bbox, page_height: float) -> BBox:
@@ -216,47 +233,139 @@ def _page_items(document, internal_page: int, original_page: int) -> DoclingPage
     return out
 
 
-def convert_pages(pdf_path: Path, pages: list[int], *, ocr: bool) -> dict[int, DoclingPage]:
-    """Run Docling on ``pages`` (1-indexed) and return items per original page."""
-    results: dict[int, DoclingPage] = {}
-    if not pages:
-        return results
-    conv = converter(ocr)
-    step = _batch_size()
-    with tempfile.TemporaryDirectory() as tmp:
-        for i in range(0, len(pages), step):
-            batch = pages[i : i + step]
-            sub = Path(tmp) / f"pages_{batch[0]}_{batch[-1]}.pdf"
-            started = time.perf_counter()
+def warm_up(*, ocr: bool = True) -> float:
+    """Load every lane's models now (a long-running worker calls this at start).
+
+    Converts one blank page per lane and kind, so the first real document
+    does not pay for loading the layout, table and OCR models.
+    """
+    import pypdfium2 as pdfium
+    from docling.utils.locks import pypdfium2_lock
+
+    started = time.perf_counter()
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        blank = Path(tmp) / "blank.pdf"
+        with pypdfium2_lock:
+            doc = pdfium.PdfDocument.new()
             try:
-                _write_subset(pdf_path, batch, sub)
-                res = conv.convert(sub, raises_on_error=False)
-                document = res.document
-                scores = {}
-                conf = getattr(res, "confidence", None)
-                for internal, original in enumerate(batch, start=1):
-                    if internal not in document.pages:
-                        results[original] = DoclingPage(error="docling returned no page")
-                        continue
-                    page = _page_items(document, internal, original)
-                    if conf is not None and getattr(conf, "pages", None):
-                        pc = conf.pages.get(internal - 1) or conf.pages.get(internal)
-                        if pc is not None:
-                            scores = {
-                                k: float(getattr(pc, k).value if hasattr(getattr(pc, k), "value") else getattr(pc, k))
-                                for k in ("parse_score", "layout_score", "table_score", "ocr_score")
-                                if getattr(pc, k, None) is not None
-                            }
-                    page.scores = {k: v for k, v in scores.items() if v == v}  # drop NaN
-                    results[original] = page
-            except Exception as exc:  # one bad batch must not lose the others
-                logger.warning("docling failed on pages %s: %s", batch, exc)
-                for original in batch:
-                    results[original] = DoclingPage(error=f"{type(exc).__name__}: {exc}")
+                doc.new_page(595, 842)
+                doc.save(str(blank))
             finally:
-                elapsed = (time.perf_counter() - started) / max(1, len(batch))
-                for original in batch:
-                    if original in results:
-                        results[original].scores.setdefault("seconds", elapsed)
-                gc.collect()
+                doc.close()
+        kinds = [False, True] if ocr and tesseract_available() else [False]
+
+        def load(lane: int) -> None:
+            for kind in kinds:
+                try:
+                    converter(kind, lane).convert(blank, raises_on_error=False)
+                except Exception as exc:  # warming is an optimisation only
+                    logger.warning("warm-up failed (lane %s, ocr=%s): %s", lane, kind, exc)
+
+        threads = [threading.Thread(target=load, args=(i,), daemon=True) for i in range(_dev.lanes())]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    return time.perf_counter() - started
+
+
+def _convert_batch(conv, pdf_path: Path, batch: list[int], tmp: Path) -> dict[int, DoclingPage]:
+    results: dict[int, DoclingPage] = {}
+    sub = tmp / f"pages_{batch[0]}_{batch[-1]}_{threading.get_ident()}.pdf"
+    started = time.perf_counter()
+    try:
+        _write_subset(pdf_path, batch, sub)
+        res = conv.convert(sub, raises_on_error=False)
+        document = res.document
+        conf = getattr(res, "confidence", None)
+        for internal, original in enumerate(batch, start=1):
+            if internal not in document.pages:
+                results[original] = DoclingPage(error="docling returned no page")
+                continue
+            page = _page_items(document, internal, original)
+            scores = {}
+            if conf is not None and getattr(conf, "pages", None):
+                pc = conf.pages.get(internal - 1) or conf.pages.get(internal)
+                if pc is not None:
+                    scores = {
+                        k: float(getattr(pc, k).value if hasattr(getattr(pc, k), "value") else getattr(pc, k))
+                        for k in ("parse_score", "layout_score", "table_score", "ocr_score")
+                        if getattr(pc, k, None) is not None
+                    }
+            page.scores = {k: v for k, v in scores.items() if v == v}  # drop NaN
+            results[original] = page
+    except Exception as exc:  # one bad batch must not lose the others
+        logger.warning("docling failed on pages %s: %s", batch, exc)
+        for original in batch:
+            results[original] = DoclingPage(error=f"{type(exc).__name__}: {exc}")
+    finally:
+        elapsed = (time.perf_counter() - started) / max(1, len(batch))
+        for original in batch:
+            if original in results:
+                results[original].scores.setdefault("seconds", elapsed)
+        try:
+            sub.unlink(missing_ok=True)
+        except OSError:  # Windows: still open; the temp folder is removed later
+            pass
+        gc.collect()
     return results
+
+
+def convert_pages(
+    pdf_path: Path,
+    table_pages: list[int],
+    ocr_pages: list[int],
+    *,
+    on_page_done: Callable[[int], None] | None = None,
+    lanes: int | None = None,
+) -> tuple[dict[int, DoclingPage], dict[int, DoclingPage]]:
+    """Run Docling on the table pages (no OCR) and the scanned pages (OCR).
+
+    Returns ``(table_results, ocr_results)`` keyed by original page number.
+    ``on_page_done`` is called once per finished page, from a worker thread.
+    """
+    tables: dict[int, DoclingPage] = {}
+    ocrs: dict[int, DoclingPage] = {}
+    if not table_pages and not ocr_pages:
+        return tables, ocrs
+    want_lanes = lanes or _dev.lanes()
+    work: queue.Queue = queue.Queue()
+    # Scans first: they are the slowest pages, so lanes finish closer together.
+    for ocr, pages in ((True, ocr_pages), (False, table_pages)):
+        # Small page sets are split so that every lane gets a share.
+        step = max(1, min(_batch_size(), -(-len(pages) // want_lanes)))
+        for i in range(0, len(pages), step):
+            work.put((ocr, pages[i : i + step]))
+    n_lanes = max(1, min(want_lanes, work.qsize()))
+    lock = threading.Lock()
+    errors: list[BaseException] = []
+
+    def lane(index: int, tmp: Path) -> None:
+        while True:
+            try:
+                ocr, batch = work.get_nowait()
+            except queue.Empty:
+                return
+            try:
+                out = _convert_batch(converter(ocr, index), pdf_path, batch, tmp)
+            except BaseException as exc:  # e.g. a model failed to load
+                errors.append(exc)
+                out = {p: DoclingPage(error=f"{type(exc).__name__}: {exc}") for p in batch}
+            with lock:
+                (ocrs if ocr else tables).update(out)
+            if on_page_done is not None:
+                for p in batch:
+                    on_page_done(p)
+
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        if n_lanes == 1:
+            lane(0, Path(tmp))
+        else:
+            threads = [threading.Thread(target=lane, args=(i, Path(tmp)), daemon=True) for i in range(n_lanes)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+    if errors:
+        logger.warning("docling lane errors: %s", errors[0])
+    return tables, ocrs

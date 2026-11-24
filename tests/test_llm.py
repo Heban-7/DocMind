@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 
 from src.agents.domain import (
+    DomainHint,
     FallbackDomainClassifier,
     KeywordDomainClassifier,
     LlmDomainClassifier,
@@ -21,7 +22,6 @@ from src.llm import factory, registry
 from src.llm.base import LLMClient, LLMResult
 from src.llm.providers._openai_compatible import _to_openai_messages
 from src.llm.providers.gemini import _to_gemini
-from src.models.document_profile import DomainHint
 
 
 # --- Registry ---------------------------------------------------------------

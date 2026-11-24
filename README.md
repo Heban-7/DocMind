@@ -70,20 +70,19 @@ DocMind resolves these failure modes through an **Agentic 5-Stage Refinery Archi
 
 ```mermaid
 flowchart TD
-    subgraph INGESTION ["STAGE 1: TRIAGE & ROUTING"]
-        A[Raw Document PDF] --> B[Document Triage Agent]
-        B -->|Heuristic & Visual Signals| C{Triage Classification}
-        C -->|Low Complexity / Clean Digital| S1[Strategy A: FastText]
-        C -->|Multi-Column / Tabular| S2[Strategy B: Layout-Aware / Docling]
-        C -->|Scanned / Degraded / Form| S3[Strategy C: Vision VLM]
+    subgraph INGESTION ["STAGE 1: UPLOAD & QUEUE"]
+        A[PDF upload] -->|202 in milliseconds| Q0[(Postgres job queue)]
+        Q0 --> W[Ingest worker: separate process, models loaded once]
     end
 
-    subgraph EXTRACTION ["STAGE 2: CONFIDENCE-GATED EXTRACTION"]
-        S1 --> G{Confidence Guard}
-        S2 --> G
-        S3 --> G
-        G -->|Confidence < Threshold| S3
-        G -->|Verified| D[Standardized Extraction Document]
+    subgraph EXTRACTION ["STAGE 2: PAGE-LEVEL EXTRACTION"]
+        W --> R{Route every page}
+        R -->|clean text layer| S1[Text layer: columns, headings]
+        R -->|table on the page| S2[Docling layout + TableFormer, cells re-read from the text layer]
+        R -->|scan or broken text| S3[Docling + Tesseract OCR amh+eng]
+        S3 -->|nothing readable| S4[Vision model, flagged for review]
+        S1 -->|quick index: searchable in seconds| D
+        S2 & S3 & S4 -->|parallel lanes, progress per page| D[Structured document model + per-page ledger]
     end
 
     subgraph REFINERY ["STAGE 3 & 4: CHUNKING & PAGEINDEX"]
@@ -111,15 +110,13 @@ flowchart TD
 
 ## ⚡ 8 Core Engine Capabilities
 
-### 1. Intelligent Document Triage & Cost Routing
-- **Deterministic Signal Analysis**: Extracts font density, image ratio, table bounding box candidate areas, and layout entropy to categorize documents into `clean_digital`, `complex_layout`, or `scanned_image`.
-- **Cost Optimization Engine**: Routes low-entropy digital documents to ultra-fast local extractors ($0.0001/page) while reserving GPU-accelerated layout models and Vision LLMs ($0.02/page) exclusively for high-entropy scanned pages.
+### 1. Background Ingest with Live Progress
+- **Uploads Return at Once**: The API stores the PDF, queues a job in Postgres and answers `202` in milliseconds; a separate worker process reads it. Workers claim jobs with `FOR UPDATE SKIP LOCKED`, renew a lease while they work, and a job whose worker died is picked up again; failures are retried, then reported.
+- **Searchable Early, Ready Soon**: Every page's text layer is indexed first, so questions can use a document within seconds, while table and scanned pages are read in parallel lanes. `GET /documents/{id}` and `/documents/{id}/events` report the stage and pages done.
 
-### 2. Confidence-Gated Multi-Strategy Extraction
-- **Strategy A (FastText / PyMuPDF)**: Sub-second high-throughput text stream extraction for structured digital documents.
-- **Strategy B (Layout-Aware / Docling / MinerU)**: Preserves reading order across arbitrary column boundaries and extracts tabular grids into Markdown/HTML strings.
-- **Strategy C (Vision VLM / Claude 3.5 Sonnet / GPT-4o)**: Deep visual parsing for scanned, skewed, or degraded historical archives.
-- **Automated Escalation Guard**: Evaluates extraction confidence metrics (OCR character ambiguity, layout misalignment); automatically re-routes failed pages to higher-tier strategies.
+### 2. Page-Level Extraction with Quality Checks
+- **Each Page Routed on Its Own**: Clean text pages are read from the PDF's text layer (columns and headings kept); pages with tables go to Docling layout and TableFormer with every cell re-read from the text layer, so numbers are never split; scans go to Tesseract OCR (Amharic and English).
+- **Nothing Dropped Silently**: Pages that end without readable text, picture-only pages and low-confidence OCR are flagged for review, and a per-page ledger records engine, confidence, time and cost.
 
 ### 3. Context-Aware Semantic Chunking (Logical Document Units)
 - **Chunking Constitution**: Replaces naive 512-token windows with Logical Document Units (LDUs).
@@ -164,13 +161,13 @@ The benchmark figures previously shown here were not produced by a reproducible 
 ```ascii
 DocMind/
 ├── src/                     # Python backend (FastAPI + LangGraph)
-│   ├── agents/              # Triage, query agent, intent router, audit agent, prompts
+│   ├── agents/              # Query agent, intent router, audit agent, prompts
 │   ├── api/                 # FastAPI app, routes, auth
 │   ├── chunking/            # Logical Document Unit chunker
 │   ├── db/                  # Postgres pool, migrations (row-level security), repositories
 │   ├── document/            # V2 structured document model and page-level extraction
-│   ├── extraction/          # V1 engines (Docling, MinerU, vision) kept for the CLI
 │   ├── facts/               # FactTable extraction
+│   ├── jobs/                # Postgres job queue and the ingest worker
 │   ├── llm/                 # Provider clients and model registry
 │   ├── models/              # Pydantic schemas
 │   ├── pageindex/           # PageIndex builder and navigation
@@ -227,7 +224,9 @@ uv sync
 # The API applies database migrations when it starts. To apply them by hand:
 uv run python -m src.db.migrate
 
-# Launch FastAPI development server on port 8000
+# Launch FastAPI development server on port 8000. For local development it
+# also starts the ingest worker as a child process (DOCMIND_EMBEDDED_WORKER=1);
+# in production run the worker on its own: uv run python -m src.jobs.worker
 uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -264,9 +263,13 @@ curl -X POST http://127.0.0.1:8000/api/auth/login \
 
 ### 2. Ingest Document PDF
 ```bash
+# Returns 202 at once with the document id and status "queued"
 curl -X POST http://127.0.0.1:8000/upload \
   -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>" \
   -F "file=@data/sample.pdf"
+
+# Progress: status, stage, pages_done, searchable
+curl http://127.0.0.1:8000/documents/<DOCUMENT_ID> -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
 ```
 
 ### 3. Stream Conversational Query with Provenance

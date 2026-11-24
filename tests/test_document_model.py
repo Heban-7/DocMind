@@ -166,3 +166,36 @@ def test_ledger_has_one_row_per_page():
     model = DocumentModel(doc_id="d", file_name="f.pdf", sha256="s", page_count=2, pages=pages)
     ledger = model.ledger()
     assert [r["page"] for r in ledger] == [1, 2] and ledger[1]["needs_review"] and ledger[1]["flags"] == ["x"]
+
+
+# --- M4: preview model and picture-only pages -------------------------------
+
+
+def test_preview_model_reads_text_pages_and_leaves_scans_for_later():
+    from pathlib import Path
+
+    tl = _tl([W("Revenue", 50, 100), W("grew", 110, 100), W("strongly", 150, 100), W("this", 210, 100), W("year", 250, 100)])
+    tri = ex.Triage(pdf_path=Path("r.pdf"), sha="a" * 64, n_pages=3)
+    tri.routes = {1: "text", 2: "docling", 3: "ocr"}
+    tri.layers = {1: tl, 2: tl}
+    tri.sizes = {n: (600.0, 800.0) for n in (1, 2, 3)}
+    model = ex.preview_model(tri)
+    assert [p.number for p in model.pages] == [1, 2, 3]
+    assert "Revenue" in model.pages[0].body_text() and "Revenue" in model.pages[1].body_text()
+    assert model.pages[2].blocks == [] and model.pages[2].quality.engine == "none"
+    assert model.extractor == "docmind-v2-preview"
+
+
+def test_picture_only_page_is_rendered_as_failed_not_as_content():
+    page = _page(1, blocks=[Block(block_id="p1-b0", type=BlockType.TEXT, text="MODMDODODOG")],
+                 flags=["little or no readable text: picture-only page?"])
+    md = render_markdown(DocumentModel(doc_id="d", file_name="f.pdf", sha256="s", page_count=1, pages=[page]))
+    assert "<!-- page 1 failed: little or no readable text" in md
+
+
+def test_extraction_runtime_dependencies_are_installed():
+    """Docling imports OpenCV only when a page is converted, and does not declare it."""
+    import importlib
+
+    for name in ("cv2", "pypdfium2", "pdfplumber", "docling.document_converter", "docling.backend.pypdfium2_backend"):
+        importlib.import_module(name)

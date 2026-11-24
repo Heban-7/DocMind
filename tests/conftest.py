@@ -24,6 +24,7 @@ os.environ["DOCMIND_REFINERY_DIR"] = os.path.join(_TEST_ROOT, "refinery")
 os.environ["DOCMIND_STORAGE_DIR"] = os.path.join(_TEST_ROOT, "storage")
 os.environ["JWT_SECRET_KEY"] = "test-only-secret-not-for-production-" + "x" * 32
 os.environ["LANGSMITH_TRACING"] = "false"
+os.environ["DOCMIND_EMBEDDED_WORKER"] = "0"  # tests run jobs in-process (src.jobs.worker.run_once)
 
 _TEST_DB_URL = os.getenv(
     "DOCMIND_TEST_DATABASE_URL",

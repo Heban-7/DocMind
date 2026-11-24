@@ -1,15 +1,5 @@
 """Pydantic schemas for the DocMind Refinery pipeline."""
 
-from src.models.document_profile import (
-    DocumentProfile,
-    DocumentSignals,
-    DomainHint,
-    ExtractionCost,
-    LanguageGuess,
-    LayoutComplexity,
-    OriginType,
-    PageSignals,
-)
 from src.models.page_index import PageIndex, SectionNode
 from src.models.provenance import BoundingBox, Citation, ProvenanceChain
 from src.models.query import (
@@ -21,14 +11,6 @@ from src.models.query import (
 )
 
 __all__ = [
-    "DocumentProfile",
-    "DocumentSignals",
-    "DomainHint",
-    "ExtractionCost",
-    "LanguageGuess",
-    "LayoutComplexity",
-    "OriginType",
-    "PageSignals",
     "PageIndex",
     "SectionNode",
     "BoundingBox",

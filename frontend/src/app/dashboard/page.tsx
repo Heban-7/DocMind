@@ -20,7 +20,7 @@ export default function DashboardPage() {
 
   // All custom hooks called unconditionally at top level
   const { messages, isLoading, error: chatError, threadId, activeDocId, send, loadThread, newChat } = useChat();
-  const { uploadState, uploadingThreadId, selectedFile, error: uploadError, upload, getThreadDocument, setThreadDocument } = useUpload();
+  const { uploadState, uploadingThreadId, selectedFile, error: uploadError, upload, getThreadDocument, setThreadDocument, progress, progressLabel } = useUpload();
   const { threads, refresh: refreshThreads } = useThreads();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [federatedSearch, setFederatedSearch] = useState(false);
@@ -157,6 +157,8 @@ export default function DashboardPage() {
                 fileName={activeDoc?.file_name || (isCurrentThreadUploading ? selectedFile?.name : null) || "Document.pdf"}
                 fileSizeMb={selectedFile && isCurrentThreadUploading ? (selectedFile.size / (1024 * 1024)).toFixed(2) : null}
                 uploadState={isCurrentThreadUploading ? uploadState : "indexed"}
+                progress={isCurrentThreadUploading ? progress : 1}
+                progressLabel={isCurrentThreadUploading ? progressLabel : ""}
                 strategyTier={activeDoc?.strategy_tier}
               />
             )}

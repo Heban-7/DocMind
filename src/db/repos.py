@@ -100,11 +100,20 @@ class DocumentRow:
     stats: dict[str, Any]
     error: str | None
     created_at: datetime
+    stage: str = ""
+    pages_done: int = 0
+    searchable: bool = False
+
+    @property
+    def progress(self) -> float:
+        if self.status == "ready":
+            return 1.0
+        return round(min(1.0, self.pages_done / self.page_count), 3) if self.page_count else 0.0
 
 
 _DOC_COLUMNS = (
     "id, sha256, file_name, page_count, status, storage_key, model_key, pages_needing_review,"
-    " domain_hint, stats, error, created_at"
+    " domain_hint, stats, error, created_at, stage, pages_done, searchable"
 )
 
 
@@ -127,13 +136,35 @@ def create_document(
     sha256: str,
     file_name: str,
     storage_key: str,
+    status: str = "processing",
+    page_count: int = 0,
+    enqueue: bool = False,
 ) -> DocumentRow:
+    """Create the document row; with ``enqueue`` also add its ingest job, atomically."""
     with tenant_tx(principal.tenant_id) as conn:
         row = conn.execute(
-            "INSERT INTO documents (id, sha256, file_name, storage_key, status, created_by)"
-            f" VALUES (%s, %s, %s, %s, 'processing', %s) RETURNING {_DOC_COLUMNS}",
-            (document_id, sha256, file_name, storage_key, principal.user_id),
+            "INSERT INTO documents (id, sha256, file_name, storage_key, status, page_count, created_by, stage)"
+            f" VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING {_DOC_COLUMNS}",
+            (document_id, sha256, file_name, storage_key, status, page_count, principal.user_id, status),
         ).fetchone()
+        if enqueue:
+            from src.jobs.queue import enqueue as add_job
+
+            add_job(principal.tenant_id, document_id, conn=conn)
+    return _doc(row)
+
+
+def requeue_document(principal: Principal, document_id: str, *, file_name: str) -> DocumentRow:
+    """A failed document uploaded again: queue a fresh ingest job for it."""
+    with tenant_tx(principal.tenant_id) as conn:
+        row = conn.execute(
+            "UPDATE documents SET status = 'queued', stage = 'queued', error = NULL, pages_done = 0,"
+            f" file_name = %s, updated_at = now() WHERE id = %s RETURNING {_DOC_COLUMNS}",
+            (file_name, document_id),
+        ).fetchone()
+        from src.jobs.queue import enqueue as add_job
+
+        add_job(principal.tenant_id, document_id, conn=conn)
     return _doc(row)
 
 
@@ -168,21 +199,45 @@ def list_documents(tenant_id: str, *, ready_only: bool = False) -> list[Document
     return [_doc(r) for r in rows]
 
 
-def mark_document_processing(tenant_id: str, document_id: str, *, file_name: str) -> None:
+def mark_document_processing(tenant_id: str, document_id: str, *, file_name: str | None = None) -> None:
     with tenant_tx(tenant_id) as conn:
         conn.execute(
-            "UPDATE documents SET status = 'processing', error = NULL, file_name = %s, updated_at = now()"
-            " WHERE id = %s",
+            "UPDATE documents SET status = 'processing', error = NULL, file_name = coalesce(%s, file_name),"
+            " updated_at = now() WHERE id = %s",
             (file_name, document_id),
         )
 
 
-def mark_document_failed(tenant_id: str, document_id: str, error: str) -> None:
+def set_progress(tenant_id: str, document_id: str, *, stage: str, pages_done: int, page_count: int | None = None) -> None:
     with tenant_tx(tenant_id) as conn:
         conn.execute(
-            "UPDATE documents SET status = 'failed', error = %s, updated_at = now() WHERE id = %s",
-            (error[:2000], document_id),
+            "UPDATE documents SET stage = %s, pages_done = %s, page_count = coalesce(%s, page_count),"
+            " updated_at = now() WHERE id = %s",
+            (stage, pages_done, page_count, document_id),
         )
+
+
+def mark_searchable(tenant_id: str, document_id: str) -> None:
+    """The quick index is in place: answers may use this document already."""
+    with tenant_tx(tenant_id) as conn:
+        conn.execute("UPDATE documents SET searchable = true, updated_at = now() WHERE id = %s", (document_id,))
+
+
+def mark_document_failed(tenant_id: str, document_id: str, error: str, *, final: bool = True) -> None:
+    """Record an error; ``final=False`` keeps the document queued for a retry."""
+    with tenant_tx(tenant_id) as conn:
+        if final:
+            conn.execute(
+                "UPDATE documents SET status = 'failed', stage = 'failed', searchable = false, error = %s,"
+                " updated_at = now() WHERE id = %s",
+                (error[:2000], document_id),
+            )
+        else:
+            conn.execute(
+                "UPDATE documents SET status = 'queued', stage = 'retrying', error = %s, updated_at = now()"
+                " WHERE id = %s",
+                (error[:2000], document_id),
+            )
 
 
 def mark_document_ready(
@@ -220,8 +275,9 @@ def mark_document_ready(
             )
         conn.execute(
             "UPDATE documents SET status = 'ready', error = NULL, page_count = %s, model_key = %s,"
-            " pages_needing_review = %s, domain_hint = %s, stats = %s, updated_at = now() WHERE id = %s",
-            (page_count, model_key, needing_review, domain_hint, Jsonb(stats or {}), document_id),
+            " pages_needing_review = %s, domain_hint = %s, stats = %s, stage = 'done', pages_done = %s,"
+            " searchable = true, updated_at = now() WHERE id = %s",
+            (page_count, model_key, needing_review, domain_hint, Jsonb(stats or {}), page_count, document_id),
         )
 
 

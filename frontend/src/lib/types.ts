@@ -55,12 +55,26 @@ export interface ChatResponse {
   provenance: ProvenanceCitation[];
 }
 
-export interface UploadResponse {
+/** Live processing state of a document (the worker reads it in the background). */
+export interface DocumentProgress {
+  /** queued | processing | indexed | failed */
+  status: string;
+  /** queued | reading | layout | indexing | done | retrying | failed */
+  stage?: string;
+  pages_done?: number;
+  /** 0-1 */
+  progress?: number;
+  /** questions can already use the document */
+  searchable?: boolean;
+  error?: string | null;
+}
+
+export interface UploadResponse extends DocumentProgress {
   document_id: string;
   file_name: string;
   page_count: number;
   strategy_tier: string;
-  status: string;
+  deduplicated?: boolean;
 }
 
 export interface HistoryMessage {
@@ -87,12 +101,11 @@ export interface ThreadListResponse {
   threads: ThreadSummary[];
 }
 
-export interface DocumentInfo {
+export interface DocumentInfo extends DocumentProgress {
   document_id: string;
   file_name: string;
   page_count: number;
   strategy_tier: string;
-  status: string;
 }
 
 export interface DocumentListResponse {

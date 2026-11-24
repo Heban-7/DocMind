@@ -6,6 +6,7 @@ import type {
   UploadResponse,
   HistoryResponse,
   ThreadListResponse,
+  DocumentInfo,
   DocumentListResponse,
   TokenResponse,
   UserProfile,
@@ -146,6 +147,19 @@ export async function uploadDocument(file: File): Promise<UploadResponse> {
     }
     const data = await res.json().catch(() => null);
     throw new Error(parseApiError(data, res.status, "Upload failed"));
+  }
+  return res.json();
+}
+
+/** Current status and progress of one document. */
+export async function fetchDocumentStatus(docId: string): Promise<DocumentInfo> {
+  const token = getStoredToken();
+  const res = await fetch(`${API_BASE}/documents/${encodeURIComponent(docId)}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(parseApiError(data, res.status, "Status check failed"));
   }
   return res.json();
 }

@@ -18,8 +18,19 @@ import logging
 import re
 from typing import Protocol, runtime_checkable
 
+from enum import Enum
+
 from src.config import Thresholds
-from src.models.document_profile import DomainHint
+
+
+class DomainHint(str, Enum):
+    """Subject-matter hint shown to the document router."""
+
+    FINANCIAL = "financial"
+    LEGAL = "legal"
+    TECHNICAL = "technical"
+    MEDICAL = "medical"
+    GENERAL = "general"
 
 logger = logging.getLogger("docmind.domain")
 

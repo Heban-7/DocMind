@@ -39,6 +39,17 @@ python -m evaluation.run score   --run runs/m3 --name "M3" --publish m3-postgres
 
 `--publish` copies the report to `reports/`. The corpus folder defaults to `data/data` (override with `DOCMIND_CORPUS_DIR`). Set `DOCMIND_EVAL_REUSE_MODELS` to a folder of saved document models to skip extraction when only later stages changed (see `systems/current.py`).
 
+### Speed on a small server
+
+```bash
+# the product as it ships: API + worker processes pinned to 2 CPU cores, CPU only
+python -m evaluation.speed --mode worker --run runs/m4-speed/after
+# older code where the upload request ran the whole ingest (e.g. an export of commit 920d19b)
+python -m evaluation.speed --mode sync --code <folder> --run runs/m4-speed/before --env DOCMIND_NUM_THREADS=2
+```
+
+Each run gets a fresh database. It records time to ready, time until the document is first searchable, and API latency (`/health` and a database read every 250 ms) while the document is read.
+
 The V1 baseline (`reports/v1-baseline.*`) and the M2 run (`reports/m2-v2-extraction.*`) were produced with systems `v1` and `v2`, which were removed with the old storage in M3; check out commit `9d8509f` to rerun them.
 
 ## Metrics

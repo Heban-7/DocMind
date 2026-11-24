@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { uploadDocument } from "@/lib/api";
+import { fetchDocumentStatus, uploadDocument } from "@/lib/api";
 import type { UploadedDocument, UploadState, DocumentInfo } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 
@@ -12,6 +12,10 @@ interface UploadContextType {
   uploadingThreadId: string | null;
   selectedFile: File | null;
   error: string | null;
+  /** Real progress reported by the server while the document is read (0-1). */
+  progress: number;
+  /** e.g. "Reading page 40 of 161" */
+  progressLabel: string;
   threadDocMap: Record<string, UploadedDocument>;
   upload: (file: File, threadId?: string) => Promise<UploadedDocument | null>;
   setThreadDocument: (threadId: string, doc: UploadedDocument | DocumentInfo) => void;
@@ -29,6 +33,8 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
   const [uploadingThreadId, setUploadingThreadId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number>(0);
+  const [progressLabel, setProgressLabel] = useState<string>("");
   const [threadDocMap, setThreadDocMap] = useState<Record<string, UploadedDocument>>({});
 
   // Load persisted thread documents on mount or user change
@@ -84,15 +90,40 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
-      setUploadState("processing");
+      setProgress(0);
+      setProgressLabel("Uploading");
       const res = await uploadDocument(file);
+      setUploadState("processing");
+
+      // The upload returns at once; the worker reads the PDF in the background.
+      let info = res as { status: string; stage?: string; pages_done?: number; page_count: number; progress?: number; error?: string | null; strategy_tier: string };
+      const started = Date.now();
+      while (info.status !== "indexed" && info.status !== "failed") {
+        const stage = info.stage || info.status;
+        setProgress(info.progress ?? 0);
+        setProgressLabel(
+          stage === "queued" ? "Waiting for a worker" :
+          stage === "reading" ? `Reading page ${info.pages_done ?? 0} of ${info.page_count}` :
+          stage === "layout" ? `Tables and scans: ${info.pages_done ?? 0} of ${info.page_count} pages` :
+          stage === "indexing" ? "Indexing" :
+          stage === "retrying" ? "Retrying after an error" : "Processing"
+        );
+        if (Date.now() - started > 60 * 60 * 1000) throw new Error("Processing is taking longer than an hour");
+        await new Promise((r) => setTimeout(r, 1500));
+        info = await fetchDocumentStatus(res.document_id);
+      }
+      if (info.status === "failed") {
+        throw new Error(info.error || "The document could not be processed");
+      }
+      setProgress(1);
+      setProgressLabel("Ready");
 
       const doc: UploadedDocument = {
         document_id: res.document_id,
         file_name: res.file_name,
-        page_count: res.page_count,
-        strategy_tier: res.strategy_tier,
-        status: res.status,
+        page_count: info.page_count,
+        strategy_tier: info.strategy_tier,
+        status: info.status,
         uploadedAt: Date.now(),
       };
 
@@ -123,6 +154,8 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         uploadingThreadId,
         selectedFile,
         error,
+        progress,
+        progressLabel,
         threadDocMap,
         upload,
         setThreadDocument,

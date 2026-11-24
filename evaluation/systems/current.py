@@ -53,11 +53,10 @@ def _principal():
 
 
 def _device() -> str:
-    from src.config import EXTRACTION_DEVICE
-    from src.extraction._docling_support import _resolve_device
+    from src.document.device import lanes, resolve_device
 
-    dev, _ = _resolve_device(EXTRACTION_DEVICE)
-    return str(dev.value if hasattr(dev, "value") else dev)
+    dev, _ = resolve_device()
+    return f"{dev.value if hasattr(dev, 'value') else dev} x{lanes()} lanes"
 
 
 def _reused_model(pdf_path: Path):

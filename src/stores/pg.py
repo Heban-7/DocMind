@@ -1,8 +1,9 @@
 """Postgres stores. Every query runs inside ``tenant_tx``, so row-level security
 limits it to one tenant's rows; the stores never filter by tenant themselves.
 
-Only documents whose status is ``ready`` are searchable, so a document that is
-still being indexed (or failed half way) never shows up in answers.
+Only documents marked ``searchable`` are searched: a document becomes
+searchable once its first quick index is complete (see src/pipeline/ingest.py),
+never while its chunks are half written.
 """
 
 from __future__ import annotations
@@ -91,9 +92,26 @@ class PgChunkStore(_TenantBound):
                 )
         return len(rows)
 
+    def existing_embeddings(self, doc_id: str) -> dict[str, list[float]]:
+        """Vectors already stored for this document, by chunk content hash."""
+        did = as_uuid(doc_id)
+        if did is None:
+            return {}
+        with tenant_tx(self.tenant_id) as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT ON (content_hash) content_hash, embedding FROM chunks"
+                " WHERE document_id = %s AND embedding IS NOT NULL",
+                (did,),
+            ).fetchall()
+        out: dict[str, list[float]] = {}
+        for r in rows:
+            v = r["embedding"]  # a pgvector Vector, or a numpy array, depending on the adapter
+            out[r["content_hash"]] = [float(x) for x in (v.to_list() if hasattr(v, "to_list") else v)]
+        return out
+
     def query(self, query_embedding, *, doc_id: str | None = None, top_k: int = 7) -> list[RetrievedChunk]:
         params: list = [_vec(query_embedding)]
-        where = "d.status = 'ready' AND c.embedding IS NOT NULL"
+        where = "d.searchable AND c.embedding IS NOT NULL"
         if doc_id is not None:
             did = as_uuid(doc_id)
             if did is None:
@@ -179,7 +197,7 @@ class PgFactStore(_TenantBound):
         return int(row["n"])
 
     def search(self, *, doc_id=None, metric_contains=None, period_contains=None, limit=50) -> list[FactRecord]:
-        clauses = ["d.status = 'ready'"]
+        clauses = ["d.searchable"]
         params: list = []
         if doc_id is not None:
             did = as_uuid(doc_id)

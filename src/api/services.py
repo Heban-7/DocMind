@@ -35,21 +35,21 @@ from src.db import repos
 from src.db.repos import AccessDeniedError, DocumentRow, Principal, ThreadRow
 from src.llm.factory import get_text_client
 from src.models.intent import CorpusDocument
-from src.pipeline.ingest import ingest_document
+from src.pipeline.ingest import submit_document
 from src.storage.blobs import get_blob_store
 from src.stores.pg import as_uuid, pg_stores
 
 logger = logging.getLogger("docmind.api")
 
-__all__ = ["AccessDeniedError"]
+__all__ = ["AccessDeniedError", "DocumentNotReadyError"]
+
+
+class DocumentNotReadyError(RuntimeError):
+    """The pinned document cannot be searched yet (still being read, or failed)."""
 
 
 def _max_upload_bytes() -> int:
     return int(float(os.getenv("DOCMIND_MAX_UPLOAD_MB", "50")) * 1024 * 1024)
-
-
-def _skip_embed() -> bool:
-    return os.getenv("DOCMIND_API_SKIP_EMBED", "").lower() in {"1", "true", "yes"}
 
 
 def _status_label(doc: DocumentRow | str) -> str:
@@ -70,6 +70,11 @@ def _doc_info(doc: DocumentRow) -> DocumentInfo:
         strategy_tier=_engines_label((doc.stats or {}).get("engines") or {}),
         status=_status_label(doc),
         pages_needing_review=doc.pages_needing_review,
+        stage=doc.stage,
+        pages_done=doc.pages_done,
+        progress=doc.progress,
+        searchable=doc.searchable,
+        error=doc.error if doc.status == "failed" else None,
     )
 
 
@@ -109,26 +114,30 @@ def _display_name(name: str) -> str:
 
 
 def process_upload(file: UploadFile, *, principal: Principal) -> UploadResponse:
-    """Store the PDF and index it for the caller's tenant."""
+    """Store the PDF and queue it for the worker; returns in milliseconds.
+
+    Follow progress with ``GET /documents/{id}`` or ``/documents/{id}/events``.
+    """
     folder = Path(tempfile.mkdtemp(prefix="docmind-upload-"))
     try:
         path = _spool_upload(file, folder)
-        result = ingest_document(
-            path,
-            principal=principal,
-            file_name=_display_name(file.filename or ""),
-            embed=not _skip_embed(),
-        )
+        result = submit_document(path, principal=principal, file_name=_display_name(file.filename or ""))
     finally:
         shutil.rmtree(folder, ignore_errors=True)
+    doc = repos.require_document(principal.tenant_id, result.document_id)
+    info = _doc_info(doc)
     return UploadResponse(
-        document_id=result.document_id,
-        file_name=result.file_name,
-        page_count=result.page_count,
-        strategy_tier=_engines_label(result.engines or (result.stats or {}).get("engines") or {}),
-        status=_status_label(result.status),
-        pages_needing_review=result.pages_needing_review,
+        document_id=info.document_id,
+        file_name=info.file_name,
+        page_count=info.page_count,
+        strategy_tier=info.strategy_tier,
+        status=info.status,
+        pages_needing_review=info.pages_needing_review,
         deduplicated=result.deduplicated,
+        stage=info.stage,
+        pages_done=info.pages_done,
+        progress=info.progress,
+        searchable=info.searchable,
     )
 
 
@@ -137,6 +146,27 @@ def process_upload(file: UploadFile, *, principal: Principal) -> UploadResponse:
 
 def list_documents(*, principal: Principal) -> DocumentListResponse:
     return DocumentListResponse(documents=[_doc_info(d) for d in repos.list_documents(principal.tenant_id)])
+
+
+def get_document_status(doc_id: str, *, principal: Principal) -> DocumentInfo:
+    return _doc_info(repos.require_document(principal.tenant_id, doc_id))
+
+
+def document_events(doc_id: str, *, principal: Principal, interval: float = 1.0, timeout: float = 3600.0):
+    """Server-Sent Events with the document's progress until it is ready or failed."""
+    repos.require_document(principal.tenant_id, doc_id)  # fail before the stream starts
+    deadline = time.monotonic() + timeout
+    last = None
+    while True:
+        info = get_document_status(doc_id, principal=principal)
+        payload = info.model_dump(mode="json")
+        if payload != last:
+            yield f"event: progress\ndata: {json.dumps(payload)}\n\n"
+            last = payload
+        if info.status in ("indexed", "failed") or time.monotonic() > deadline:
+            yield f"event: end\ndata: {json.dumps({'status': info.status})}\n\n"
+            return
+        time.sleep(interval)
 
 
 def get_pdf_file_path(doc_id: str, *, principal: Principal) -> Path:
@@ -182,14 +212,30 @@ def _corpus(tenant_id: str) -> list[CorpusDocument]:
 # --- Chat --------------------------------------------------------------------
 
 
-def authorize_chat(payload: ChatRequest, *, principal: Principal) -> ThreadRow:
+def authorize_chat(payload: ChatRequest, *, principal: Principal) -> tuple[ThreadRow, str | None]:
     """Check thread and document access before any work (or streaming) starts.
 
     The first user to write to a thread owns it; anyone else gets "not found".
+    Returns the thread and the document the answer is pinned to (None for a
+    search across all documents). A pinned document that cannot be searched
+    yet raises DocumentNotReadyError.
     """
     if payload.document_id:
         repos.require_document(principal.tenant_id, payload.document_id)
-    return repos.claim_thread(principal, payload.thread_id, payload.document_id)
+    thread = repos.claim_thread(principal, payload.thread_id, payload.document_id)
+    bound = thread.document_id
+    if bound and repos.get_document(principal.tenant_id, bound) is None:
+        bound = None
+    doc_pin = None if payload.federated_search else (as_uuid(payload.document_id) or bound)
+    if doc_pin:
+        pinned = repos.require_document(principal.tenant_id, doc_pin)
+        if not pinned.searchable:
+            state = (
+                "failed to process" if pinned.status == "failed"
+                else f"still being read ({pinned.pages_done} of {pinned.page_count} pages)"
+            )
+            raise DocumentNotReadyError(f"{pinned.file_name} is {state}.")
+    return thread, doc_pin
 
 
 def _agent_for_chat(principal: Principal, document_id: str | None, model: str | None) -> QueryAgent:
@@ -206,11 +252,7 @@ def _agent_for_chat(principal: Principal, document_id: str | None, model: str | 
 
 def run_chat(payload: ChatRequest, *, principal: Principal) -> ChatResponse:
     """Invoke the LangGraph Query Agent and return answer + provenance."""
-    thread = authorize_chat(payload, principal=principal)
-    bound = thread.document_id
-    if bound and repos.get_document(principal.tenant_id, bound) is None:
-        bound = None
-    doc_pin = None if payload.federated_search else (as_uuid(payload.document_id) or bound)
+    _thread, doc_pin = authorize_chat(payload, principal=principal)
 
     agent = _agent_for_chat(principal, doc_pin, payload.model)
     if payload.audit_mode:

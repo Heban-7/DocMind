@@ -113,6 +113,29 @@ def test_writing_rows_into_another_tenant_is_refused():
     assert [h.text for h in pg_stores(a.tenant_id).chunks.query(_vec(1))] != ["planted"]
 
 
+def test_reindexing_reuses_stored_vectors_for_unchanged_text():
+    from src.retrieval.ingest import ingest_chunks
+
+    class Counting:
+        def __init__(self):
+            self.texts = 0
+
+        def embed(self, texts):
+            self.texts += len(texts)
+            return [_vec(i % 1536) for i, _ in enumerate(texts)]
+
+    a = _tenant()
+    doc = _ready_doc(a)
+    store = pg_stores(a.tenant_id).chunks
+    emb = Counting()
+    same = DocumentChunk.create("Revenue was ETB 5 billion in 2023.", parent_hierarchy=["Summary"], page_numbers=[3])
+    new = DocumentChunk.create("A new paragraph from a scanned page.", parent_hierarchy=["Summary"], page_numbers=[4])
+    res = ingest_chunks([same, new], doc_id=doc, store=store, embedder=emb)
+    assert emb.texts == 1 and res.texts_embedded == 1  # only the new text was embedded
+    assert store.count(doc) == 2
+    assert len(store.existing_embeddings(doc)) == 2
+
+
 def test_documents_that_are_not_ready_are_not_searchable():
     a = _tenant()
     doc = repos.new_document_id()

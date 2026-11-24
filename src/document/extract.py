@@ -20,8 +20,11 @@ import hashlib
 import logging
 import re
 import statistics
+import threading
 import time
 from collections import Counter
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pdfplumber
@@ -183,7 +186,6 @@ def _link_continued_tables(pages: list[Page]) -> None:
 
 def _vision_page(pdf_path: Path, page_no: int, client, guard) -> tuple[list[Block], float, str | None]:
     """Transcribe one page with a vision model. No boxes; always flagged."""
-    from src.extraction.page_render import render_pages_to_png
     from src.llm.budget import BudgetExceededError
 
     try:
@@ -200,7 +202,6 @@ def _vision_page(pdf_path: Path, page_no: int, client, guard) -> tuple[list[Bloc
         img.save(buf, format="PNG")
     finally:
         doc.close()
-    _ = render_pages_to_png  # kept for API parity with the V1 vision engine
     prompt = (
         "Transcribe this page exactly as printed, as GitHub-Flavored Markdown. Keep tables as Markdown tables. "
         "Copy every number character for character. If a word or number is illegible, write [illegible] "
@@ -217,19 +218,50 @@ def _vision_page(pdf_path: Path, page_no: int, client, guard) -> tuple[list[Bloc
     return blocks, result.cost_usd, None
 
 
-def extract_document(pdf_path: str | Path, *, vision_client=None, allow_vision: bool = True) -> DocumentModel:
+# Callback for progress: (stage, pages done, total pages).
+Progress = Callable[[str, int, int], None]
+
+
+@dataclass
+class Triage:
+    """The quick first pass over every page: text layer, size, route."""
+
+    pdf_path: Path
+    sha: str
+    n_pages: int
+    routes: dict[int, str] = field(default_factory=dict)
+    layers: dict[int, TextLayerPage] = field(default_factory=dict)
+    sizes: dict[int, tuple[float, float]] = field(default_factory=dict)
+    images: dict[int, float] = field(default_factory=dict)
+    seconds: dict[int, float] = field(default_factory=dict)
+    started: float = 0.0
+
+    @property
+    def pages_read(self) -> int:
+        return len(self.routes)
+
+    def levels(self) -> dict[float, int]:
+        return _heading_levels([self.layers[p] for p, r in self.routes.items() if r != "ocr" and p in self.layers])
+
+
+def triage_document(
+    pdf_path: str | Path,
+    *,
+    on_progress: Progress | None = None,
+    checkpoint: Callable[[Triage], None] | None = None,
+    checkpoint_at: int = 30,
+) -> Triage:
+    """Read every page's text layer and decide how each page will be read.
+
+    ``checkpoint`` is called once after ``checkpoint_at`` pages (if the
+    document is longer), so the caller can make the first pages searchable
+    while the rest are still being read.
+    """
     pdf_path = Path(pdf_path)
     started = time.perf_counter()
-    sha = sha256_of(pdf_path)
-    doc_id = sha[:12]
-
-    routes: dict[int, str] = {}
-    layers: dict[int, TextLayerPage] = {}
-    sizes: dict[int, tuple[float, float]] = {}
-    images: dict[int, float] = {}
-    triage_seconds: dict[int, float] = {}
+    tri = Triage(pdf_path=pdf_path, sha=sha256_of(pdf_path), n_pages=0, started=started)
     with pdfplumber.open(pdf_path) as pdf:
-        n_pages = len(pdf.pages)
+        tri.n_pages = len(pdf.pages)
         for i, page in enumerate(pdf.pages, start=1):
             t0 = time.perf_counter()
             try:
@@ -238,19 +270,90 @@ def extract_document(pdf_path: str | Path, *, vision_client=None, allow_vision: 
             except Exception as exc:  # unreadable text layer: treat as a scan
                 logger.warning("text layer unreadable on page %s: %s", i, exc)
                 tl, cov = None, 1.0
-            sizes[i] = (float(page.width), float(page.height))
-            images[i] = cov
+            tri.sizes[i] = (float(page.width), float(page.height))
+            tri.images[i] = cov
             if tl is not None:
-                layers[i] = tl
-            routes[i] = "ocr" if tl is None else _route(tl, cov)
-            triage_seconds[i] = time.perf_counter() - t0
+                tri.layers[i] = tl
+            tri.routes[i] = "ocr" if tl is None else _route(tl, cov)
+            tri.seconds[i] = time.perf_counter() - t0
             page.flush_cache()
+            if on_progress is not None:
+                on_progress("reading", i, tri.n_pages)
+            if checkpoint is not None and i == checkpoint_at and tri.n_pages > checkpoint_at:
+                checkpoint(tri)
+    return tri
 
-    levels = _heading_levels([layers[p] for p, r in routes.items() if r != "ocr" and p in layers])
+
+def preview_model(tri: Triage) -> DocumentModel:
+    """A text-layer-only model of the pages read so far, to search before the full read.
+
+    Table pages give their text without table structure; scanned pages give
+    nothing yet. Only used until the full extraction replaces it.
+    """
+    levels = tri.levels()
+    pages = []
+    for n in sorted(tri.routes):
+        width, height = tri.sizes[n]
+        tl = tri.layers.get(n)
+        blocks = blocks_from_lines(tl.lines, n, tl.body_size, levels) if tl is not None and tri.routes[n] != "ocr" else []
+        pages.append(
+            Page(
+                number=n,
+                width=width,
+                height=height,
+                blocks=blocks,
+                script=script_of(tl) if tl is not None else "none",
+                quality=PageQuality(
+                    engine="text_layer" if blocks else "none",
+                    confidence=0.5 if blocks else 0.0,
+                    flags=["preview: full extraction still running"],
+                    needs_review=False,
+                ),
+            )
+        )
+    _mark_running_headers(pages)
+    return DocumentModel(
+        doc_id=tri.sha[:12],
+        file_name=tri.pdf_path.name,
+        sha256=tri.sha,
+        page_count=tri.n_pages,
+        pages=pages,
+        extractor="docmind-v2-preview",
+    )
+
+
+def extract_document(
+    pdf_path: str | Path,
+    *,
+    vision_client=None,
+    allow_vision: bool = True,
+    triage: Triage | None = None,
+    on_progress: Progress | None = None,
+) -> DocumentModel:
+    pdf_path = Path(pdf_path)
+    tri = triage or triage_document(pdf_path, on_progress=on_progress)
+    started = tri.started or time.perf_counter()
+    sha, n_pages = tri.sha, tri.n_pages
+    doc_id = sha[:12]
+    routes, layers, sizes, images, triage_seconds = tri.routes, tri.layers, tri.sizes, tri.images, tri.seconds
+
+    levels = tri.levels()
     table_pages = [p for p, r in routes.items() if r == "docling"]
     ocr_pages = [p for p, r in routes.items() if r == "ocr"]
-    docling_out = docling_engine.convert_pages(pdf_path, table_pages, ocr=False)
-    ocr_out = docling_engine.convert_pages(pdf_path, ocr_pages, ocr=True)
+
+    done = {"n": sum(1 for r in routes.values() if r == "text")}
+    done_lock = threading.Lock()
+
+    def page_done(_page: int) -> None:
+        with done_lock:
+            done["n"] += 1
+            n = done["n"]
+        if on_progress is not None:
+            on_progress("layout", n, n_pages)
+
+    if on_progress is not None:
+        on_progress("layout", done["n"], n_pages)
+    docling_out, ocr_out = docling_engine.convert_pages(pdf_path, table_pages, ocr_pages, on_page_done=page_done)
 
     guard = None
     if allow_vision and vision_client is None:
@@ -331,8 +434,8 @@ def extract_document(pdf_path: str | Path, *, vision_client=None, allow_vision: 
                 eth = len(re.findall(r"[ሀ-፿]", text))
                 lat = len(re.findall(r"[A-Za-z]", text))
                 script = "ethiopic" if eth > lat else ("mixed" if eth > 0.1 * max(1, lat) else ("latin" if lat else "none"))
-                if docling_engine.ocr_engine_name() != "tesseract":
-                    flags.append("Tesseract not installed: Amharic cannot be read")
+                if not docling_engine.tesseract_available():
+                    flags.append("Tesseract not installed: scanned pages cannot be read")
                 if script in ("ethiopic", "mixed"):
                     flags.append("Amharic OCR: check against the page")
             has_text = any(b.text.strip() for b in blocks) or bool(tables)
@@ -358,9 +461,14 @@ def extract_document(pdf_path: str | Path, *, vision_client=None, allow_vision: 
 
         body = "".join(
             b.text for b in blocks if b.type not in (BlockType.FIGURE, BlockType.TABLE, BlockType.PAGE_HEADER, BlockType.PAGE_FOOTER)
-        )
-        if not tables and len(re.sub(r"\s+", "", body)) < MIN_TEXT_CHARS and not any("no text" in f for f in flags):
-            flags.append("no readable text on this page (image-only or blank)")
+        ) + "".join(c.text for t in tables for c in t.cells)
+        # An empty table found on a picture is not content either.
+        if len(re.sub(r"\s+", "", body)) < MIN_TEXT_CHARS and not any("no text" in f for f in flags):
+            has_figure = any(b.type is BlockType.FIGURE for b in blocks)
+            flags.append(
+                "little or no readable text: picture-only page?" if has_figure
+                else "no readable text on this page (image-only or blank)"
+            )
         needs_review = bool(flags) or confidence < OCR_LOW_CONFIDENCE
         pages.append(
             Page(

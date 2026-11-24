@@ -37,6 +37,9 @@ class MemoryChunkStore:
             self._rows[c.id] = (doc_id, document_name or doc_id, c, vec)
         return len(chunks)
 
+    def existing_embeddings(self, doc_id: str) -> dict[str, list[float]]:
+        return {c.metadata.content_hash: list(e) for d, _, c, e in self._rows.values() if d == doc_id and e is not None}
+
     def query(self, query_embedding, *, doc_id=None, top_k=7) -> list[RetrievedChunk]:
         rows = [r for r in self._rows.values() if r[3] is not None and (doc_id is None or r[0] == doc_id)]
         scored = sorted(((_cosine_distance(query_embedding, r[3]), r) for r in rows), key=lambda t: t[0])[:top_k]

@@ -13,6 +13,7 @@ from src.db.repos import AccessDeniedError, Principal
 from src.api.schemas import (
     ChatRequest,
     ChatResponse,
+    DocumentInfo,
     DocumentListResponse,
     HealthResponse,
     HistoryResponse,
@@ -20,7 +21,10 @@ from src.api.schemas import (
     UploadResponse,
 )
 from src.api.services import (
+    DocumentNotReadyError,
+    document_events,
     fetch_history,
+    get_document_status,
     get_pdf_file_path,
     list_documents,
     list_threads,
@@ -46,13 +50,17 @@ def health() -> HealthResponse:
 @upload_router.post(
     "/upload",
     response_model=UploadResponse,
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_202_ACCEPTED,
 )
-async def upload_pdf(
+def upload_pdf(
     file: UploadFile = File(...),
     principal: Principal = Depends(get_principal),
 ) -> UploadResponse:
-    """Accept a PDF, extract, chunk and index it for the caller's account."""
+    """Store a PDF and queue it; the worker reads it in the background.
+
+    A plain ``def`` on purpose: FastAPI runs it in a worker thread, so a slow
+    disk never blocks the event loop (and with it every other request).
+    """
     try:
         return process_upload(file, principal=principal)
     except ValueError as exc:
@@ -84,6 +92,36 @@ def get_documents(principal: Principal = Depends(get_principal)) -> DocumentList
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list documents: {exc}",
         ) from exc
+
+
+@upload_router.get("/documents/{doc_id}", response_model=DocumentInfo)
+def get_document(doc_id: str, principal: Principal = Depends(get_principal)) -> DocumentInfo:
+    """Status and progress of one document (queued, processing, indexed, failed)."""
+    try:
+        return get_document_status(doc_id, principal=principal)
+    except AccessDeniedError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.") from exc
+
+
+@upload_router.get("/documents/{doc_id}/events")
+def get_document_events(doc_id: str, principal: Principal = Depends(get_principal_header_or_query)):
+    """Server-Sent Events with progress until the document is ready or failed.
+
+    Accepts ``?token=`` because a browser EventSource cannot send headers.
+    """
+    from starlette.responses import StreamingResponse
+
+    try:
+        stream = document_events(doc_id, principal=principal)
+        first = next(stream)
+    except AccessDeniedError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.") from exc
+
+    def gen():
+        yield first
+        yield from stream
+
+    return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 
 
 @upload_router.get("/documents/{doc_id}/pdf")
@@ -133,6 +171,8 @@ def chat(payload: ChatRequest, principal: Principal = Depends(get_principal)) ->
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Thread or document not found.",
         ) from exc
+    except DocumentNotReadyError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except RuntimeError as exc:
         # Missing LLM keys / misconfigured providers.
         raise HTTPException(
@@ -167,6 +207,8 @@ def chat_stream(payload: ChatRequest, principal: Principal = Depends(get_princip
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Thread or document not found.",
         ) from exc
+    except DocumentNotReadyError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
     try:
         return StreamingResponse(

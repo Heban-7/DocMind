@@ -1,4 +1,4 @@
-"""Offline smoke tests for the DocMind FastAPI gateway (services mocked, no database).
+﻿"""Offline smoke tests for the DocMind FastAPI gateway (services mocked, no database).
 
 Real register/login and the isolation guarantees are in tests/test_api_security.py.
 """
@@ -72,7 +72,7 @@ def test_upload_success_mocked():
             "/upload",
             files={"file": ("report.pdf", b"%PDF-1.4 fake", "application/pdf")},
         )
-    assert res.status_code == 201
+    assert res.status_code == 202
     assert res.json()["document_id"] == "abc123"
     assert res.json()["page_count"] == 12
 

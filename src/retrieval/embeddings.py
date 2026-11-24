@@ -9,6 +9,7 @@ reuses the shared HTTP retry helper.
 from __future__ import annotations
 
 import logging
+import os
 from abc import ABC, abstractmethod
 
 from src.config import EmbeddingConfig, VisionConfig
@@ -64,11 +65,16 @@ class OpenAIEmbeddingClient(EmbeddingClient):
         # OpenAI rejects empty strings and inputs over 8,191 tokens; keep positional
         # alignment with placeholders and cut oversized inputs (about 6k tokens).
         cleaned = [t[:MAX_INPUT_CHARS] if t.strip() else " " for t in texts]
-        vectors: list[list[float]] = []
-        for start in range(0, len(cleaned), self.batch_size):
-            batch = cleaned[start : start + self.batch_size]
-            vectors.extend(self._embed_batch(batch))
-        return vectors
+        batches = [cleaned[i : i + self.batch_size] for i in range(0, len(cleaned), self.batch_size)]
+        if len(batches) == 1:
+            return self._embed_batch(batches[0])
+        # The calls wait on the network, so a few run at once (order is kept).
+        from concurrent.futures import ThreadPoolExecutor
+
+        workers = max(1, int(os.getenv("DOCMIND_EMBEDDING_CONCURRENCY", "4")))
+        with ThreadPoolExecutor(max_workers=min(workers, len(batches))) as pool:
+            results = list(pool.map(self._embed_batch, batches))
+        return [v for batch in results for v in batch]
 
     def _embed_batch(self, texts: list[str]) -> list[list[float]]:
         payload: dict = {"model": self.model, "input": texts}

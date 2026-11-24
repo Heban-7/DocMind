@@ -115,10 +115,14 @@ def _account(client) -> dict:
 
 
 def _upload(client, account, text: str, *, data: bytes | None = None) -> dict:
+    """Upload, then let an in-process worker read the queued document."""
+    from src.jobs.worker import run_once
+
     data = data or (_MINIMAL_PDF + f"%{uuid4().hex}\n".encode())
     client.pdf_texts[data] = text
     res = client.post("/upload", headers=account["h"], files={"file": ("report.pdf", data, "application/pdf")})
-    assert res.status_code == 201, res.text
+    assert res.status_code == 202, res.text
+    run_once()
     return res.json()
 
 
@@ -306,3 +310,34 @@ def test_bad_tokens_are_rejected(client):
     }
     for name, headers in cases.items():
         assert client.get("/documents", headers=headers).status_code == 401, name
+
+
+# --- M4: queued uploads, status and progress ---------------------------------
+
+
+def test_upload_is_queued_and_status_is_private(client):
+    a, b = _account(client), _account(client)
+    data = _MINIMAL_PDF + f"%{uuid4().hex}\n".encode()
+    client.pdf_texts[data] = "Alpha revenue was ETB 3 billion."
+    res = client.post("/upload", headers=a["h"], files={"file": ("q.pdf", data, "application/pdf")})
+    assert res.status_code == 202 and res.json()["status"] == "queued"
+    doc = res.json()["document_id"]
+
+    status = client.get(f"/documents/{doc}", headers=a["h"]).json()
+    assert status["status"] == "queued" and status["searchable"] is False
+    assert client.get(f"/documents/{doc}", headers=b["h"]).status_code == 404
+    assert client.get(f"/documents/{doc}/events", headers=b["h"]).status_code == 404
+
+    # Asking about a document that is still being read is a clear 409, not an empty answer.
+    res = _chat(client, a, f"t-{uuid4().hex}", document_id=doc)
+    assert res.status_code == 409 and "still being read" in res.json()["detail"]
+    res = client.post("/chat/stream", headers=a["h"], json={"message": "hi there", "thread_id": f"t-{uuid4().hex}", "document_id": doc})
+    assert res.status_code == 409
+
+    from src.jobs.worker import run_once
+
+    run_once()
+    status = client.get(f"/documents/{doc}", headers=a["h"]).json()
+    assert status["status"] == "indexed" and status["searchable"] and status["progress"] == 1.0
+    events = client.get(f"/documents/{doc}/events", params={"token": a["token"]}).text
+    assert "event: progress" in events and '"status": "indexed"' in events and "event: end" in events

@@ -53,11 +53,34 @@ async def lifespan(_app: FastAPI):
         applied = migrate()
         if applied:
             logger.info("applied migrations: %s", ", ".join(applied))
+    worker = _start_embedded_worker()
     logger.info("DocMind API ready")
     yield
+    if worker is not None:
+        worker.terminate()
+        try:
+            worker.wait(timeout=10)
+        except Exception:
+            worker.kill()
     from src.db.pool import close_pool
 
     close_pool()
+
+
+def _start_embedded_worker():
+    """For local development: run the ingest worker as a child process.
+
+    The worker is a separate process (never a thread of the API), so reading
+    a large PDF cannot slow the API down. In production run it on its own
+    (``python -m src.jobs.worker``) and set DOCMIND_EMBEDDED_WORKER=0.
+    """
+    if os.getenv("DOCMIND_EMBEDDED_WORKER", "1").lower() not in {"1", "true", "yes"}:
+        return None
+    import subprocess
+    import sys
+
+    logger.info("starting an embedded ingest worker process")
+    return subprocess.Popen([sys.executable, "-m", "src.jobs.worker"])
 
 
 def create_app() -> FastAPI:

@@ -76,9 +76,13 @@ class UploadResponse(BaseModel):
     file_name: str
     page_count: int
     strategy_tier: str
-    status: str
+    status: str = Field(description="queued | processing | indexed (ready) | failed")
     pages_needing_review: int = 0
     deduplicated: bool = Field(default=False, description="Same file was already in this account")
+    stage: str = ""
+    pages_done: int = 0
+    progress: float = Field(default=0.0, description="0-1, pages read so far")
+    searchable: bool = False
 
 
 class HistoryMessage(BaseModel):
@@ -111,8 +115,13 @@ class DocumentInfo(BaseModel):
     file_name: str
     page_count: int
     strategy_tier: str
-    status: str
+    status: str = Field(description="queued | processing | indexed (ready) | failed")
     pages_needing_review: int = 0
+    stage: str = Field(default="", description="queued | reading | layout | indexing | done | retrying | failed")
+    pages_done: int = 0
+    progress: float = Field(default=0.0, description="0-1, pages read so far")
+    searchable: bool = Field(default=False, description="Questions can already use this document")
+    error: Optional[str] = None
 
 
 class DocumentListResponse(BaseModel):
