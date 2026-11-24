@@ -97,7 +97,7 @@ flowchart TD
         Q[User Query] --> I[Intent Classifier & Rewriter]
         I --> J[Adaptive Planner]
         J --> K1[Tool: FactTable lookup]
-        J --> K2[Tool: Vector Semantic Search]
+        J --> K2[Tool: Hybrid search: vectors + keywords]
         J --> K3[Tool: PageIndex Tree Traversal]
         K1 & K2 & K3 --> L[Evidence Synthesizer]
         L --> M{Zero-Trust Audit Guard}
@@ -122,9 +122,9 @@ flowchart TD
 - **Chunking Constitution**: Replaces naive 512-token windows with Logical Document Units (LDUs).
 - **Structural Integrity Protection**: Tables, bulleted clauses, and section hierarchies are never fragmented across chunk boundaries. Table headers are dynamically injected into sub-chunk schemas to ensure zero contextual drift.
 
-### 4. Hierarchical PageIndex Tree Traversal
-- **Recursive Structural Navigation**: Constructs an in-memory recursive tree of document sections, chapters, sub-clauses, and tables.
-- **Section Shortlisting**: Lets the Query Agent shortlist sections by their headings before reading chunks.
+### 4. Hybrid Retrieval and the PageIndex
+- **Hybrid Search**: Every chunk is embedded and keyword-indexed together with its document title and section path. A question is answered from pgvector similarity and Postgres full-text matches fused by reciprocal rank fusion, with quoted labels ("Government Bond") and references ("Table 3") as phrase votes. On the golden set the answer is in the top 5 chunks for 87% of questions (vectors alone: 74%).
+- **PageIndex**: A tree of the document's sections, built from real heading levels and kept in page order, lets the agent shortlist sections by heading.
 
 ### 5. Structured FactTable & SQL Query Execution
 - **Fact Lookup**: Numeric facts extracted from tables are stored in Postgres and looked up by metric and period with parameterised queries (the model never writes SQL).

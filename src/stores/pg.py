@@ -61,7 +61,9 @@ class PgChunkStore(_TenantBound):
         with tenant_tx(self.tenant_id) as conn:
             conn.execute("DELETE FROM chunks WHERE document_id = %s", (did,))
 
-    def replace_doc_chunks(self, doc_id, chunks: list[DocumentChunk], embeddings, *, document_name: str = "") -> int:
+    def replace_doc_chunks(
+        self, doc_id, chunks: list[DocumentChunk], embeddings, *, document_name: str = "", contexts=None, embed_hashes=None
+    ) -> int:
         did = as_uuid(doc_id)
         if did is None:
             raise ValueError("doc_id must be a UUID")
@@ -79,6 +81,8 @@ class PgChunkStore(_TenantBound):
                 c.metadata.content_hash,
                 c.metadata.word_count,
                 _vec(embeddings[i]) if embeddings is not None else None,
+                contexts[i] if contexts else "",
+                embed_hashes[i] if embed_hashes else c.metadata.content_hash,
             )
             for i, c in enumerate(chunks)
         ]
@@ -87,27 +91,101 @@ class PgChunkStore(_TenantBound):
             with conn.cursor() as cur:
                 cur.executemany(
                     "INSERT INTO chunks (id, document_id, ordinal, text, chunk_type, section_path, page_numbers,"
-                    " content_hash, word_count, embedding) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    " content_hash, word_count, embedding, context, embed_hash)"
+                    " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     rows,
                 )
         return len(rows)
 
     def existing_embeddings(self, doc_id: str) -> dict[str, list[float]]:
-        """Vectors already stored for this document, by chunk content hash."""
+        """Vectors already stored for this document, by the hash of the exact text embedded."""
         did = as_uuid(doc_id)
         if did is None:
             return {}
         with tenant_tx(self.tenant_id) as conn:
             rows = conn.execute(
-                "SELECT DISTINCT ON (content_hash) content_hash, embedding FROM chunks"
-                " WHERE document_id = %s AND embedding IS NOT NULL",
+                "SELECT DISTINCT ON (embed_hash) embed_hash, embedding FROM chunks"
+                " WHERE document_id = %s AND embedding IS NOT NULL AND embed_hash <> ''",
                 (did,),
             ).fetchall()
         out: dict[str, list[float]] = {}
         for r in rows:
             v = r["embedding"]  # a pgvector Vector, or a numpy array, depending on the adapter
-            out[r["content_hash"]] = [float(x) for x in (v.to_list() if hasattr(v, "to_list") else v)]
+            out[r["embed_hash"]] = [float(x) for x in (v.to_list() if hasattr(v, "to_list") else v)]
         return out
+
+    def search(self, query_text: str, query_embedding, *, doc_id: str | None = None, top_k: int = 20) -> list[RetrievedChunk]:
+        """Hybrid search: vector and keyword rankings fused with reciprocal rank fusion (k = 60)."""
+        from src.retrieval.keywords import keyword_query, quoted_phrases
+
+        did = as_uuid(doc_id) if doc_id else None
+        if doc_id and did is None:
+            return []
+        tsq = keyword_query(query_text)
+        phrases = quoted_phrases(query_text)
+        params = {
+            "ph": phrases or "nothing_to_match",
+            "has_p": bool(phrases),
+            "v": _vec(query_embedding) if query_embedding is not None else None,
+            "has_v": query_embedding is not None,
+            "tsq": tsq or "nothing_to_match",
+            "has_t": bool(tsq),
+            "doc": did,
+            "n": 40,
+            "k": int(top_k),
+        }
+        sql = """
+            WITH vec AS (
+                SELECT c.id, row_number() OVER (ORDER BY c.embedding <=> %(v)s::vector) AS r
+                  FROM chunks c JOIN documents d ON d.id = c.document_id
+                 WHERE %(has_v)s AND d.searchable AND c.embedding IS NOT NULL
+                   AND (%(doc)s::uuid IS NULL OR c.document_id = %(doc)s::uuid)
+                 ORDER BY c.embedding <=> %(v)s::vector LIMIT %(n)s
+            ), kw AS (
+                SELECT c.id, row_number() OVER (ORDER BY ts_rank_cd(c.tsv, q) DESC) AS r
+                  FROM chunks c JOIN documents d ON d.id = c.document_id,
+                       to_tsquery('english', %(tsq)s) q
+                 WHERE %(has_t)s AND d.searchable AND c.tsv @@ q
+                   AND (%(doc)s::uuid IS NULL OR c.document_id = %(doc)s::uuid)
+                 ORDER BY ts_rank_cd(c.tsv, q) DESC LIMIT %(n)s
+            ), ph AS (
+                -- a label the question quotes ("Government Bond") is a third vote
+                SELECT c.id, row_number() OVER (ORDER BY ts_rank_cd(c.tsv, q) DESC) AS r
+                  FROM chunks c JOIN documents d ON d.id = c.document_id,
+                       to_tsquery('english', %(ph)s) q
+                 WHERE %(has_p)s AND d.searchable AND c.tsv @@ q
+                   AND (%(doc)s::uuid IS NULL OR c.document_id = %(doc)s::uuid)
+                 ORDER BY ts_rank_cd(c.tsv, q) DESC LIMIT %(n)s
+            ), fused AS (
+                SELECT id, sum(1.0 / (60 + r)) AS score
+                  FROM (SELECT * FROM vec UNION ALL SELECT * FROM kw UNION ALL SELECT * FROM ph) x GROUP BY id
+            )
+            SELECT c.id, c.text, c.context, c.document_id, d.file_name, c.page_numbers, c.section_path, c.content_hash,
+                   c.chunk_type, f.score,
+                   CASE WHEN %(has_v)s AND c.embedding IS NOT NULL THEN c.embedding <=> %(v)s::vector ELSE 1.0 END AS distance
+              FROM fused f JOIN chunks c ON c.id = f.id JOIN documents d ON d.id = c.document_id
+             ORDER BY f.score DESC, c.ordinal
+             LIMIT %(k)s
+        """
+        with tenant_tx(self.tenant_id) as conn:
+            conn.execute("SET LOCAL hnsw.iterative_scan = relaxed_order")
+            rows = conn.execute(sql, params).fetchall()  # keyword_query only emits words, phrases and |
+        return [
+            RetrievedChunk(
+                chunk_id=str(r["id"]),
+                text=r["text"],
+                doc_id=str(r["document_id"]),
+                document_name=r["file_name"],
+                page_numbers=list(r["page_numbers"] or [1]),
+                parent_hierarchy=list(r["section_path"] or []),
+                content_hash=r["content_hash"],
+                chunk_type=r["chunk_type"],
+                distance=float(r["distance"]),
+                context=r["context"],
+                relevance=round(min(1.0, float(r["score"]) * 20.3), 4),
+            )
+            for r in rows
+        ]
 
     def query(self, query_embedding, *, doc_id: str | None = None, top_k: int = 7) -> list[RetrievedChunk]:
         params: list = [_vec(query_embedding)]

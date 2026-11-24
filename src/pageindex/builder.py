@@ -105,10 +105,19 @@ def _build_tree(
         for depth in range(1, len(path)):
             all_paths.add(path[:depth])
 
+    # Sections stay in document order (first chunk, then first page), not
+    # alphabetical order as in V1.
+    first_seen = {path: i for i, path in enumerate(buckets.keys())}
+
+    def order(path: tuple[str, ...]) -> tuple[int, int]:
+        own = [first_seen[p] for p in all_paths if p[: len(path)] == path and p in first_seen]
+        pages = [min(buckets[p]["pages"] or {1}) for p in all_paths if p[: len(path)] == path and p in buckets]
+        return (min(own) if own else 10**9, min(pages) if pages else 10**9)
+
     def make_node(path: tuple[str, ...]) -> SectionNode:
         data = buckets.get(path)
         child_paths = sorted(
-            p for p in all_paths if len(p) == len(path) + 1 and p[: len(path)] == path
+            (p for p in all_paths if len(p) == len(path) + 1 and p[: len(path)] == path), key=order
         )
         children = [make_node(p) for p in child_paths]
 
@@ -145,7 +154,7 @@ def _build_tree(
             children=children,
         )
 
-    root_paths = sorted(p for p in all_paths if len(p) == 1)
+    root_paths = sorted((p for p in all_paths if len(p) == 1), key=order)
     return [make_node(p) for p in root_paths]
 
 

@@ -14,11 +14,12 @@ import re
 
 from src.models.page_index import PageIndex, SectionNode
 
-_TOKEN = re.compile(r"[a-z0-9]+", re.IGNORECASE)
+_TOKEN = re.compile(r"[^\W_]+", re.UNICODE)  # any script: V1's [a-z0-9]+ found nothing in Amharic
+_ETHIOPIC = re.compile(r"[\u1200-\u137F]")
 
 
 def _tokens(text: str) -> set[str]:
-    return {t.lower() for t in _TOKEN.findall(text) if len(t) > 2}
+    return {t.lower() for t in _TOKEN.findall(text) if len(t) > 2 or _ETHIOPIC.search(t)}
 
 
 def score_section(topic: str, node: SectionNode) -> float:

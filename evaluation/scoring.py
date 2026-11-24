@@ -13,6 +13,7 @@ from evaluation.numbers import (
     close_enough,
     match_number_in_text,
     normalise_number_text,
+    number_tokens,
     parse_number,
     presence_on_page,
 )
@@ -297,3 +298,23 @@ def score_answer(
 def parse_value(value_text: str) -> float | None:
     """Re-export for drafting tools."""
     return parse_number(value_text)
+
+
+def answer_in_evidence(question: GoldQuestion, texts: list[str], figures: list[GoldFigure]) -> bool:
+    """Do the retrieved chunks hold the answer, on whatever page it is printed?
+
+    The page-based hit@5 only knows the one page a question was drafted from,
+    while a figure is often printed twice (highlights and statements). Here:
+    a lookup needs the printed number, a change needs both of its figures,
+    and a list needs half of its items.
+    """
+    joined = "\n".join(texts)
+    if question.qtype.value == "list":
+        items = [i.lower() for i in question.gold_items if i]
+        return bool(items) and sum(i in joined.lower() for i in items) >= max(1, len(items) // 2)
+    tokens = number_tokens(joined)
+    wanted = [normalise_number_text(f.value_text).lstrip("-") for f in figures]
+    if not wanted and question.gold_value_raw is not None:
+        raw = question.gold_value_raw
+        wanted = [str(int(raw)) if float(raw).is_integer() else str(raw)]
+    return bool(wanted) and all(w in tokens or w.rstrip("0").rstrip(".") in tokens for w in wanted)

@@ -177,7 +177,7 @@ def ask(doc_id: str, pdf_path: Path, question: str, *, model: str | None = None)
         answer = agent.ask(question)
     latency = time.perf_counter() - start
     with measured() as r:
-        hits = semantic_search(question, doc_id=doc_id, top_k=5, store=stores.chunks)
+        hits = semantic_search(question, doc_id=doc_id, top_k=5, store=stores.chunks)  # hybrid + rerank since M6
     return {
         "answer": answer.answer,
         "cited_pages": [c.page_number for c in answer.provenance.citations],
@@ -187,4 +187,27 @@ def ask(doc_id: str, pdf_path: Path, question: str, *, model: str | None = None)
         "usage": m,
         "retrieval_top5_pages": sorted({p for h in hits for p in (h.page_numbers or [])}),
         "retrieval_usage": r,
+    }
+
+
+def retrieve_pages(doc_id: str, question: str, *, top_k: int = 5, rerank: bool = True, vector_only: bool = False) -> dict:
+    """Retrieval only (no LLM): the pages of the top ``top_k`` chunks, for fast tuning."""
+    install()
+    from src.retrieval.embeddings import build_embedding_client
+    from src.retrieval.ingest import retrieve
+    from src.stores.pg import pg_stores
+
+    principal = _principal()
+    store = pg_stores(principal.tenant_id).chunks
+    t = time.perf_counter()
+    with measured() as m:
+        if vector_only:  # the M3-M5 retrieval, for comparison
+            hits = store.query(build_embedding_client().embed([question])[0], doc_id=doc_id, top_k=top_k)
+        else:
+            hits = retrieve(question, store=store, doc_id=doc_id, top_k=top_k, rerank=rerank)
+    return {
+        "ranked_pages": [h.page_numbers for h in hits],
+        "texts": [h.text for h in hits],
+        "seconds": round(time.perf_counter() - t, 3),
+        "usage": m,
     }

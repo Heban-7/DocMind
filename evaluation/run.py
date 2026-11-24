@@ -105,6 +105,47 @@ def cmd_qa(args) -> None:
             print(f"{q.question_id}: {(row.get('answer') or row.get('error') or '')[:90]}", flush=True)
 
 
+def cmd_retrieval(args) -> None:
+    """Retrieval only, no LLM: hit@1/3/5 and MRR over the answerable questions (fast tuning loop)."""
+    run_dir = _resolve(args.run)
+    _prepare_env(run_dir)
+    from evaluation.schema import load_golden
+
+    golden = load_golden(args.golden)
+    system = _system(args.system)
+    extraction = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in (run_dir / "extraction").glob("*.json")}
+    from evaluation.scoring import answer_in_evidence
+
+    figures = {f.figure_id: f for f in golden.figures}
+    rows, hits = [], {1: 0, 3: 0, 5: 0}
+    rr = 0.0
+    evidence_hits = 0
+    for q in golden.scored_questions():
+        if q.qtype.value == "unanswerable" or not q.gold_pages:
+            continue
+        ext = extraction.get(q.doc_key)
+        if not ext or ext.get("error"):
+            continue
+        res = system.retrieve_pages(ext["doc_id"], q.question, top_k=5, rerank=not args.no_rerank, vector_only=args.vector_only)
+        gold = set(q.gold_pages)
+        first = next((i for i, pages in enumerate(res["ranked_pages"], start=1) if gold & set(pages)), None)
+        for k in hits:
+            hits[k] += bool(first and first <= k)
+        rr += 1.0 / first if first else 0.0
+        texts = res.pop("texts", [])
+        found = answer_in_evidence(q, texts, [figures[i] for i in q.figure_ids if i in figures])
+        evidence_hits += found
+        rows.append({"question_id": q.question_id, "first_hit": first, "answer_in_top5": found, **res})
+    n = len(rows)
+    summary = {f"hit@{k}": round(100 * v / n, 1) for k, v in hits.items()} | {"mrr": round(rr / n, 3), "questions": n}
+    summary["answer_in_top5"] = round(100 * evidence_hits / n, 1)
+    summary["p50_seconds"] = sorted(r["seconds"] for r in rows)[n // 2] if rows else None
+    name = "retrieval-vector" if args.vector_only else ("retrieval-norerank" if args.no_rerank else "retrieval")
+    (run_dir / f"{name}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    (run_dir / f"{name}.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    print(json.dumps(summary))
+
+
 def cmd_score(args) -> None:
     run_dir = _resolve(args.run)
     from evaluation.report import build_report
@@ -154,13 +195,19 @@ def main(argv: list[str] | None = None) -> None:
         p.add_argument("--force", action="store_true")
         if name == "qa":
             p.add_argument("--model", default=None, help="model name; default = the system's own default")
+    p = sub.add_parser("retrieval")
+    p.add_argument("--system", default="current")
+    p.add_argument("--run", required=True)
+    p.add_argument("--golden", default="v1")
+    p.add_argument("--no-rerank", action="store_true")
+    p.add_argument("--vector-only", action="store_true", help="vectors alone, as before M6")
     p = sub.add_parser("score")
     p.add_argument("--run", required=True)
     p.add_argument("--golden", default="v1")
     p.add_argument("--name", default="")
     p.add_argument("--publish", default="", help="also copy the report to evaluation/reports/<name>.*")
     args = ap.parse_args(argv)
-    {"extract": cmd_extract, "qa": cmd_qa, "score": cmd_score}[args.cmd](args)
+    {"extract": cmd_extract, "qa": cmd_qa, "retrieval": cmd_retrieval, "score": cmd_score}[args.cmd](args)
 
 
 if __name__ == "__main__":

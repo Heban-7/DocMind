@@ -130,10 +130,14 @@ def test_reindexing_reuses_stored_vectors_for_unchanged_text():
     emb = Counting()
     same = DocumentChunk.create("Revenue was ETB 5 billion in 2023.", parent_hierarchy=["Summary"], page_numbers=[3])
     new = DocumentChunk.create("A new paragraph from a scanned page.", parent_hierarchy=["Summary"], page_numbers=[4])
-    res = ingest_chunks([same, new], doc_id=doc, store=store, embedder=emb)
-    assert emb.texts == 1 and res.texts_embedded == 1  # only the new text was embedded
-    assert store.count(doc) == 2
-    assert len(store.existing_embeddings(doc)) == 2
+    ingest_chunks([same], doc_id=doc, store=store, embedder=emb, document_name="a.pdf")
+    assert emb.texts == 1
+    res = ingest_chunks([same, new], doc_id=doc, store=store, embedder=emb, document_name="a.pdf")
+    assert emb.texts == 2 and res.texts_embedded == 1  # only the new text was embedded
+    assert store.count(doc) == 2 and len(store.existing_embeddings(doc)) == 2
+    # The context is part of what is embedded: a renamed section is embedded again.
+    moved = DocumentChunk.create(same.text, parent_hierarchy=["Financial review"], page_numbers=[3])
+    assert ingest_chunks([moved, new], doc_id=doc, store=store, embedder=emb, document_name="a.pdf").texts_embedded == 1
 
 
 def test_documents_that_are_not_ready_are_not_searchable():

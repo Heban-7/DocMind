@@ -1,0 +1,9 @@
+{
+  "hit@1": 44.4,
+  "hit@3": 68.4,
+  "hit@5": 76.1,
+  "mrr": 0.567,
+  "questions": 117,
+  "answer_in_top5": 74.4,
+  "p50_seconds": 1.382
+}

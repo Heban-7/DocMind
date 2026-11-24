@@ -37,14 +37,15 @@ DEFAULT_SAMPLE_PDF = DATA_DIR / "sample.pdf"
 # and chat memory live in Postgres (DOCMIND_DATABASE_URL, see src/db/pool.py).
 REFINERY_DIR = Path(os.getenv("DOCMIND_REFINERY_DIR", str(PROJECT_ROOT / ".refinery")))
 
-# --- Phase 4 retrieval depth (how many LDUs / citations reach the answer) ---
-# Semantic search previously defaulted to 5 and the synthesizer often kept only
-# 3 citations -- too thin for "list the policies"-style questions. Raise floor.
-SEMANTIC_TOP_K: int = int(os.getenv("DOCMIND_SEMANTIC_TOP_K", "7"))
+# --- Retrieval depth (how many chunks / citations reach the answer) -----------
+# Hybrid search fetches 20 candidates, the reranker keeps the best SEMANTIC_TOP_K,
+# and the answer step reads each one in full (up to EVIDENCE_EXCERPT_CHARS; V1
+# cut every chunk at 700 characters, which hid 70% of the average table chunk).
+SEMANTIC_TOP_K: int = int(os.getenv("DOCMIND_SEMANTIC_TOP_K", "6"))
 PAGEINDEX_TOP_K: int = int(os.getenv("DOCMIND_PAGEINDEX_TOP_K", "5"))
 MAX_CITATIONS: int = int(os.getenv("DOCMIND_MAX_CITATIONS", "8"))
 MIN_CITATIONS: int = int(os.getenv("DOCMIND_MIN_CITATIONS", "5"))
-EVIDENCE_EXCERPT_CHARS: int = int(os.getenv("DOCMIND_EVIDENCE_EXCERPT_CHARS", "700"))
+EVIDENCE_EXCERPT_CHARS: int = int(os.getenv("DOCMIND_EVIDENCE_EXCERPT_CHARS", "4000"))
 
 # --- Chunking (Phase 3) -----------------------------------------------------
 # Soft target and hard ceiling (in words) for a Logical Document Unit. The
