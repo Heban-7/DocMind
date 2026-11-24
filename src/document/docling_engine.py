@@ -72,7 +72,9 @@ def tesseract_available() -> bool:
 def _ocr_options():
     from docling.datamodel.pipeline_options import TesseractCliOcrOptions
 
-    # One Tesseract process per lane, one core each.
+    # One Tesseract process per lane, one core each. (Letting Tesseract use
+    # every core on the single-lane GPU box was slower, 431 s vs 371 s on a
+    # 38-page scan, so the limit applies everywhere.)
     os.environ.setdefault("OMP_THREAD_LIMIT", "1")
     return TesseractCliOcrOptions(lang=list(OCR_LANGUAGES), force_full_page_ocr=True)
 
