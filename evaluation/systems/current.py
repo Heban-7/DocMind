@@ -59,17 +59,33 @@ def _device() -> str:
     return f"{dev.value if hasattr(dev, 'value') else dev} x{lanes()} lanes"
 
 
+_MODEL_INDEX: dict[str, Path] | None = None
+
+
 def _reused_model(pdf_path: Path):
+    """A saved model for this PDF: ``<sha256[:12]>.json``, or any ``model.json`` below the folder."""
+    global _MODEL_INDEX
     folder = os.getenv("DOCMIND_EVAL_REUSE_MODELS")
     if not folder:
         return None
     from src.document.model import DocumentModel
     from src.pipeline.ingest import sha256_file
 
-    path = Path(folder) / f"{sha256_file(pdf_path)[:12]}.json"
-    if not path.exists():
-        return None
-    return DocumentModel.model_validate_json(path.read_text(encoding="utf-8"))
+    sha = sha256_file(pdf_path)
+    direct = Path(folder) / f"{sha[:12]}.json"
+    if direct.exists():
+        return DocumentModel.model_validate_json(direct.read_text(encoding="utf-8"))
+    if _MODEL_INDEX is None:
+        _MODEL_INDEX = {}
+        for path in Path(folder).rglob("model.json"):
+            head = path.read_text(encoding="utf-8")[:4000]
+            import re as _re
+
+            m = _re.search(r'"sha256":\s*"([0-9a-f]{64})"', head)
+            if m:
+                _MODEL_INDEX[m.group(1)] = path
+    path = _MODEL_INDEX.get(sha)
+    return DocumentModel.model_validate_json(path.read_text(encoding="utf-8")) if path else None
 
 
 def run_document(pdf_path: Path, *, embed: bool = True) -> dict:
@@ -126,17 +142,9 @@ def run_document(pdf_path: Path, *, embed: bool = True) -> dict:
         out["failed_pages"] = sorted(failed)
         out["ledger"] = model.ledger()
         facts = pg_stores(principal.tenant_id).facts.search(doc_id=result.document_id, limit=1_000_000)
-        out["facts"] = [
-            {
-                "metric": f.metric,
-                "value": f.value,
-                "value_text": f.value_text,
-                "unit": f.unit,
-                "period": f.period,
-                "page_number": f.page_number,
-            }
-            for f in facts
-        ]
+        keep = ("metric", "value", "value_text", "unit", "period", "page_number", "scale", "row_label", "row_group",
+                "column_label", "table_title", "period_key", "source")
+        out["facts"] = [{k: getattr(f, k) for k in keep} for f in facts]
     except Exception as exc:  # record and continue with the next document
         out["error"] = f"{type(exc).__name__}: {exc}"
         out["traceback"] = traceback.format_exc()[-2000:]

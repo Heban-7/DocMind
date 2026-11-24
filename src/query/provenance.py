@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.models.provenance import Citation, ProvenanceChain
+from src.models.provenance import BoundingBox, Citation, ProvenanceChain
 from src.query.bbox import resolve_page_bbox
 from src.query.evidence import EvidenceHit, ToolResult
 from src.query.page_map import resolve_printed_page
@@ -27,6 +27,14 @@ def citation_from_hit(
     already set, otherwise resolved from the PDF ``/PageLabels`` map (optional).
     """
     bbox = resolve_page_bbox(pdf_path, hit.page_number)
+    cell = (hit.extra or {}).get("bbox")
+    if cell and len(cell) == 4 and bbox.page_height:
+        # A fact knows its cell: [x0, top, x1, bottom] from the top-left corner.
+        x0, top, x1, bottom = (float(v) for v in cell)
+        bbox = BoundingBox(
+            x0=x0, y0=bbox.page_height - bottom, x1=x1, y1=bbox.page_height - top,
+            page_width=bbox.page_width, page_height=bbox.page_height,
+        )
     printed = hit.printed_page
     if printed is None and pdf_path is not None:
         printed = resolve_printed_page(pdf_path, hit.page_number)

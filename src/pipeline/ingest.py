@@ -30,7 +30,7 @@ from src.chunking.engine import ContextAwareChunker
 from src.chunking.models import DocumentChunk
 from src.document.model import DocumentModel
 from src.document.render import render_markdown
-from src.facts.extractor import extract_and_store
+from src.facts.typed import facts_from_model
 from src.pageindex.builder import build_page_index
 from src.retrieval.embeddings import EmbeddingClient
 from src.retrieval.ingest import ingest_chunks
@@ -99,7 +99,8 @@ def index_document(
     t = time.perf_counter()
     index = build_page_index(chunks, doc_id=doc_id, source_filename=document_name, summarize=True, llm_client=None)
     stores.pageindex.save(index)
-    facts = extract_and_store(chunks, doc_id=doc_id, document_name=document_name, store=stores.facts)
+    # Facts come from the model itself (cells, boxes, pages), not from the Markdown.
+    facts_written = stores.facts.replace_doc_facts(doc_id, facts_from_model(model, doc_id=doc_id, document_name=document_name))
     seconds["index"] = time.perf_counter() - t
 
     t = time.perf_counter()
@@ -110,7 +111,7 @@ def index_document(
 
     result = IndexResult(
         chunk_count=len(chunks),
-        facts_written=facts.facts_written,
+        facts_written=facts_written,
         pageindex_sections=len(index.iter_nodes()),
         embedded=ingest.embedded,
         texts_embedded=ingest.texts_embedded,

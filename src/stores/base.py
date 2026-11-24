@@ -67,6 +67,8 @@ class FactStore(Protocol):
 
     def count(self, doc_id: str | None = None) -> int: ...
 
+    def run_query(self, spec, *, doc_id: str | None = None): ...  # FactQuery -> FactQueryResult
+
 
 class PageIndexStore(Protocol):
     def save(self, index: PageIndex) -> None: ...

@@ -75,10 +75,16 @@ class MemoryFactStore:
             f
             for f in self._facts
             if (doc_id is None or f.doc_id == doc_id)
-            and (not metric_contains or metric_contains.lower() in f.metric.lower())
+            and (not metric_contains or metric_contains.lower() in " ".join([f.row_group, f.metric, f.column_label, f.table_title]).lower())
             and (not period_contains or period_contains.lower() in f.period.lower())
         ]
         return sorted(out, key=lambda f: (f.page_number, f.metric))[:limit]
+
+    def run_query(self, spec, *, doc_id=None):
+        """The FactQuery semantics in Python (the Postgres store does it in SQL)."""
+        from src.facts.query import run_in_memory
+
+        return run_in_memory(self._facts, spec, doc_id=doc_id)
 
 
 class MemoryPageIndexStore:

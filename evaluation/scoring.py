@@ -34,6 +34,8 @@ class FigureResult:
     row_intact: bool  # label and value on the same extracted line or table row
     fact_correct: bool  # the system's fact table holds the right value on that page
     fact_present: bool  # a fact with these digits exists on that page (any value)
+    fact_scaled: bool = False  # ...with the right sign, scale and percent unit (M5)
+    fact_typed: bool = False  # ...and labels and period that identify it (M5)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -77,6 +79,8 @@ def score_figure(
     target_digits = normalise_number_text(fig.value_text).lstrip("-")
     fact_present = False
     fact_correct = False
+    fact_scaled = False
+    fact_typed = False
     for f in facts:
         if int(f.get("page_number") or 0) != fig.page:
             continue
@@ -85,8 +89,16 @@ def score_figure(
             continue
         fact_present = True
         value = f.get("value")
-        if value is not None and close_enough(float(value), fig.value, 1e-6, 1e-9):
-            fact_correct = True
+        if value is None or not close_enough(float(value), fig.value, 1e-6, 1e-9):
+            continue
+        fact_correct = True
+        if "scale" not in f:  # systems before M5 had no typed facts
+            break
+        if abs(float(f.get("scale") or 1.0) - fig.scale) > 1e-9 or (fig.unit == "%") != (f.get("unit") == "%"):
+            continue
+        fact_scaled = True
+        if _labels_match(fig, f):
+            fact_typed = True
             break
     return FigureResult(
         figure_id=fig.figure_id,
@@ -98,7 +110,32 @@ def score_figure(
         row_intact=_row_intact(fig, page_text),
         fact_correct=fact_correct,
         fact_present=fact_present,
+        fact_scaled=fact_scaled,
+        fact_typed=fact_typed,
     )
+
+
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"[a-zሀ-፿]{3,}|\d+", (text or "").lower()))
+
+
+def _labels_match(fig: GoldFigure, fact: dict) -> bool:
+    """Do the fact's labels say what the gold figure is? (half the row label's words, and the period)"""
+    from src.facts.typed import normalize_period
+
+    want = _words(fig.row_label)
+    have = _words(" ".join(str(fact.get(k) or "") for k in ("row_label", "row_group", "metric", "table_title")))
+    if want and len(want & have) / len(want) < 0.5:
+        return False
+    if fig.period or fig.column_label:
+        key = normalize_period(fig.period or fig.column_label)
+        keys = {fact.get("period_key") or "", normalize_period(str(fact.get("column_label") or "")),
+                normalize_period(str(fact.get("period") or ""))}
+        if key and key in keys:
+            return True
+        col = _words(fig.column_label)
+        return bool(col) and col <= _words(f"{fact.get('column_label') or ''} {fact.get('period') or ''}")
+    return True
 
 
 def page_coverage(pages: dict[int, str], n_pages: int, failed_pages: set[int] | None = None) -> dict:

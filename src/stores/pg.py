@@ -147,10 +147,47 @@ class PgChunkStore(_TenantBound):
         return sorted(hits, key=lambda h: h.distance)
 
 
-_FACT_COLUMNS = (
-    "id, document_id, metric, value, value_text, unit, period, page_number, content_hash, chunk_id,"
-    " source_excerpt, extractor, created_at"
+_FACT_FIELDS = (
+    "id", "document_id", "metric", "value", "value_text", "unit", "period", "page_number", "content_hash",
+    "chunk_id", "source_excerpt", "extractor", "created_at", "row_label", "row_group", "column_label",
+    "table_title", "scale", "currency", "table_id", "row_index", "col_index", "bbox", "source", "confidence",
+    "period_key",
 )
+_FACT_COLUMNS = ", ".join(_FACT_FIELDS)
+_SELECT_FACT = ", ".join(f"f.{c}" for c in _FACT_FIELDS) + ", d.file_name"
+
+
+def _fact_from_row(r: dict, prefix: str = "") -> FactRecord:
+    g = lambda k: r[prefix + k]  # noqa: E731
+    return FactRecord(
+        id=str(g("id")),
+        doc_id=str(g("document_id")),
+        document_name=g("file_name"),
+        metric=g("metric"),
+        value=g("value"),
+        value_text=g("value_text"),
+        unit=g("unit"),
+        period=g("period"),
+        page_number=g("page_number"),
+        content_hash=g("content_hash"),
+        chunk_id=g("chunk_id"),
+        source_excerpt=g("source_excerpt"),
+        extractor=g("extractor"),
+        created_at=g("created_at"),
+        row_label=g("row_label"),
+        row_group=g("row_group"),
+        column_label=g("column_label"),
+        table_title=g("table_title"),
+        scale=g("scale"),
+        currency=g("currency"),
+        table_id=g("table_id"),
+        row_index=g("row_index"),
+        col_index=g("col_index"),
+        bbox=list(g("bbox")) if g("bbox") is not None else None,
+        source=g("source"),
+        confidence=g("confidence"),
+        period_key=g("period_key"),
+    )
 
 
 class PgFactStore(_TenantBound):
@@ -160,29 +197,18 @@ class PgFactStore(_TenantBound):
             raise ValueError("doc_id must be a UUID")
         rows = [
             (
-                f.id,
-                did,
-                f.metric,
-                f.value,
-                f.value_text,
-                f.unit,
-                f.period,
-                f.page_number,
-                f.content_hash,
-                f.chunk_id,
-                f.source_excerpt,
-                f.extractor,
-                f.created_at,
+                f.id, did, f.metric, f.value, f.value_text, f.unit, f.period, f.page_number, f.content_hash,
+                f.chunk_id, f.source_excerpt, f.extractor, f.created_at, f.row_label, f.row_group, f.column_label,
+                f.table_title, f.scale, f.currency, f.table_id, f.row_index, f.col_index, f.bbox,
+                f.source if f.source in ("table", "text") else "text", f.confidence, f.period_key,
             )
             for f in facts
         ]
+        placeholders = ", ".join(["%s"] * len(_FACT_FIELDS))
         with tenant_tx(self.tenant_id) as conn:
             conn.execute("DELETE FROM facts WHERE document_id = %s", (did,))
             with conn.cursor() as cur:
-                cur.executemany(
-                    f"INSERT INTO facts ({_FACT_COLUMNS}) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    rows,
-                )
+                cur.executemany(f"INSERT INTO facts ({_FACT_COLUMNS}) VALUES ({placeholders})", rows)
         return len(rows)
 
     def count(self, doc_id: str | None = None) -> int:
@@ -206,38 +232,130 @@ class PgFactStore(_TenantBound):
             clauses.append("f.document_id = %s")
             params.append(did)
         if metric_contains:
-            clauses.append("f.metric ILIKE %s")
-            params.append(f"%{_escape_like(metric_contains)}%")
+            clauses.append("f.search_text ILIKE %s")
+            params.append(f"%{_escape_like(metric_contains.lower())}%")
         if period_contains:
-            clauses.append("f.period ILIKE %s")
-            params.append(f"%{_escape_like(period_contains)}%")
+            clauses.append("(f.period ILIKE %s OR f.column_label ILIKE %s)")
+            params += [f"%{_escape_like(period_contains)}%"] * 2
         params.append(int(limit))
-        cols = ", ".join(f"f.{c.strip()}" for c in _FACT_COLUMNS.split(","))
         sql = (
-            f"SELECT {cols}, d.file_name FROM facts f JOIN documents d ON d.id = f.document_id"
+            f"SELECT {_SELECT_FACT} FROM facts f JOIN documents d ON d.id = f.document_id"
             f" WHERE {' AND '.join(clauses)} ORDER BY f.page_number, f.metric LIMIT %s"
         )
         with tenant_tx(self.tenant_id) as conn:
             rows = conn.execute(sql, params).fetchall()
-        return [
-            FactRecord(
-                id=str(r["id"]),
-                doc_id=str(r["document_id"]),
-                document_name=r["file_name"],
-                metric=r["metric"],
-                value=r["value"],
-                value_text=r["value_text"],
-                unit=r["unit"],
-                period=r["period"],
-                page_number=r["page_number"],
-                content_hash=r["content_hash"],
-                chunk_id=r["chunk_id"],
-                source_excerpt=r["source_excerpt"],
-                extractor=r["extractor"],
-                created_at=r["created_at"],
-            )
-            for r in rows
-        ]
+        return [_fact_from_row(r) for r in rows]
+
+    # --- numeric questions -------------------------------------------------------
+
+    def run_query(self, spec, *, doc_id: str | None = None):
+        """Compile a checked FactQuery to fixed SQL and run it read-only.
+
+        Runs as docmind_reader (SELECT on facts and documents only), inside
+        the tenant's row-level security, with a 3-second limit. Every user
+        value is a bind parameter; the SQL text comes only from this method.
+        """
+        from src.facts.query import CHANGE_OPS, COLUMN_OPS, Computed, FactQueryResult
+        from src.facts.typed import normalize_period
+
+        did = as_uuid(doc_id) if doc_id else None
+        if doc_id and did is None:
+            return FactQueryResult(spec, [])
+        base = {"m": spec.metric.lower(), "doc": did, "unit": spec.unit, "col": f"%{_escape_like(spec.column or '')}%"}
+        candidates = f"""
+            SELECT {_SELECT_FACT}, f.value_abs, word_similarity(%(m)s, f.search_text) AS ws
+              FROM facts f JOIN documents d ON d.id = f.document_id
+             WHERE d.searchable AND f.value IS NOT NULL
+               AND %(m)s <%% f.search_text
+               AND (%(doc)s::uuid IS NULL OR f.document_id = %(doc)s::uuid)
+               AND (%(unit)s::text IS NULL OR f.unit = %(unit)s::text)
+               AND f.column_label ILIKE %(col)s
+        """
+
+        def period_clause(alias: str, i: int, params: dict, period: str) -> str:
+            params[f"pk{i}"] = normalize_period(period)
+            params[f"pl{i}"] = f"%{_escape_like(period)}%"
+            return f"(({alias}.period_key <> '' AND {alias}.period_key = %(pk{i})s) OR {alias}.column_label ILIKE %(pl{i})s)"
+
+        with tenant_tx(self.tenant_id) as conn:
+            conn.execute("SET LOCAL ROLE docmind_reader")
+            conn.execute("SET LOCAL statement_timeout = '3s'")
+            conn.execute("SET LOCAL pg_trgm.word_similarity_threshold = 0.45")
+            if spec.op in CHANGE_OPS:
+                params = dict(base)
+                a_clause = period_clause("c", 0, params, spec.periods[0])
+                b_clause = period_clause("c", 1, params, spec.periods[1])
+                rows = conn.execute(
+                    f"""
+                    WITH c AS ({candidates}),
+                         a AS (SELECT * FROM c WHERE {a_clause}),
+                         b AS (SELECT * FROM c WHERE {b_clause})
+                    SELECT {", ".join(f"a.{k} AS a_{k}" for k in (*_FACT_FIELDS, "file_name", "value_abs", "ws"))},
+                           {", ".join(f"b.{k} AS b_{k}" for k in (*_FACT_FIELDS, "file_name", "value_abs", "ws"))},
+                           b.value_abs - a.value_abs AS difference,
+                           CASE WHEN a.value_abs <> 0
+                                THEN (b.value_abs - a.value_abs) / abs(a.value_abs) * 100 END AS percent_change
+                      FROM a JOIN b ON a.document_id = b.document_id AND a.id <> b.id AND a.unit = b.unit
+                       AND ((a.table_id <> '' AND a.table_id = b.table_id AND a.row_index = b.row_index)
+                            OR a.metric = b.metric)
+                     ORDER BY a.ws + b.ws DESC, a.confidence + b.confidence DESC
+                     LIMIT 3
+                    """,
+                    params,
+                ).fetchall()
+                out = FactQueryResult(spec, [])
+                for r in rows:
+                    a, b = _fact_from_row(r, "a_"), _fact_from_row(r, "b_")
+                    value = r[spec.op]
+                    if value is None:
+                        continue
+                    p1, p2 = spec.periods
+                    formula = f"{p2} - {p1}" if spec.op == "difference" else f"({p2} - {p1}) / |{p1}| x 100"
+                    out.facts += [a, b]
+                    out.computed.append(
+                        Computed(round(float(value), 4), "%" if spec.op == "percent_change" else a.unit, formula, [a.id, b.id])
+                    )
+                return out
+
+            params = dict(base)
+            where = ""
+            if spec.periods:
+                where = "WHERE " + " OR ".join(period_clause("c", i, params, p) for i, p in enumerate(spec.periods))
+            params["limit"] = spec.limit
+            ranked = conn.execute(
+                f"WITH c AS ({candidates}) SELECT * FROM c {where}"
+                " ORDER BY ws DESC, confidence DESC, page_number LIMIT %(limit)s",
+                params,
+            ).fetchall()
+            facts = [_fact_from_row(r) for r in ranked]
+            if spec.op not in COLUMN_OPS or not ranked:
+                return FactQueryResult(spec, facts)
+
+            # Aggregates run over the best match's table column, without its total rows.
+            best = ranked[0]
+            agg = {"sum": "sum", "average": "avg", "max": "max", "min": "min", "count": "count"}[spec.op]
+            params.update(doc_best=best["document_id"], table=best["table_id"], coli=best["col_index"])
+            column_rows = conn.execute(
+                f"""
+                SELECT {_SELECT_FACT}, f.value_abs FROM facts f JOIN documents d ON d.id = f.document_id
+                 WHERE f.document_id = %(doc_best)s AND f.table_id = %(table)s AND f.table_id <> ''
+                   AND f.col_index = %(coli)s AND f.value IS NOT NULL AND f.row_label NOT ILIKE '%%total%%'
+                 ORDER BY f.row_index LIMIT 50
+                """,
+                params,
+            ).fetchall() or [best]
+            value = conn.execute(
+                f"SELECT {agg}(v) AS v FROM unnest(%(vals)s::double precision[]) AS v",
+                {"vals": [r["value_abs"] for r in column_rows]},
+            ).fetchone()["v"]
+            column = [_fact_from_row(r) for r in column_rows]
+            unit = "rows" if spec.op == "count" else column[0].unit
+            inputs = [f.id for f in column]
+            label = f"{spec.op} of the column"
+            if spec.op in ("max", "min"):
+                pick = next((f for f, r in zip(column, column_rows) if r["value_abs"] == value), column[0])
+                inputs, label = [pick.id], f"{spec.op} of the column: {pick.row_label}"
+            return FactQueryResult(spec, column, [Computed(round(float(value), 4), unit, label, inputs)])
 
 
 def _escape_like(text: str) -> str:

@@ -141,11 +141,11 @@ def _default_plan(
             "what", "was", "were", "how", "much", "many", "the", "and", "for",
             "in", "of", "to", "a", "an",
         }]
-        metric = " ".join(tokens[:3]) if tokens else None
+        metric = " ".join(tokens[:4]) if tokens else q
         calls.append(
             {
                 "tool": ToolName.STRUCTURED_QUERY.value,
-                "args": {"metric_contains": metric, "limit": 10},
+                "args": {"op": "lookup", "metric": metric, "limit": 10},
             }
         )
     if allow_pageindex:
@@ -280,13 +280,11 @@ def _run_one_tool(
             store=deps.stores.chunks,
             embedder=deps.embedder,
         )
-    return structured_query(
-        doc_id=active_doc_id,
-        metric_contains=args.get("metric_contains"),
-        period_contains=args.get("period_contains"),
-        limit=int(args.get("limit") or 20),
-        store=deps.stores.facts,
-    )
+    spec = {k: args[k] for k in ("op", "metric", "periods", "column", "unit", "limit") if args.get(k) is not None}
+    if "metric" not in spec and args.get("metric_contains"):  # the older filter form
+        spec = {"op": "lookup", "metric": args["metric_contains"],
+                "periods": [args["period_contains"]] if args.get("period_contains") else []}
+    return structured_query(doc_id=active_doc_id, spec=spec, store=deps.stores.facts)
 
 
 @dataclass
@@ -480,6 +478,14 @@ class QueryAgent:
                 normalized = _default_plan(
                     question, allow_pageindex=allow_pageindex
                 )[: deps.max_tool_calls]
+            # A fact lookup alone refused most answerable questions in the V1
+            # baseline (85% false refusals): the text around a number is
+            # always fetched too.
+            tools = {c["tool"] for c in normalized}
+            if ToolName.STRUCTURED_QUERY.value in tools and ToolName.SEMANTIC_SEARCH.value not in tools:
+                normalized.append(
+                    {"tool": ToolName.SEMANTIC_SEARCH.value, "args": {"query": question, "top_k": deps.semantic_top_k}}
+                )
             return {"plan_calls": normalized, "error": None}
 
         def tools_node(state: QueryState) -> QueryState:

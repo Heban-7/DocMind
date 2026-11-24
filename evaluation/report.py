@@ -75,6 +75,12 @@ def _extraction(golden: GoldenSet, run_dir: Path) -> dict:
             "row_intact_pct": _pct(sum(r["row_intact"] for r in rows), n),
             "fact_correct_pct": _pct(sum(r["fact_correct"] for r in rows), n),
             "fact_present_but_wrong_pct": _pct(sum(r["fact_present"] and not r["fact_correct"] for r in rows), n),
+            "fact_scaled_pct": _pct(sum(r.get("fact_scaled", False) for r in rows), n),
+            "fact_typed_pct": _pct(sum(r.get("fact_typed", False) for r in rows), n),
+            "fact_scaled_of_intact_pct": _pct(
+                sum(r.get("fact_scaled", False) for r in rows if r["on_gold_page"] == "intact"),
+                sum(1 for r in rows if r["on_gold_page"] == "intact"),
+            ),
         }
 
     by_class: dict[str, list[dict]] = defaultdict(list)
@@ -270,6 +276,9 @@ def render_markdown(r: dict) -> str:
         f"| Label and value on the same row (table row integrity) | {_fmt(f['row_intact_pct'], '%')} |",
         f"| FactTable holds the right value | {_fmt(f['fact_correct_pct'], '%')} |",
         f"| FactTable holds the figure with a wrong value | {_fmt(f['fact_present_but_wrong_pct'], '%')} |",
+        f"| ...with the right sign, scale and unit (typed facts, M5) | {_fmt(f.get('fact_scaled_pct'), '%')} |",
+        f"| ...of the figures intact on their page | {_fmt(f.get('fact_scaled_of_intact_pct'), '%')} |",
+        f"| ...and labels and period that identify it | {_fmt(f.get('fact_typed_pct'), '%')} |",
         f"| Ingest time, all documents | {ex['ingest_seconds']} s |",
         f"| Ingest API cost, all documents | ${ex['ingest_cost_usd']} |",
         "",

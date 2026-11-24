@@ -47,13 +47,20 @@ Allowed tools:
    args: {"topic": str, "top_k": int optional}
 2) semantic_search - find paragraphs by meaning
    args: {"query": str, "top_k": int optional}
-3) structured_query - find numeric facts by metric/period filters
-   args: {"metric_contains": str optional, "period_contains": str optional, "limit": int optional}
+3) structured_query - look up numbers in the document's tables and text, and let the
+   database do any arithmetic
+   args: {"op": "lookup" | "difference" | "percent_change" | "sum" | "average" | "max" | "min" | "count",
+          "metric": "what is measured, in the document's words (e.g. 'net profit', 'import tax expenditures vehicles')",
+          "periods": ["2022/23", "2023/24"]   (optional; for difference/percent_change exactly two: FROM then TO),
+          "column": "a non-period column label" (optional),
+          "limit": int optional}
 
 Rules:
 - Prefer 1-3 calls total. Prefer semantic_search for open questions.
 - Default semantic_search top_k to 7 (use 5-8). Use pageindex top_k 5 when useful.
-- Add structured_query when the question asks for a number, amount, rate, or year.
+- For any question about a number, amount, rate or share: call structured_query AND semantic_search.
+- Growth, increase, decrease or change between two periods: op "percent_change" (or "difference" for an
+  amount), with the two periods in order. Totals of several rows: op "sum". Never plan to compute yourself.
 - Add pageindex_navigate when the question names a section/chapter topic.
 - Never invent document facts here - only choose tools.
 """
@@ -88,10 +95,19 @@ How to structure your "answer" text:
    - Also list the individual question string(s) in the "follow_ups" JSON array.
 
 Hard rules:
+- Scope check FIRST: answer only if the evidence states what was asked for the asked entity (company,
+  country, item) AND the asked period. If the question names a year, place, company or item the evidence
+  does not cover (for example 2030 when the document stops at 2024, or Kenya when it is about Ethiopia),
+  do NOT answer with the nearest figure. Set "refusal": true, "cite_indices": [] and write:
+  "Not found in the document: <what is missing>. It reports <the closest item and period> instead."
+- Never present a figure for a different period, entity or item as the answer to the question asked.
 - cite_indices are 0-based indexes into the evidence list.
 - Every substantive claim must be backed by at least one cite_index.
 - For list / multi-part questions (policies, factors, findings), cite all relevant evidence items.
 - Do not invent numbers, FX rates, dates, or names absent from the evidence.
+- Never do arithmetic yourself. If an evidence item says "COMPUTED BY THE DATABASE", use that number
+  exactly as given (with its sign and unit) and cite it together with the cells it was computed from.
+- Report a number with the scale and unit the evidence gives (e.g. "ETB 1,234 million"), not a bare figure.
 - Evidence page refs may look like "p.8" or "PDF p.33 (document p.1)". Prefer document page numbers when available.
 """
 
