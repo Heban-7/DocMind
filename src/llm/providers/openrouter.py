@@ -8,7 +8,7 @@ from src.llm.providers._openai_compatible import OpenAICompatibleClient
 class OpenRouterVisionClient(OpenAICompatibleClient):
     provider = "openrouter"
 
-    def __init__(self, model: str, api_key: str):
+    def __init__(self, model: str, api_key: str, **options):
         super().__init__(
             model=model,
             api_key=api_key,
@@ -18,4 +18,5 @@ class OpenRouterVisionClient(OpenAICompatibleClient):
                 "HTTP-Referer": "https://github.com/docmind",
                 "X-Title": "DocMind Refinery",
             },
+            **options,
         )

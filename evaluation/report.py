@@ -8,7 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from evaluation.schema import GoldenSet, ReviewStatus, load_golden
-from evaluation.scoring import page_coverage, score_answer, score_figure
+from evaluation.scoring import answer_in_evidence, page_coverage, score_answer, score_figure
 
 
 def _pct(n: float, d: float) -> float | None:
@@ -149,6 +149,13 @@ def _qa(golden: GoldenSet, run_dir: Path) -> dict | None:
             row = json.loads(line)
             raw[row["question_id"]] = row
     doc_class = {d.doc_key: d.doc_class.value for d in golden.documents}
+    figures = {f.figure_id: f for f in golden.figures}
+    page_texts: dict[str, dict[int, str]] = {}
+    for doc in golden.documents:
+        ext = run_dir / "extraction" / f"{doc.doc_key}.json"
+        if ext.exists():
+            data = json.loads(ext.read_text(encoding="utf-8"))
+            page_texts[doc.doc_key] = {int(k): v for k, v in (data.get("pages_text") or {}).items()}
     results = []
     for q in golden.scored_questions():
         row = raw.get(q.question_id)
@@ -174,6 +181,18 @@ def _qa(golden: GoldenSet, run_dir: Path) -> dict | None:
             r.output_tokens = usage.get("output_tokens")
             r.cost_usd = usage.get("total_cost_usd")
         d = r.to_dict()
+        # A figure is often printed on two pages (highlights and statements) while a
+        # question names one: a citation also counts when its page prints the answer.
+        cited = [p for p in d.get("cited_pages") or [] if p]
+        if cited and q.qtype.value != "unanswerable" and not row.get("error"):
+            texts = page_texts.get(q.doc_key, {})
+            figs = [figures[i] for i in q.figure_ids if i in figures]
+            ok = [p in set(q.gold_pages) or answer_in_evidence(q, [texts.get(p, "")], figs) for p in cited]
+            d["citation_support"] = sum(ok) / len(ok)
+        else:
+            d["citation_support"] = None
+        answer_text = (row.get("answer") or "").strip().lower()
+        d["not_found_but_correct"] = bool(d["correct"] and q.qtype.value != "unanswerable" and answer_text.startswith("not found"))
         d["doc_class"] = doc_class.get(q.doc_key)
         d["question"] = q.question
         d["answer"] = (row.get("answer") or "")[:600]
@@ -185,6 +204,7 @@ def _qa(golden: GoldenSet, run_dir: Path) -> dict | None:
         answerable = [r for r in rows if r["qtype"] != "unanswerable"]
         unans = [r for r in rows if r["qtype"] == "unanswerable"]
         prec = [r["citation_precision"] for r in answerable if r["citation_precision"] is not None]
+        support = [r["citation_support"] for r in answerable if r.get("citation_support") is not None]
         ret = [r["retrieval_hit_at_5"] for r in answerable if r["retrieval_hit_at_5"] is not None]
         lat = [r["latency_s"] for r in rows if r.get("latency_s")]
         ftt = [r["first_token_s"] for r in rows if r.get("first_token_s")]
@@ -197,6 +217,8 @@ def _qa(golden: GoldenSet, run_dir: Path) -> dict | None:
             "false_refusal_pct": _pct(sum(r["refused"] and not r["correct"] for r in answerable), len(answerable)),
             "unanswerable_refused_pct": _pct(sum(r["correct"] for r in unans), len(unans)),
             "citation_precision_mean": round(statistics.mean(prec), 3) if prec else None,
+            "citation_support_mean": round(statistics.mean(support), 3) if support else None,
+            "not_found_but_correct": sum(bool(r.get("not_found_but_correct")) for r in answerable),
             "citation_hit_pct": _pct(sum(bool(r["citation_hit"]) for r in answerable), len(answerable)),
             "retrieval_hit_at_5_pct": _pct(sum(ret), len(ret)),
             "latency_p50_s": _quantile(lat, 0.5),
@@ -335,7 +357,9 @@ def render_markdown(r: dict) -> str:
             f"| Unanswerable questions correctly refused | {_fmt(o['unanswerable_refused_pct'], '%')} |",
             f"| Retrieval: a gold page in the top 5 | {_fmt(o['retrieval_hit_at_5_pct'], '%')} |",
             f"| Citation precision (share of citations on a gold page) | {_fmt(o['citation_precision_mean'])} |",
+            f"| Citation support (share of citations on a page that prints the answer) | {_fmt(o.get('citation_support_mean'))} |",
             f"| Answers citing at least one gold page | {_fmt(o['citation_hit_pct'], '%')} |",
+            f"| \"Not found\" answers that still state the right figure | {o.get('not_found_but_correct', '-')} |",
             f"| Latency p50 / p95 | {_fmt(o['latency_p50_s'], ' s')} / {_fmt(o['latency_p95_s'], ' s')} |",
             f"| Time to first token, p50 | {_fmt(o['first_token_p50_s'], ' s')} |",
             f"| LLM calls per question | {_fmt(o['llm_calls_mean'])} |",

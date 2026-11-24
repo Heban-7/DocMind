@@ -26,10 +26,53 @@ from src.llm.providers.gemini import _to_gemini
 
 # --- Registry ---------------------------------------------------------------
 def test_registry_resolves_friendly_name():
-    spec = registry.resolve("gemini-flash")
+    spec = registry.resolve("gemini-2.5-flash-lite")
     assert spec.provider == "gemini"
-    assert spec.slug == "gemini-2.0-flash"
-    assert spec.supports_vision is True
+    assert spec.slug == "gemini-2.5-flash-lite"
+    assert spec.supports_vision is True and spec.free_tier is True
+
+
+def test_registry_old_names_point_at_models_that_still_exist():
+    # Gemini 2.0 was shut down on 1 June 2026; old names must not call it
+    assert registry.resolve("gemini-flash").slug == "gemini-2.5-flash-lite"
+    assert registry.resolve("groq-llama-vision").slug == "openai/gpt-oss-120b"
+
+
+def test_registry_names_match_what_they_call():
+    for name, spec in registry.all_specs().items():
+        if spec.provider in ("openai", "gemini"):
+            assert spec.slug == name, f"{name} calls {spec.slug}"
+
+
+def test_registry_records_when_prices_were_checked():
+    assert registry.prices_checked_on() == "2026-11-24"
+    assert registry.price_sources()["openai"].startswith("https://")
+
+
+def test_reasoning_models_get_reasoning_parameters():
+    from src.llm.providers.openai import OpenAIVisionClient
+
+    spec = registry.resolve("gpt-5-nano")
+    c = OpenAIVisionClient(spec.slug, "sk", api_style=spec.api, reasoning_effort=spec.reasoning_effort)
+    body = c._payload([{"role": "user", "content": "hi"}], temperature=0.0, max_tokens=100)
+    assert "temperature" not in body and "max_tokens" not in body
+    assert body["max_completion_tokens"] > 100 and body["reasoning_effort"] == "low"
+    classic = OpenAIVisionClient("gpt-4o-mini", "sk")._payload([{"role": "user", "content": "hi"}], temperature=0.0, max_tokens=100)
+    assert classic["temperature"] == 0.0 and classic["max_tokens"] == 100
+
+
+def test_gemini_key_is_sent_in_a_header_not_the_url(monkeypatch):
+    from src.llm.providers import gemini
+
+    seen = {}
+
+    def fake_post(url, *, json, headers=None, timeout=None, provider=""):
+        seen["url"], seen["headers"] = url, headers
+        return {"candidates": [{"content": {"parts": [{"text": "ok"}]}}], "usageMetadata": {}}
+
+    monkeypatch.setattr(gemini, "post_json", fake_post)
+    gemini.GeminiVisionClient("gemini-2.5-flash-lite", "secret-key").chat([{"role": "user", "content": "hi"}])
+    assert "secret-key" not in seen["url"] and seen["headers"]["x-goog-api-key"] == "secret-key"
 
 
 def test_registry_resolves_by_slug():
@@ -49,7 +92,7 @@ def test_registry_price_lookup():
 
 
 def test_registry_default_text_model():
-    assert registry.default_model("text") == "gemini-flash"
+    assert registry.default_model("text") == "gpt-4o-mini"
 
 
 # --- Message translation ----------------------------------------------------

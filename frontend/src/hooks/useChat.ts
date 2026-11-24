@@ -66,15 +66,28 @@ export function useChat() {
             )
           );
         },
-        (provenance) => {
+        (done) => {
+          // the checked answer replaces the streamed text: the verifier may have
+          // removed a sentence the evidence does not support
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === aiMsgId ? { ...msg, provenance } : msg
+              msg.id === aiMsgId
+                ? {
+                    ...msg,
+                    content: done.answer || msg.content,
+                    provenance: done.provenance,
+                    status: done.status,
+                    usage: done.usage,
+                    followUps: done.followUps,
+                  }
+                : msg
             )
           );
           setIsLoading(false);
         },
         (err) => {
+          // drop the half-written answer: an error is not an answer
+          setMessages((prev) => prev.filter((msg) => msg.id !== aiMsgId));
           setError(err.message || "Streaming response failed");
           setIsLoading(false);
         }

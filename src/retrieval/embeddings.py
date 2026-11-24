@@ -72,18 +72,41 @@ class OpenAIEmbeddingClient(EmbeddingClient):
         from concurrent.futures import ThreadPoolExecutor
 
         workers = max(1, int(os.getenv("DOCMIND_EMBEDDING_CONCURRENCY", "4")))
+        from src.llm.usage import run_in_context
+
         with ThreadPoolExecutor(max_workers=min(workers, len(batches))) as pool:
-            results = list(pool.map(self._embed_batch, batches))
+            # each batch keeps the caller's context, so its usage reaches the caller's ledger
+            futures = [pool.submit(run_in_context(self._embed_batch, b)) for b in batches]
+            results = [f.result() for f in futures]
         return [v for batch in results for v in batch]
 
     def _embed_batch(self, texts: list[str]) -> list[list[float]]:
         payload: dict = {"model": self.model, "input": texts}
         if self.dimensions is not None:
             payload["dimensions"] = self.dimensions
+        import time
+
+        from src.llm import usage
+        from src.llm.pricing import estimate_cost
+
+        started = time.perf_counter()
         data = post_json(
             _OPENAI_EMBEDDINGS_URL,
             json=payload,
             headers={"Authorization": f"Bearer {self._api_key}"},
+            provider="openai",
+        )
+        tokens = int((data.get("usage") or {}).get("prompt_tokens") or sum(len(t) for t in texts) // 4)
+        usage.emit(
+            usage.UsageEvent(
+                kind="embed",
+                provider="openai",
+                model=self.model,
+                purpose=usage.current_purpose() if usage.current_purpose() != "other" else "embed",
+                input_tokens=tokens,
+                cost_usd=estimate_cost(self.model, tokens, 0),
+                latency_ms=(time.perf_counter() - started) * 1000,
+            )
         )
         # API may return items out of order; sort by index.
         items = sorted(data["data"], key=lambda row: row["index"])

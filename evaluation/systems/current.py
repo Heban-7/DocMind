@@ -170,20 +170,38 @@ def ask(doc_id: str, pdf_path: Path, question: str, *, model: str | None = None)
         doc = repos.get_document(principal.tenant_id, did)
         return blobs.local_path(doc.storage_key) if doc else None
 
-    llm = get_text_client(model=model) if model else None
-    agent = build_query_agent(doc_id, stores=stores, llm=llm, pdf_resolver=resolver)
+    import os
+
+    from src.llm.factory import client_for_request
+
+    llm = client_for_request(model) if model else get_text_client()
+    agent = build_query_agent(
+        doc_id, stores=stores, llm=llm, pdf_resolver=resolver, mode=os.getenv("DOCMIND_EVAL_MODE") or None
+    )
+    first: list[float] = []
     start = time.perf_counter()
+
+    def on_token(_piece: str) -> None:  # the answer is streamed, as in the product
+        if not first:
+            first.append(time.perf_counter() - start)
+
     with measured() as m:
-        answer = agent.ask(question)
+        answer = agent.ask(question, on_token=on_token)
     latency = time.perf_counter() - start
     with measured() as r:
         hits = semantic_search(question, doc_id=doc_id, top_k=5, store=stores.chunks)  # hybrid + rerank since M6
     return {
         "answer": answer.answer,
+        "status": answer.status,
         "cited_pages": [c.page_number for c in answer.provenance.citations],
         "tools": [t.tool.value for t in answer.tool_trace],
         "latency_s": round(latency, 3),
-        "first_token_s": round(latency, 3),  # answers are not streamed token by token yet
+        "first_token_s": round(first[0] if first else latency, 3),
+        "timings": answer.timings,
+        "model": answer.usage.get("answer_model") or f"{llm.provider}/{llm.model}",
+        "prompt_profile": answer.prompt_profile,
+        "mode": answer.mode,
+        "verification": {k: v for k, v in answer.verification.items() if k != "sentences"},
         "usage": m,
         "retrieval_top5_pages": sorted({p for h in hits for p in (h.page_numbers or [])}),
         "retrieval_usage": r,

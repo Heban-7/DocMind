@@ -1,66 +1,85 @@
 """
-LangGraph Query Agent (Phase 4).
+The answer engine (M7): plan, retrieve, answer (streamed), verify.
 
-Analogy: a research supervisor who (1) decides which assistants to send,
-(2) collects their sticky notes, (3) writes a short answer with footnotes.
+    understand ──> retrieve ──> answer ──> verify ──> END
+        └──(greeting)────────────────────────────┘
 
-Graph (one pass, cost-conscious):
-    plan -> execute_tools -> synthesize -> finalize -> END
+* understand: a greeting is answered with no model call. Otherwise one model
+  call plans (standalone question, document, fact lookup), or, for a first
+  question about one document, a rule-based plan does, with no call at all.
+  The search for the question starts at the same time as the planning call.
+* retrieve: hybrid search, the fact lookup (arithmetic in SQL) and the
+  section index run in parallel.
+* answer: one model call writes the answer, citing evidence ids ([E2]); the
+  text is streamed to the caller as it is written, with the ids shown as
+  page badges.
+* verify: every number is checked against the evidence it cites (see
+  ``src.query.verify``); unsupported sentences are removed and citations
+  point at the evidence that holds the numbers. No padding.
 
-STEP 1 adds a Patient File: conversation ``messages`` persisted via a LangGraph
-checkpointer (Postgres in the API) keyed by ``thread_id``.
+A failed model call raises ``LLMError``: the caller reports an error, never a
+"not found" answer (audit P1-8). The whole answer shares one deadline.
+
+Conversation memory (``messages``) is kept by a LangGraph checkpointer
+(Postgres in the API) keyed by ``thread_id``.
 """
 
 from __future__ import annotations
 
+import contextvars
 import logging
+import os
 import re
+import time
 from collections.abc import Callable
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Annotated, Any, Literal, TypedDict
+from typing import Annotated, Any, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 
-from src.agents.intent_router import route_intent
+from src.agents.intent_router import _heuristic_route
 from src.agents.json_util import extract_json
-from src.agents.query_prompts import (
-    CLASSIFIER_SYSTEM,
-    PLANNER_SYSTEM,
-    REWRITER_SYSTEM,
-    SYNTHESIZER_SYSTEM,
-    classifier_user_prompt,
-    planner_user_prompt,
-    rewriter_user_prompt,
-    synthesizer_user_prompt,
-)
+from src.agents.planning import GREETING, Plan, llm_plan, rules_plan
+from src.agents.prompt_profiles import DEFAULT_MODE, PromptProfile, get_profile, normalize_mode
+from src.llm import usage
 from src.llm.base import LLMClient
+from src.llm.errors import LLMError
 from src.llm.factory import get_text_client
 from src.models.conversation import ConversationMessage, MessageRole, SessionConfig
-from src.models.intent import CorpusDocument, IntentRouter
+from src.models.intent import CorpusDocument
 from src.models.provenance import ProvenanceChain
 from src.models.query import QueryAnswer, ToolName, ToolTrace
 from src.query.evidence import EvidenceHit, ToolResult
 from src.query.provenance import assemble_provenance
 from src.query.tools import pageindex_navigate, semantic_search, structured_query
+from src.query.verify import CITE, NOT_FOUND, as_written, missing_scope_terms, verify_answer
 from src.retrieval.embeddings import EmbeddingClient
 from src.stores.base import Stores
 
 logger = logging.getLogger("docmind.query_agent")
 
+_POOL = ThreadPoolExecutor(max_workers=8, thread_name_prefix="docmind-tools")
+_TOKEN_SINK: contextvars.ContextVar[Callable[[str], None] | None] = contextvars.ContextVar("docmind_token_sink", default=None)
+_RUN: contextvars.ContextVar[dict | None] = contextvars.ContextVar("docmind_answer_run", default=None)
 
-# Regex pattern for obvious greetings — avoids LLM call entirely.
-_GREETING_RE = re.compile(
-    r"^\s*"
-    r"(h(i|ello|ey|owdy)|good\s*(morning|afternoon|evening|day)"
-    r"|thanks?|thank\s*you|bye|goodbye|see\s*you|cheers"
-    r"|what'?s\s*up|yo|sup|greetings)"
-    r"[!.,?\s]*$",
-    re.IGNORECASE,
-)
+# Kept for callers that imported it from here.
+_GREETING_RE = GREETING
+
+MAX_COMPUTED = 3
+MAX_FACTS = 6
+MAX_SECTIONS = 2
+
+
+def _deadline_seconds() -> float:
+    try:
+        return float(os.getenv("DOCMIND_ANSWER_DEADLINE_S", "60"))
+    except ValueError:
+        return 60.0
 
 
 class QueryState(TypedDict, total=False):
@@ -68,21 +87,15 @@ class QueryState(TypedDict, total=False):
 
     messages: Annotated[list[BaseMessage], add_messages]
     question: str
+    standalone: str
+    mode: str
     doc_id: str
     active_doc_id: str | None
-    intent: dict[str, Any]
-    intent_type: str  # "greeting" | "document_query"
-    rewritten_question: str  # decontextualised query
     pdf_path: str | None
-    plan_calls: list[dict[str, Any]]
-    hits: list[dict[str, Any]]
-    tool_trace: list[dict[str, Any]]
-    draft_answer: str
-    cite_indices: list[int]
-    refusal: bool
-    follow_ups: list[str]  # autonomous follow-up suggestions
-    answer: dict[str, Any] | None
-    error: str | None
+    plan: dict[str, Any]
+    # Evidence, traces and the draft live in the per-call run record, not here:
+    # the checkpointer writes the state after every step, and the evidence of
+    # one answer is tens of kilobytes.
 
 
 def _resolve_pdf(deps: "QueryAgentDeps", doc_id: str | None) -> Path | None:
@@ -100,124 +113,34 @@ class QueryAgentDeps:
 
     llm: LLMClient
     stores: Stores
-    doc_id: str | None = None  # forced pin; None => IntentRouter decides
+    doc_id: str | None = None  # forced pin; None => the plan picks from the corpus
     pdf_path: str | Path | None = None
     # document id -> local PDF path (page labels and citation boxes)
     pdf_resolver: Callable[[str], Path | None] | None = None
     embedder: EmbeddingClient | None = None
     checkpointer: BaseCheckpointSaver | None = None
     corpus: list[CorpusDocument] = field(default_factory=list)
-    max_tool_calls: int = 3
-    semantic_top_k: int = 7
-    pageindex_top_k: int = 5
-    min_citations: int = 5
+    max_tool_calls: int = 3  # kept for callers; the engine runs at most three tools
+    semantic_top_k: int = 6
+    pageindex_top_k: int = 3
+    min_citations: int = 0  # unused since M7: citations are never padded
     max_citations: int = 8
     history_max_messages: int = 12
+    planner: str = field(default_factory=lambda: os.getenv("DOCMIND_PLANNER", "auto"))  # auto | llm | rules
+    profile: PromptProfile = field(default_factory=get_profile)
+    mode: str = DEFAULT_MODE
 
 
 def _extract_json(text: str) -> dict[str, Any]:
     """Backward-compatible alias."""
     return extract_json(text)
 
-def _default_plan(
-    question: str,
-    *,
-    allow_pageindex: bool = True,
-) -> list[dict[str, Any]]:
-    """Cheap heuristic plan used when the LLM returns unusable JSON."""
-    q = question.strip()
-    calls: list[dict[str, Any]] = [
-        {"tool": ToolName.SEMANTIC_SEARCH.value, "args": {"query": q, "top_k": 7}},
-    ]
-    lowered = q.lower()
-    if any(
-        w in lowered
-        for w in (
-            "how much", "what was", "revenue", "expenditure", "etb", "$",
-            "billion", "million", "percent", "%", "fy ", "20",
-        )
-    ):
-        tokens = [t for t in re.findall(r"[A-Za-z]{3,}", q) if t.lower() not in {
-            "what", "was", "were", "how", "much", "many", "the", "and", "for",
-            "in", "of", "to", "a", "an",
-        }]
-        metric = " ".join(tokens[:4]) if tokens else q
-        calls.append(
-            {
-                "tool": ToolName.STRUCTURED_QUERY.value,
-                "args": {"op": "lookup", "metric": metric, "limit": 10},
-            }
-        )
-    if allow_pageindex:
-        calls.append(
-            {
-                "tool": ToolName.PAGEINDEX_NAVIGATE.value,
-                "args": {"topic": q, "top_k": 5},
-            }
-        )
-    return calls[:3]
-
-
-def _expand_cite_indices(
-    cite_indices: list[int],
-    hits: list[EvidenceHit],
-    *,
-    min_citations: int,
-    max_citations: int,
-) -> list[int]:
-    """Keep synthesizer cites, then pad with next-best hits up to min/max.
-
-    Retrieval may already have 5-7 related chunks; the LLM often returns only
-    1-3 cite_indices. Padding by score keeps related evidence in the report
-    without inventing new retrieval.
-    """
-    if not hits:
-        return []
-    ceiling = max(1, min(int(max_citations), len(hits)))
-    floor = max(1, min(int(min_citations), ceiling))
-
-    ordered: list[int] = []
-    seen: set[int] = set()
-    for i in cite_indices:
-        if 0 <= i < len(hits) and i not in seen:
-            ordered.append(i)
-            seen.add(i)
-
-    remaining = [
-        i
-        for i, _ in sorted(
-            enumerate(hits),
-            key=lambda pair: (-float(pair[1].score or 0.0), pair[0]),
-        )
-        if i not in seen
-    ]
-    # Meet the preferred minimum first, then fill remaining related hits.
-    while len(ordered) < floor and remaining:
-        ordered.append(remaining.pop(0))
-    while len(ordered) < ceiling and remaining:
-        ordered.append(remaining.pop(0))
-    return ordered[:ceiling]
-
-
-def _format_hit(hit: EvidenceHit, index: int) -> str:
-    from src.query.page_map import format_page_reference
-
-    page_bit = format_page_reference(hit.page_number, hit.printed_page)
-    bits = [
-        f"tool={hit.tool.value}",
-        f"doc={hit.doc_id}" if hit.doc_id else None,
-        f"page={page_bit}",
-        f"title={hit.title!r}" if hit.title else None,
-        f"excerpt={hit.excerpt!r}",
-    ]
-    return " | ".join(b for b in bits if b)
-
 
 def _format_history(messages: list[BaseMessage], *, max_messages: int) -> str:
-    """Render prior turns for planner/synthesizer (excludes the latest human)."""
+    """Render prior turns for the planner and the answer step (excludes the latest human)."""
     if not messages:
         return ""
-    prior = list(messages[:-1]) if messages else []
+    prior = list(messages[:-1])
     window = prior[-max_messages:] if max_messages > 0 else prior
     lines: list[str] = []
     for msg in window:
@@ -231,65 +154,193 @@ def _format_history(messages: list[BaseMessage], *, max_messages: int) -> str:
     return "\n".join(lines)
 
 
-def _run_one_tool(
-    call: dict[str, Any],
-    deps: QueryAgentDeps,
-    *,
-    active_doc_id: str | None,
-) -> ToolResult:
-    """Run one retrieval tool, applying the IntentRouter's doc filter."""
-    name = str(call.get("tool") or "").strip()
-    args = dict(call.get("args") or {})
-    try:
-        tool = ToolName(name)
-    except ValueError:
-        return ToolResult(
-            tool=ToolName.SEMANTIC_SEARCH,
-            hits=[],
-            trace=ToolTrace(
-                tool=ToolName.SEMANTIC_SEARCH,
-                arguments=args,
-                summary=f"unknown tool '{name}' skipped",
-            ),
-        )
+# --- evidence ----------------------------------------------------------------
 
-    if tool is ToolName.PAGEINDEX_NAVIGATE:
-        if not active_doc_id:
-            return ToolResult(
-                tool=tool,
-                hits=[],
-                trace=ToolTrace(
-                    tool=tool,
-                    arguments=args,
-                    summary="skipped: pageindex requires a scoped document_id",
-                ),
-            )
-        return pageindex_navigate(
-            str(args.get("topic") or active_doc_id),
-            doc_id=active_doc_id,
-            top_k=int(args.get("top_k") or deps.pageindex_top_k),
-            store=deps.stores.pageindex,
-        )
-    if tool is ToolName.SEMANTIC_SEARCH:
-        # IntentRouter output: concrete id => document filter;
-        # None => federated corpus search (still within one tenant).
-        return semantic_search(
-            str(args.get("query") or ""),
-            doc_id=active_doc_id,
-            top_k=int(args.get("top_k") or deps.semantic_top_k),
-            store=deps.stores.chunks,
-            embedder=deps.embedder,
-        )
-    spec = {k: args[k] for k in ("op", "metric", "periods", "column", "unit", "limit") if args.get(k) is not None}
-    if "metric" not in spec and args.get("metric_contains"):  # the older filter form
-        spec = {"op": "lookup", "metric": args["metric_contains"],
-                "periods": [args["period_contains"]] if args.get("period_contains") else []}
-    return structured_query(doc_id=active_doc_id, spec=spec, store=deps.stores.facts)
+
+def _clip(n: Any, lo: int, hi: int, default: int) -> int:
+    try:
+        return max(lo, min(hi, int(n)))
+    except (TypeError, ValueError):
+        return default
+
+
+def _search(deps: QueryAgentDeps, query: str, doc_id: str | None) -> ToolResult:
+    return semantic_search(query, doc_id=doc_id, top_k=_clip(deps.semantic_top_k, 1, 10, 6), store=deps.stores.chunks, embedder=deps.embedder)
+
+
+def _facts(deps: QueryAgentDeps, spec: dict, doc_id: str | None) -> ToolResult:
+    spec = dict(spec)
+    spec["limit"] = _clip(spec.get("limit", 10), 1, 20, 10)
+    return structured_query(doc_id=doc_id, spec=spec, store=deps.stores.facts)
+
+
+def _sections(deps: QueryAgentDeps, topic: str, doc_id: str) -> ToolResult:
+    return pageindex_navigate(topic, doc_id=doc_id, top_k=_clip(deps.pageindex_top_k, 1, 5, 3), store=deps.stores.pageindex)
+
+
+def _safe(tool: ToolName, args: dict, fn: Callable[[], ToolResult]) -> ToolResult:
+    try:
+        return fn()
+    except LLMError:
+        raise
+    except Exception as exc:
+        logger.warning("Tool %s failed: %s", tool.value, exc)
+        return ToolResult(tool=tool, hits=[], trace=ToolTrace(tool=tool, arguments=args, summary=f"tool error: {exc}"))
+
+
+def _submit(fn: Callable[[], ToolResult]) -> Future:
+    return _POOL.submit(usage.run_in_context(fn))
+
+
+def _order_hits(results: list[ToolResult], doc_id: str | None) -> list[EvidenceHit]:
+    computed, facts, chunks, sections = [], [], [], []
+    seen: set[str] = set()
+    for r in results:
+        for h in r.hits:
+            if doc_id and h.doc_id and h.doc_id != doc_id:
+                continue
+            key = str(h.extra.get("fact_id") or h.chunk_id or "") or f"{h.tool.value}:{h.doc_id}:{h.page_number}:{h.excerpt[:80]}"
+            if key in seen:
+                continue
+            seen.add(key)
+            if h.tool is ToolName.STRUCTURED_QUERY and h.extra.get("computed"):
+                computed.append(h)
+            elif h.tool is ToolName.STRUCTURED_QUERY:
+                facts.append(h)
+            elif h.tool is ToolName.PAGEINDEX_NAVIGATE:
+                sections.append(h)
+            else:
+                chunks.append(h)
+    return computed[:MAX_COMPUTED] + facts[:MAX_FACTS] + chunks + sections[:MAX_SECTIONS]
+
+
+def _evidence_text(h: EvidenceHit) -> str:
+    """What the verifier searches: the excerpt, its section and title context."""
+    return " ".join(x for x in (h.excerpt, h.title, str(h.extra.get("context") or "")) if x)
+
+
+def _evidence_values(h: EvidenceHit) -> list[float]:
+    vals = [h.extra.get("value"), h.extra.get("value_abs")]
+    return [float(v) for v in vals if isinstance(v, (int, float))]
+
+
+def _kind(h: EvidenceHit) -> str:
+    if h.tool is ToolName.STRUCTURED_QUERY:
+        return "computed" if h.extra.get("computed") else "table cell"
+    if h.tool is ToolName.PAGEINDEX_NAVIGATE:
+        return "section summary"
+    return "passage"
+
+
+def _defang(text: str) -> str:
+    return re.sub(r"<\s*/?\s*evidence", "‹evidence", text or "", flags=re.IGNORECASE)
+
+
+def evidence_blocks(hits: list[EvidenceHit], *, multi_doc: bool = False) -> str:
+    blocks = []
+    for i, h in enumerate(hits, 1):
+        attrs = [f'id="E{i}"', f'page="{h.page_number}"', f'kind="{_kind(h)}"']
+        if multi_doc and h.document_name:
+            attrs.append(f'document="{_defang(h.document_name)[:80]}"')
+        if h.title:
+            attrs.append(f'section="{_defang(h.title).replace(chr(34), chr(39))[:160]}"')
+        period = h.extra.get("period")
+        if period:
+            attrs.append(f'period="{_defang(str(period))[:40]}"')
+        blocks.append(f"<evidence {' '.join(attrs)}>\n{_defang(h.excerpt)}\n</evidence>")
+    return "\n\n".join(blocks) if blocks else "(no evidence was found)"
+
+
+def answer_user_prompt(question: str, blocks: str, *, history: str = "", notes: list[str] | None = None) -> str:
+    parts = [f"question: {question}"]
+    if history.strip():
+        parts.append("recent conversation:\n" + history)
+    if notes:
+        parts.append("notes:\n" + "\n".join(f"- {n}" for n in notes))
+    parts.append("evidence:\n" + blocks)
+    parts.append("Write the answer now.")
+    return "\n\n".join(parts)
+
+
+# --- streaming ------------------------------------------------------------------
+
+_TRAILER = re.compile(r"\n?\s*\**FOLLOW[\s-]?UPS?\**\s*:", re.IGNORECASE)
+
+
+def _labels(hits: list[EvidenceHit]) -> dict[int, str]:
+    return {i: f"[Page {h.page_number}]" for i, h in enumerate(hits, 1)}
+
+
+def display_text(text: str, labels: dict[int, str]) -> str:
+    """``[E2][E5]`` -> ``[Page 12][Page 30]`` (same page once)."""
+
+    def run(m: re.Match) -> str:
+        ids = [int(x) for x in CITE.findall(m.group(0))]
+        out = list(dict.fromkeys(labels[i] for i in ids if i in labels))
+        return (" " if m.group(0).startswith(" ") else "") + "".join(out)
+
+    return re.sub(r" ?(?:\[E\d{1,3}\])+", run, text or "")
+
+
+class StreamFilter:
+    """Shows the answer as it streams: evidence ids become page badges, the FOLLOW-UPS trailer is hidden."""
+
+    def __init__(self, labels: dict[int, str]):
+        self.labels = labels
+        self.raw = ""
+        self.sent = 0  # chars of raw already shown
+        self.done = False
+
+    def feed(self, piece: str) -> str:
+        self.raw += piece
+        return self._release(final=False)
+
+    def finish(self) -> str:
+        return self._release(final=True)
+
+    def _release(self, *, final: bool) -> str:
+        if self.done:
+            return ""
+        m = _TRAILER.search(self.raw, self.sent)
+        end = m.start() if m else len(self.raw)
+        if m:
+            self.done = True
+        elif not final:
+            tail = self.raw[self.sent:end]
+            hold = len(tail)
+            bracket = tail.rfind("[")
+            if bracket != -1 and "]" not in tail[bracket:] and len(tail) - bracket < 8:
+                hold = bracket  # wait for "[E12]" to close
+            low = tail.lower()
+            for k in range(12, 0, -1):  # a trailer may be arriving: "\nFOLLOW-U" (longest match first)
+                if low.endswith("\nfollow-ups:"[:k]) or low.endswith("follow-ups:"[:k]) or low.endswith("**follow"[:k]):
+                    hold = min(hold, len(tail) - k)
+                    break
+            end = self.sent + max(0, hold)
+        out = self.raw[self.sent:end]
+        self.sent = end
+        return display_text(out, self.labels)
+
+
+def split_follow_ups(text: str) -> tuple[str, list[str]]:
+    m = _TRAILER.search(text or "")
+    if not m:
+        return (text or "").strip(), []
+    body, tail = text[: m.start()], text[m.end():]
+    ups = []
+    for line in tail.splitlines():
+        line = line.strip().lstrip("-*•").strip()
+        if line and line.lower().rstrip(".") != "none":
+            ups.append(line)
+    return body.strip(), ups[:2]
+
+
+# --- the agent -------------------------------------------------------------------
 
 
 @dataclass
 class QueryAgent:
-    """Compile-once LangGraph runner scoped to a single document."""
+    """Compile-once LangGraph runner."""
 
     deps: QueryAgentDeps
     _graph: Any = field(default=None, init=False, repr=False)
@@ -297,421 +348,209 @@ class QueryAgent:
     def __post_init__(self) -> None:
         self._graph = self._build_graph()
 
+    # The nodes read the per-call run record (timings, streaming sink) from a
+    # context variable: callables cannot live in checkpointed state.
+
     def _build_graph(self):
         deps = self.deps
 
-        # ---- NEW: Intent Classification (entry point) --------------------
-        def classify_intent_node(state: QueryState) -> QueryState:
-            """Fast-path regex or LLM classification: greeting vs document query."""
+        def understand_node(state: QueryState) -> QueryState:
+            run = _RUN.get() or {}
             question = (state.get("question") or "").strip()
+            history = _format_history(list(state.get("messages") or []), max_messages=deps.history_max_messages)
+            pinned = deps.doc_id
+            catalog = [] if pinned else list(deps.corpus)
+            if not pinned and len(catalog) == 1:
+                pinned, catalog = catalog[0].document_id, []
 
-            # Regex fast-path: obvious greetings skip the LLM entirely.
-            if _GREETING_RE.match(question):
-                logger.debug("classify_intent: regex matched greeting")
-                return {"intent_type": "greeting", "error": None}
+            if GREETING.match(question):
+                return {"plan": Plan(kind="chitchat", question=question).__dict__, "standalone": question}
 
-            # LLM fallback for edge cases.
-            try:
-                result = deps.llm.complete(
-                    classifier_user_prompt(question),
-                    system=CLASSIFIER_SYSTEM,
-                    response_format="json",
-                    temperature=0.0,
-                    max_tokens=60,
-                )
-                payload = _extract_json(result.text)
-                intent = str(payload.get("intent") or "document_query").strip().lower()
-                if intent not in ("greeting", "document_query"):
-                    intent = "document_query"
-            except Exception as exc:  # pragma: no cover
-                logger.warning("Intent classifier failed (%s); defaulting to document_query", exc)
-                intent = "document_query"
-
-            logger.debug("classify_intent: %s", intent)
-            return {"intent_type": intent, "error": None}
-
-        # ---- NEW: Greeting Response (short-circuit) ----------------------
-        def greeting_response_node(state: QueryState) -> QueryState:
-            """Generate a warm greeting, optionally acknowledging the active document."""
-            active = state.get("active_doc_id") or deps.doc_id
-            if active:
-                # Try to find document name from corpus or profile.
-                doc_name = active
-                for d in deps.corpus:
-                    if d.document_id == active:
-                        doc_name = d.document_name or active
-                        break
-                answer_text = (
-                    f"Hello! I'm ready to help you explore **{doc_name}**. "
-                    "What would you like to know about this document?"
-                )
-            else:
-                answer_text = (
-                    "Hello! Welcome to DocMind \U0001f4c4 — your document intelligence "
-                    "assistant. Upload a PDF to get started, or ask me anything "
-                    "about your documents!"
-                )
-
-            qa = QueryAnswer(
-                question=state.get("question") or "",
-                answer=answer_text,
-                provenance=ProvenanceChain(),
-                doc_id=active,
-            )
-            return {
-                "draft_answer": answer_text,
-                "refusal": False,
-                "cite_indices": [],
-                "follow_ups": [],
-                "hits": [],
-                "tool_trace": [],
-                "answer": qa.model_dump(mode="json"),
-                "messages": [AIMessage(content=answer_text)],
-            }
-
-        # ---- NEW: Query Rewriter (pronoun resolution) --------------------
-        def rewrite_query_node(state: QueryState) -> QueryState:
-            """Decontextualize the question: strip fluff, resolve pronouns."""
-            question = (state.get("question") or "").strip()
-            history = _format_history(
-                list(state.get("messages") or []),
-                max_messages=deps.history_max_messages,
-            )
-
-            # Skip rewriting if there's no conversation history to resolve.
+            use_llm = deps.planner == "llm" or (deps.planner == "auto" and (bool(history.strip()) or len(catalog) > 1))
+            speculative: Future | None = None
             if not history.strip():
-                return {"rewritten_question": question, "error": None}
+                speculative = _submit(lambda: _safe(ToolName.SEMANTIC_SEARCH, {"query": question}, lambda: _search(deps, question, pinned)))
 
-            try:
-                result = deps.llm.complete(
-                    rewriter_user_prompt(question, history=history),
-                    system=REWRITER_SYSTEM,
-                    temperature=0.0,
-                    max_tokens=200,
-                )
-                rewritten = result.text.strip().strip('"').strip("'").strip()
-                if not rewritten:
-                    rewritten = question
-            except Exception as exc:  # pragma: no cover
-                logger.warning("Query rewriter failed (%s); using original", exc)
-                rewritten = question
-
-            logger.debug("rewrite_query: '%s' -> '%s'", question, rewritten)
-            return {
-                "rewritten_question": rewritten,
-                "question": rewritten,  # update for downstream nodes
-                "error": None,
-            }
-
-        # ---- Conditional edge function -----------------------------------
-        def _after_classify(state: QueryState) -> Literal["greeting_response", "rewrite_query"]:
-            """Route to greeting or full retrieval pipeline."""
-            if state.get("intent_type") == "greeting":
-                return "greeting_response"
-            return "rewrite_query"
-
-        # ---- Existing nodes (updated) ------------------------------------
-        def route_node(state: QueryState) -> QueryState:
-            """IntentRouter before retrieval: pin one doc or search the corpus."""
-            question = state["question"]
-            intent = route_intent(
-                question,
-                corpus=deps.corpus,
-                llm=None if deps.doc_id else deps.llm,
-                forced_document_id=deps.doc_id,
-            )
-            active = intent.document_id
-            pdf = deps.pdf_path
-            if active and pdf is None:
-                pdf = _resolve_pdf(deps, active)
-            return {
-                "intent": intent.model_dump(mode="json"),
-                "active_doc_id": active,
-                "doc_id": active or "",
-                "pdf_path": str(pdf) if pdf else None,
-                "error": None,
-            }
-
-        def plan_node(state: QueryState) -> QueryState:
-            question = state["question"]
-            active = state.get("active_doc_id")
-            allow_pageindex = bool(active)
-            history = _format_history(
-                list(state.get("messages") or []),
-                max_messages=deps.history_max_messages,
-            )
-            scope_label = active or "CORPUS (all documents)"
-            try:
-                result = deps.llm.complete(
-                    planner_user_prompt(
-                        question,
-                        scope_label,
-                        history=history,
-                    ),
-                    system=PLANNER_SYSTEM,
-                    response_format="json",
-                    temperature=0.0,
-                    max_tokens=400,
-                )
-                payload = _extract_json(result.text)
-                calls = payload.get("calls")
-                if not isinstance(calls, list) or not calls:
-                    calls = _default_plan(question, allow_pageindex=allow_pageindex)
-            except Exception as exc:  # pragma: no cover - network / provider
-                logger.warning("Planner failed (%s); using heuristic plan", exc)
-                calls = _default_plan(question, allow_pageindex=allow_pageindex)
-
-            normalized: list[dict[str, Any]] = []
-            for raw in calls[: deps.max_tool_calls]:
-                if not isinstance(raw, dict):
-                    continue
-                tool = str(raw.get("tool") or "").strip()
-                if not tool:
-                    continue
-                # Corpus-wide: drop pageindex even if planner asked for it.
-                if tool == ToolName.PAGEINDEX_NAVIGATE.value and not allow_pageindex:
-                    continue
-                normalized.append(
-                    {"tool": tool, "args": dict(raw.get("args") or {})}
-                )
-            if not normalized:
-                normalized = _default_plan(
-                    question, allow_pageindex=allow_pageindex
-                )[: deps.max_tool_calls]
-            # A fact lookup alone refused most answerable questions in the V1
-            # baseline (85% false refusals): the text around a number is
-            # always fetched too.
-            tools = {c["tool"] for c in normalized}
-            if ToolName.STRUCTURED_QUERY.value in tools and ToolName.SEMANTIC_SEARCH.value not in tools:
-                normalized.append(
-                    {"tool": ToolName.SEMANTIC_SEARCH.value, "args": {"query": question, "top_k": deps.semantic_top_k}}
-                )
-            return {"plan_calls": normalized, "error": None}
-
-        def tools_node(state: QueryState) -> QueryState:
-            hits: list[EvidenceHit] = []
-            traces: list[ToolTrace] = []
-            active = state.get("active_doc_id")
-            for call in state.get("plan_calls") or []:
+            if use_llm:
                 try:
-                    result = _run_one_tool(call, deps, active_doc_id=active)
-                except Exception as exc:
-                    name = str(call.get("tool") or ToolName.SEMANTIC_SEARCH.value)
-                    try:
-                        tool_name = ToolName(name)
-                    except ValueError:
-                        tool_name = ToolName.SEMANTIC_SEARCH
-                    logger.warning("Tool %s failed: %s", name, exc)
-                    result = ToolResult(
-                        tool=tool_name,
-                        hits=[],
-                        trace=ToolTrace(
-                            tool=tool_name,
-                            arguments=dict(call.get("args") or {}),
-                            summary=f"tool error: {exc}",
-                        ),
-                    )
-                hits.extend(result.hits)
-                traces.append(result.trace)
-
-            if active:
-                scoped_hits = []
-                for h in hits:
-                    if not h.doc_id or h.doc_id == active:
-                        scoped_hits.append(h.model_copy(update={"doc_id": active}))
-                hits = scoped_hits
-
-            pdf = state.get("pdf_path") or deps.pdf_path
-            from src.query.page_map import enrich_hit_printed_page
-
-            pdf_cache: dict[str, Path | None] = {}
-
-            def _pdf_for(hit: EvidenceHit):
-                if pdf:
-                    return pdf
-                if hit.doc_id not in pdf_cache:
-                    pdf_cache[hit.doc_id] = _resolve_pdf(deps, hit.doc_id)
-                return pdf_cache[hit.doc_id]
-
-            hits = [
-                enrich_hit_printed_page(h, pdf_path=_pdf_for(h)) for h in hits
-            ]
-            return {
-                "hits": [h.model_dump(mode="json") for h in hits],
-                "tool_trace": [t.model_dump(mode="json") for t in traces],
-            }
-
-        def synthesize_node(state: QueryState) -> QueryState:
-            hits = [EvidenceHit.model_validate(h) for h in (state.get("hits") or [])]
-            blocks = [_format_hit(h, i) for i, h in enumerate(hits)]
-            question = state["question"]
-            history = _format_history(
-                list(state.get("messages") or []),
-                max_messages=deps.history_max_messages,
-            )
-            try:
-                result = deps.llm.complete(
-                    synthesizer_user_prompt(question, blocks, history=history),
-                    system=SYNTHESIZER_SYSTEM,
-                    response_format="json",
-                    temperature=0.0,
-                    max_tokens=2048,
-                )
-                payload = _extract_json(result.text)
-            except Exception as exc:  # pragma: no cover
-                logger.warning("Synthesizer failed (%s)", exc)
-                payload = {}
-
-            refusal = bool(payload.get("refusal"))
-            answer = str(payload.get("answer") or "").strip()
-
-            # Clean inline citation badges: convert [📄 doc_id — Page p.X] or [Page p.X] into [Page X]
-            if answer:
-                answer = re.sub(
-                    r"\[(?:📄\s*)?[^\]]*?Page\s*(?:p\.)?\s*(\d+)\]",
-                    r"[Page \1]",
-                    answer,
-                    flags=re.IGNORECASE,
-                )
-                answer = re.sub(r"\[p\.\s*(\d+)\]", r"[Page \1]", answer, flags=re.IGNORECASE)
-
-            raw_idxs = payload.get("cite_indices") or []
-            cite_indices: list[int] = []
-            if isinstance(raw_idxs, list):
-                for x in raw_idxs:
-                    try:
-                        i = int(x)
-                    except (TypeError, ValueError):
-                        continue
-                    if 0 <= i < len(hits):
-                        cite_indices.append(i)
-
-            # Extract follow-up suggestions from synthesizer output if present.
-            raw_followups = payload.get("follow_ups") or []
-            follow_ups: list[str] = []
-            if isinstance(raw_followups, list):
-                for f in raw_followups:
-                    s = str(f).strip()
-                    if s:
-                        follow_ups.append(s)
-
-            if not answer:
-                refusal = True
-                answer = "Unverifiable / Source Not Found — the document does not contain this information."
-                cite_indices = []
-                follow_ups = []
-            elif not hits:
-                refusal = True
-                if "could not find" not in answer.lower() and "unverifiable" not in answer.lower():
-                    answer = "Unverifiable / Source Not Found — the document does not contain this information."
-                cite_indices = []
-                follow_ups = []
-            elif not refusal:
-                # LLM often cites 1-3; pad with next-best retrieved hits (5-7).
-                cite_indices = _expand_cite_indices(
-                    cite_indices,
-                    hits,
-                    min_citations=deps.min_citations,
-                    max_citations=deps.max_citations,
-                )
-
-            return {
-                "draft_answer": answer,
-                "cite_indices": cite_indices,
-                "refusal": refusal,
-                "follow_ups": follow_ups,
-            }
-
-        def finalize_node(state: QueryState) -> QueryState:
-            # If greeting_response already set the answer, just pass through.
-            if state.get("answer") and state.get("intent_type") == "greeting":
-                return {}
-
-            hits = [EvidenceHit.model_validate(h) for h in (state.get("hits") or [])]
-            idxs = state.get("cite_indices") or []
-            selected = [hits[i] for i in idxs if 0 <= i < len(hits)]
-            if state.get("refusal") or not selected:
-                provenance = ProvenanceChain()
+                    with usage.purpose("plan"):
+                        plan = llm_plan(deps.llm, question, system=deps.profile.plan_system, history=history, catalog=catalog or None)
+                except LLMError as exc:
+                    if exc.kind in ("auth", "deadline", "rate_limit"):
+                        raise
+                    logger.warning("Planner call failed (%s); using the rule-based plan", exc)
+                    plan = rules_plan(question)
+                    plan.source = "fallback"
+                    plan.notes.append(f"planner error: {exc.kind}")
             else:
-                pdf_for_cite = state.get("pdf_path") or deps.pdf_path
-                if not pdf_for_cite and selected and selected[0].doc_id:
-                    pdf_for_cite = _resolve_pdf(deps, selected[0].doc_id)
-                provenance = assemble_provenance(
-                    selected,
-                    pdf_path=pdf_for_cite,
-                    max_citations=deps.max_citations,
+                plan = rules_plan(question)
+
+            doc = pinned or plan.document_id
+            if not doc and catalog and plan.source != "llm":
+                doc = _heuristic_route(question, catalog).document_id
+            plan.document_id = doc
+            run["speculative"] = speculative
+            run["speculative_doc"] = pinned
+            run["plan_s"] = time.perf_counter() - run.get("t0", time.perf_counter())
+            pdf = deps.pdf_path or (_resolve_pdf(deps, doc) if doc else None)
+            return {
+                "plan": plan.__dict__,
+                "standalone": plan.question or question,
+                "active_doc_id": doc,
+                "doc_id": doc or "",
+                "pdf_path": str(pdf) if pdf else None,
+            }
+
+        def after_understand(state: QueryState) -> str:
+            return "verify" if (state.get("plan") or {}).get("kind") == "chitchat" else "retrieve"
+
+        def retrieve_node(state: QueryState) -> QueryState:
+            run = _RUN.get() or {}
+            plan = state.get("plan") or {}
+            doc = state.get("active_doc_id")
+            standalone = state.get("standalone") or state.get("question") or ""
+            jobs: list[Future] = []
+            speculative: Future | None = run.pop("speculative", None)
+            # The search started with the planning call ran on the question as asked (it
+            # only starts when there is no conversation to resolve), so it stays valid
+            # unless the plan then picked a document the search did not filter on.
+            if speculative is not None and run.get("speculative_doc") == doc:
+                jobs.append(speculative)
+            else:
+                if speculative is not None:
+                    speculative.cancel()
+                jobs.append(_submit(lambda: _safe(ToolName.SEMANTIC_SEARCH, {"query": standalone}, lambda: _search(deps, standalone, doc))))
+            if plan.get("facts"):
+                spec = plan["facts"]
+                jobs.append(_submit(lambda: _safe(ToolName.STRUCTURED_QUERY, spec, lambda: _facts(deps, spec, doc))))
+            if plan.get("section") and doc:
+                topic = plan["section"]
+                jobs.append(_submit(lambda: _safe(ToolName.PAGEINDEX_NAVIGATE, {"topic": topic}, lambda: _sections(deps, topic, doc))))
+            results = [j.result() for j in jobs]
+            hits = _order_hits(results, doc)
+            titles = " ".join({h.document_name for h in hits if h.document_name})
+            titles += " " + " ".join(d.document_name for d in deps.corpus if d.document_id == doc)
+            missing = missing_scope_terms(standalone, " ".join(_evidence_text(h) for h in hits) + " " + titles)
+            run["retrieve_s"] = time.perf_counter() - run.get("t0", time.perf_counter())
+            run["hits"], run["traces"], run["missing_terms"] = hits, [r.trace for r in results], missing
+            return {}
+
+        def answer_node(state: QueryState) -> QueryState:
+            run = _RUN.get() or {}
+            hits: list[EvidenceHit] = run.get("hits") or []
+            mode = state.get("mode") or deps.mode
+            standalone = state.get("standalone") or state.get("question") or ""
+            if mode == "audit":
+                # a claim is checked as the user wrote it, not as a rewritten question
+                standalone = state.get("question") or standalone
+            if not hits:
+                run["draft"], run["follow_ups"] = f"{NOT_FOUND}: no passage or table in the document matches this question.", []
+                return {}
+            history = _format_history(list(state.get("messages") or []), max_messages=deps.history_max_messages)
+            notes = []
+            missing = run.get("missing_terms") or []
+            if missing:
+                notes.append(
+                    "These words from the question appear nowhere in the evidence: "
+                    + ", ".join(as_written(standalone, m) for m in missing)
+                    + ". If the question depends on them, the answer is not in the evidence."
                 )
-                if provenance.is_empty and selected:
-                    provenance = assemble_provenance(
-                        [h for h in selected if h.excerpt or h.content_hash],
-                        pdf_path=pdf_for_cite,
-                        max_citations=deps.max_citations,
-                    )
+            multi = len({h.doc_id for h in hits if h.doc_id}) > 1
+            prompt = answer_user_prompt(standalone, evidence_blocks(hits, multi_doc=multi), history=history, notes=notes)
+            messages = [{"role": "system", "content": deps.profile.answer_prompt(mode)}, {"role": "user", "content": prompt}]
+            sink = _TOKEN_SINK.get()
+            stream_filter = StreamFilter(_labels(hits))
+            with usage.purpose("answer"):
+                stream = deps.llm.stream(messages, temperature=0.0, max_tokens=1600 if mode == "detailed" else 900)
+                for piece in stream:
+                    shown = stream_filter.feed(piece)
+                    if shown and sink is not None:
+                        if "first_token_s" not in run:
+                            run["first_token_s"] = time.perf_counter() - run.get("t0", time.perf_counter())
+                        sink(shown)
+                rest = stream_filter.finish()
+                if rest and sink is not None:
+                    run.setdefault("first_token_s", time.perf_counter() - run.get("t0", time.perf_counter()))
+                    sink(rest)
+            text = stream.result.text if stream.result else stream_filter.raw
+            if "first_token_s" not in run:
+                run["first_token_s"] = time.perf_counter() - run.get("t0", time.perf_counter())
+            body, follow_ups = split_follow_ups(text)
+            run["answer_model"] = f"{deps.llm.provider}/{deps.llm.model}"
+            run["draft"], run["follow_ups"] = body, follow_ups
+            return {}
 
-            traces = [
-                ToolTrace.model_validate(t) for t in (state.get("tool_trace") or [])
-            ]
-            answer_text = state.get("draft_answer") or (
-                "Unverifiable / Source Not Found — the document does not contain this information."
+        def verify_node(state: QueryState) -> QueryState:
+            run = _RUN.get() or {}
+            plan = state.get("plan") or {}
+            mode = state.get("mode") or deps.mode
+            question = state.get("question") or ""
+            if plan.get("kind") == "chitchat":
+                text = _greeting(deps, state.get("active_doc_id") or deps.doc_id)
+                sink = _TOKEN_SINK.get()
+                if sink is not None:
+                    run.setdefault("first_token_s", time.perf_counter() - run.get("t0", time.perf_counter()))
+                    sink(text)
+                qa = QueryAnswer(
+                    question=question, answer=text, provenance=ProvenanceChain(), doc_id=state.get("active_doc_id") or deps.doc_id,
+                    status="greeting", mode=mode, prompt_profile=deps.profile.id,
+                )
+                run["answer"] = qa
+                return {"messages": [AIMessage(content=text)]}
+
+            hits: list[EvidenceHit] = run.get("hits") or []
+            draft = run.get("draft") or ""
+            titles = " ".join({h.document_name for h in hits if h.document_name})
+            check = verify_answer(
+                draft,
+                [_evidence_text(h) for h in hits],
+                question=question if mode == "audit" else (state.get("standalone") or question),
+                evidence_values=[_evidence_values(h) for h in hits],
+                titles=titles + " " + " ".join(d.document_name for d in deps.corpus if d.document_id == state.get("active_doc_id")),
+                strict=(mode == "audit"),
             )
-            if provenance.is_empty:
-                lowered = answer_text.lower()
-                if not any(
-                    m in lowered
-                    for m in (
-                        "could not find",
-                        "not found",
-                        "unverifiable",
-                        "no supporting",
-                        "i don't know",
-                        "i do not know",
-                    )
-                ):
-                    answer_text = "Unverifiable / Source Not Found — the document does not contain this information."
+            selected = [hits[i - 1] for i in check.cited if 1 <= i <= len(hits)][: deps.max_citations]
+            status = "not_found" if check.not_found else "answered"
+            if status == "answered" and not selected:
+                status = "not_found"
+                check.answer = f"{NOT_FOUND}: none of the evidence states this."
+            final_text = display_text(check.answer, _labels(hits))
+            provenance = ProvenanceChain()
+            if status == "answered":
+                pdf = state.get("pdf_path") or deps.pdf_path or _resolve_pdf(deps, selected[0].doc_id)
+                from src.query.page_map import enrich_hit_printed_page
 
-            follow_ups = list(state.get("follow_ups") or [])
-
+                selected = [enrich_hit_printed_page(h, pdf_path=pdf) for h in selected]
+                provenance = assemble_provenance(selected, pdf_path=pdf, max_citations=deps.max_citations)
+                if provenance.is_empty:
+                    status = "not_found"
+                    final_text = f"{NOT_FOUND}: the cited evidence could not be located in the document."
+            traces: list[ToolTrace] = run.get("traces") or []
             qa = QueryAnswer(
-                question=state["question"],
-                answer=answer_text,
+                question=question,
+                answer=final_text,
                 provenance=provenance,
                 tool_trace=traces,
                 doc_id=state.get("active_doc_id") or deps.doc_id,
-                follow_ups=follow_ups,
+                follow_ups=list(run.get("follow_ups") or []) if status == "answered" else [],
+                status=status,
+                mode=mode,
+                prompt_profile=deps.profile.id,
+                verification=check.to_dict() | {"plan": {k: plan.get(k) for k in ("source", "facts", "section", "document_id")}},
             )
-            # Persist assistant turn onto the Patient File (messages channel).
-            return {
-                "answer": qa.model_dump(mode="json"),
-                "messages": [AIMessage(content=answer_text)],
-            }
+            run["answer"] = qa
+            return {"messages": [AIMessage(content=final_text)]}
 
-        # ---- Graph assembly with conditional routing ---------------------
         graph = StateGraph(QueryState)
-        graph.add_node("classify_intent", classify_intent_node)
-        graph.add_node("greeting_response", greeting_response_node)
-        graph.add_node("rewrite_query", rewrite_query_node)
-        graph.add_node("route", route_node)
-        graph.add_node("plan", plan_node)
-        graph.add_node("execute_tools", tools_node)
-        graph.add_node("synthesize", synthesize_node)
-        graph.add_node("finalize", finalize_node)
-
-        graph.set_entry_point("classify_intent")
-        graph.add_conditional_edges(
-            "classify_intent",
-            _after_classify,
-            {
-                "greeting_response": "greeting_response",
-                "rewrite_query": "rewrite_query",
-            },
-        )
-        graph.add_edge("greeting_response", "finalize")
-        graph.add_edge("rewrite_query", "route")
-        graph.add_edge("route", "plan")
-        graph.add_edge("plan", "execute_tools")
-        graph.add_edge("execute_tools", "synthesize")
-        graph.add_edge("synthesize", "finalize")
-        graph.add_edge("finalize", END)
+        graph.add_node("understand", understand_node)
+        graph.add_node("retrieve", retrieve_node)
+        graph.add_node("answer", answer_node)
+        graph.add_node("verify", verify_node)
+        graph.set_entry_point("understand")
+        graph.add_conditional_edges("understand", after_understand, {"retrieve": "retrieve", "verify": "verify"})
+        graph.add_edge("retrieve", "answer")
+        graph.add_edge("answer", "verify")
+        graph.add_edge("verify", END)
         if deps.checkpointer is not None:
             return graph.compile(checkpointer=deps.checkpointer)
         return graph.compile()
@@ -721,109 +560,111 @@ class QueryAgent:
         question: str,
         *,
         thread_id: str | None = None,
+        on_token: Callable[[str], None] | None = None,
+        mode: str | None = None,
     ) -> QueryAnswer:
-        """Run the graph and return a typed QueryAnswer.
+        """Answer one question; ``on_token`` receives the answer text as it is written.
 
         Pass the same ``thread_id`` on later calls to resume conversation memory
         (requires a checkpointer on ``QueryAgentDeps``).
+
+        Raises:
+            LLMError: the model provider failed or the answer ran out of time.
         """
         from src.observability.langsmith import tracing_enabled
 
         question = (question or "").strip()
+        mode = normalize_mode(mode or self.deps.mode)
         if not question:
             return QueryAnswer(
-                question="",
-                answer="I could not find that in the document.",
-                provenance=ProvenanceChain(),
-                doc_id=self.deps.doc_id,
+                question="", answer=f"{NOT_FOUND}: the question is empty.", provenance=ProvenanceChain(),
+                doc_id=self.deps.doc_id, status="not_found", mode=mode, prompt_profile=self.deps.profile.id,
             )
 
         def _invoke() -> QueryAnswer:
             payload_in: dict[str, Any] = {
                 "messages": [HumanMessage(content=question)],
                 "question": question,
+                "standalone": question,
+                "mode": mode,
                 "doc_id": self.deps.doc_id or "",
                 "active_doc_id": self.deps.doc_id,
-                "intent": {},
                 "pdf_path": str(self.deps.pdf_path) if self.deps.pdf_path else None,
-                "plan_calls": [],
-                "hits": [],
-                "tool_trace": [],
-                "draft_answer": "",
-                "cite_indices": [],
-                "refusal": False,
-                "answer": None,
-                "error": None,
+                "plan": {},
             }
-
-            if self.deps.checkpointer is not None:
-                tid = (thread_id or "default").strip() or "default"
-                config = SessionConfig(thread_id=tid).to_runnable_config()
-                final = self._graph.invoke(payload_in, config=config)
-            else:
-                final = self._graph.invoke(payload_in)
-
-            payload = final.get("answer") or {}
-            return QueryAnswer.model_validate(payload)
+            run: dict = {"t0": time.perf_counter()}
+            run_token, sink_token = _RUN.set(run), _TOKEN_SINK.set(on_token)
+            try:
+                with usage.deadline(_deadline_seconds()), usage.collect() as events:
+                    if self.deps.checkpointer is not None:
+                        tid = (thread_id or "default").strip() or "default"
+                        self._graph.invoke(payload_in, config=SessionConfig(thread_id=tid).to_runnable_config())
+                    else:
+                        self._graph.invoke(payload_in)
+            finally:
+                _RUN.reset(run_token)
+                _TOKEN_SINK.reset(sink_token)
+            total = time.perf_counter() - run["t0"]
+            answer: QueryAnswer | None = run.get("answer")
+            if answer is None:  # pragma: no cover - every path ends in verify
+                raise RuntimeError("the answer engine finished without an answer")
+            data = answer.model_dump(mode="json")
+            data["usage"] = usage.summarize(events) | {"answer_model": run.get("answer_model")}
+            data["timings"] = {
+                "total_s": round(total, 3),
+                "first_token_s": round(run.get("first_token_s", total), 3),
+                "plan_s": round(run.get("plan_s", 0.0), 3),
+                "retrieve_s": round(run.get("retrieve_s", 0.0), 3),
+            }
+            return QueryAnswer.model_validate(data)
 
         if not tracing_enabled():
             return _invoke()
-
         try:
             from langsmith import trace
         except Exception:  # pragma: no cover
             return _invoke()
-
         with trace(
             name="docmind.query.ask",
             run_type="chain",
-            inputs={
-                "question": question,
-                "doc_id": self.deps.doc_id,
-                "thread_id": thread_id,
-            },
+            inputs={"question": question, "doc_id": self.deps.doc_id, "thread_id": thread_id, "mode": mode},
             tags=["docmind", "query"],
-            metadata={"agent": "QueryAgent"},
-        ) as run:
+            metadata={"agent": "QueryAgent", "prompt_profile": self.deps.profile.id},
+        ) as tr:
             answer = _invoke()
             try:
-                run.end(
-                    outputs={
-                        "answer": answer.answer,
-                        "doc_id": answer.doc_id,
-                        "citations": len(answer.provenance),
-                        "tools": [t.tool.value for t in answer.tool_trace],
-                    }
-                )
+                tr.end(outputs={"answer": answer.answer, "status": answer.status, "citations": len(answer.provenance)})
             except Exception:  # pragma: no cover
                 pass
             return answer
 
-    def get_messages(
-        self,
-        thread_id: str,
-    ) -> list[ConversationMessage]:
+    def get_messages(self, thread_id: str) -> list[ConversationMessage]:
         """Read persisted turns for a thread (empty if no checkpointer)."""
         if self.deps.checkpointer is None:
             return []
         config = SessionConfig(thread_id=thread_id).to_runnable_config()
         snap = self._graph.get_state(config)
         values = snap.values if snap else {}
-        raw = list(values.get("messages") or [])
         out: list[ConversationMessage] = []
-        for msg in raw:
+        for msg in list(values.get("messages") or []):
             content = str(getattr(msg, "content", "") or "").strip()
             if not content:
                 continue
             mtype = getattr(msg, "type", "")
-            if mtype == "human":
-                role = MessageRole.USER
-            elif mtype == "ai":
-                role = MessageRole.ASSISTANT
-            else:
-                role = MessageRole.SYSTEM
+            role = MessageRole.USER if mtype == "human" else MessageRole.ASSISTANT if mtype == "ai" else MessageRole.SYSTEM
             out.append(ConversationMessage(role=role, content=content))
         return out
+
+
+def _greeting(deps: QueryAgentDeps, active: str | None) -> str:
+    if active:
+        name = next((d.document_name for d in deps.corpus if d.document_id == active and d.document_name), None)
+        what = f"**{name}**" if name else "this document"
+        return f"Hello! I'm ready to help you explore {what}. What would you like to know?"
+    return (
+        "Hello! Welcome to DocMind \U0001f4c4, your document intelligence assistant. Upload a PDF to get started, "
+        "or ask me anything about your documents."
+    )
 
 
 def build_query_agent(
@@ -837,41 +678,39 @@ def build_query_agent(
     checkpointer: BaseCheckpointSaver | None = None,
     corpus: list[CorpusDocument] | None = None,
     max_tool_calls: int = 3,
+    mode: str | None = None,
+    planner: str | None = None,
+    profile: str | None = None,
 ) -> QueryAgent:
     """Factory: uses ``get_text_client()`` when ``llm`` is omitted.
 
-    Pass ``doc_id`` to pin one document. Omit it to let IntentRouter choose
-    single-doc vs corpus-wide search over ``corpus``. Pass a ``checkpointer``
-    to keep conversation memory per ``thread_id``.
+    Pass ``doc_id`` to pin one document; omit it to let the plan pick from
+    ``corpus``. Pass a ``checkpointer`` to keep conversation memory per
+    ``thread_id``.
     """
     client = llm if llm is not None else get_text_client()
     if client is None:
         raise RuntimeError(
-            "No LLM client available. Set OPENAI_API_KEY (or another provider "
-            "key) in .env, or pass llm= explicitly."
+            "No LLM client available. Set OPENAI_API_KEY (or another provider key) in .env, or pass llm= explicitly."
         )
+    from src.config import MAX_CITATIONS, PAGEINDEX_TOP_K, SEMANTIC_TOP_K
 
-    from src.config import (
-        MAX_CITATIONS,
-        MIN_CITATIONS,
-        PAGEINDEX_TOP_K,
-        SEMANTIC_TOP_K,
+    deps = QueryAgentDeps(
+        llm=client,
+        stores=stores,
+        doc_id=doc_id,
+        pdf_path=pdf_path,
+        pdf_resolver=pdf_resolver,
+        embedder=embedder,
+        checkpointer=checkpointer,
+        corpus=list(corpus or []),
+        max_tool_calls=max_tool_calls,
+        semantic_top_k=SEMANTIC_TOP_K,
+        pageindex_top_k=min(PAGEINDEX_TOP_K, 3),
+        max_citations=MAX_CITATIONS,
+        profile=get_profile(profile),
+        mode=normalize_mode(mode),
     )
-
-    return QueryAgent(
-        QueryAgentDeps(
-            llm=client,
-            stores=stores,
-            doc_id=doc_id,
-            pdf_path=pdf_path,
-            pdf_resolver=pdf_resolver,
-            embedder=embedder,
-            checkpointer=checkpointer,
-            corpus=list(corpus or []),
-            max_tool_calls=max_tool_calls,
-            semantic_top_k=SEMANTIC_TOP_K,
-            pageindex_top_k=PAGEINDEX_TOP_K,
-            min_citations=MIN_CITATIONS,
-            max_citations=MAX_CITATIONS,
-        )
-    )
+    if planner:
+        deps.planner = planner
+    return QueryAgent(deps)

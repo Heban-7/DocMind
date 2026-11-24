@@ -32,7 +32,7 @@ export default function ChatMessage({ message, selectedModel }: ChatMessageProps
             </span>
           </div>
           <span className="font-label-md text-label-md font-bold text-primary dark:text-primary-fixed-dim">
-            DocMind AI {selectedModel ? `(${selectedModel})` : ""}
+            DocMind AI {message.usage?.model ? `(${message.usage.model})` : selectedModel ? `(${selectedModel})` : ""}
           </span>
         </div>
 
@@ -100,6 +100,17 @@ export default function ChatMessage({ message, selectedModel }: ChatMessageProps
             </div>
           )}
         </div>
+
+        {/* Answer footer: model, time, tokens, cost */}
+        {message.usage && (
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-label-md">
+            {message.usage.model} · {message.usage.seconds.toFixed(1)} s
+            {message.usage.first_token_s != null ? ` (first words ${message.usage.first_token_s.toFixed(1)} s)` : ""} ·{" "}
+            {(message.usage.input_tokens + message.usage.output_tokens).toLocaleString()} tokens · $
+            {message.usage.cost_usd.toFixed(5)}
+            {message.status === "not_found" ? " · not found in the document" : ""}
+          </p>
+        )}
 
         {/* Action Bar (shown when answer content exists) */}
         {message.content && (

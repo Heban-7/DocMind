@@ -39,11 +39,11 @@ class UserProfile(BaseModel):
 class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    message: str = Field(min_length=1, description="User question or follow-up")
-    thread_id: str = Field(min_length=1, description="Conversation / session id")
+    message: str = Field(min_length=1, max_length=4000, description="User question or follow-up")
+    thread_id: str = Field(min_length=1, max_length=200, description="Conversation / session id")
     document_id: Optional[str] = Field(
         default=None,
-        description="Pin one document; omit for IntentRouter / corpus search",
+        description="Pin one document; omit to let the planner pick from your documents",
     )
     federated_search: bool = Field(
         default=False,
@@ -51,14 +51,30 @@ class ChatRequest(BaseModel):
     )
     audit_mode: bool = Field(
         default=False,
-        description="Enforce strict zero-trust audit verification mode",
+        description="Audit Mode: check a claim, or answer with every sentence cited; anything uncited is removed",
+    )
+    mode: Optional[str] = Field(
+        default=None,
+        description="Answer length: concise | balanced (default) | detailed. Audit Mode overrides it.",
     )
     model: Optional[str] = Field(
-        default="gpt-4o",
-        description="Selected LLM model for generation (e.g. gpt-4o, gemini-1.5-pro)",
+        default=None,
+        max_length=120,
+        description="A model id from GET /api/models; omit for the server default",
     )
 
 
+class AnswerUsage(BaseModel):
+    """The answer footer: which model wrote it, how long it took, what it cost."""
+
+    model: str = ""
+    provider: str = ""
+    llm_calls: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cost_usd: float = 0.0
+    seconds: float = 0.0
+    first_token_s: float | None = None
 
 
 class ChatResponse(BaseModel):
@@ -69,6 +85,11 @@ class ChatResponse(BaseModel):
         default_factory=list,
         description="Autonomous follow-up questions suggested by the AI.",
     )
+    status: str = Field(default="answered", description="answered | not_found | greeting")
+    mode: str = "balanced"
+    prompt_profile: str = ""
+    usage: AnswerUsage = Field(default_factory=AnswerUsage)
+    verification: dict[str, Any] = Field(default_factory=dict, description="sentence-by-sentence evidence check")
 
 
 class UploadResponse(BaseModel):

@@ -106,6 +106,7 @@ def _hit_from_retrieved(chunk: RetrievedChunk) -> EvidenceHit:
             "parent_hierarchy": list(chunk.parent_hierarchy),
             "chunk_type": chunk.chunk_type,
             "distance": chunk.distance,
+            "context": chunk.context,
         },
     )
 

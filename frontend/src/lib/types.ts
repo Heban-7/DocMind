@@ -35,7 +35,49 @@ export interface ChatRequest {
   document_id?: string | null;
   federated_search?: boolean;
   audit_mode?: boolean;
+  mode?: "concise" | "balanced" | "detailed";
   model?: string;
+}
+
+/** The answer footer: which model wrote it, how long it took, what it cost. */
+export interface AnswerUsage {
+  model: string;
+  provider: string;
+  llm_calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number;
+  seconds: number;
+  first_token_s?: number | null;
+}
+
+/** One entry of GET /models. Prices are USD per 1M tokens, as checked on `checked_on`. */
+export interface ModelInfo {
+  id: string;
+  label: string;
+  provider: string;
+  available: boolean;
+  unavailable_reason?: string | null;
+  default: boolean;
+  status: string;
+  price: {
+    input_per_m: number | null;
+    cached_input_per_m?: number | null;
+    output_per_m: number | null;
+    checked_on: string | null;
+    source?: string | null;
+    note?: string | null;
+  };
+  capabilities: { vision: boolean; reasoning: boolean; streaming: boolean; context_window?: number | null };
+  free_tier: boolean;
+  data_use?: string | null;
+  benchmark?: { correct_pct?: number; first_token_p50_s?: number; cost_per_question_usd?: number } | null;
+}
+
+export interface ModelCatalog {
+  default: string | null;
+  prices_checked_on: string | null;
+  models: ModelInfo[];
 }
 
 
@@ -121,6 +163,9 @@ export interface ChatMessageUI {
   content: string;
   provenance?: ProvenanceCitation[];
   timestamp: number;
+  status?: string;
+  usage?: AnswerUsage;
+  followUps?: string[];
 }
 
 export interface UploadedDocument {

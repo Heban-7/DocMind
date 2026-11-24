@@ -376,7 +376,10 @@ class PgFactStore(_TenantBound):
                       FROM a JOIN b ON a.document_id = b.document_id AND a.id <> b.id AND a.unit = b.unit
                        AND ((a.table_id <> '' AND a.table_id = b.table_id AND a.row_index = b.row_index)
                             OR a.metric = b.metric)
-                     ORDER BY a.ws + b.ws DESC, a.confidence + b.confidence DESC
+                     -- the row whose own label is the metric first: a table title can make
+                     -- every row of a statement look equally similar to "profit before tax"
+                     ORDER BY word_similarity(%(m)s, lower(coalesce(a.row_label, ''))) DESC,
+                              a.ws + b.ws DESC, a.confidence + b.confidence DESC
                      LIMIT 3
                     """,
                     params,

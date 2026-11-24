@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [federatedSearch, setFederatedSearch] = useState(false);
   const [auditMode, setAuditMode] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("gpt-4o");
+  const [selectedModel, setSelectedModel] = useState(""); // "" = the server default (GET /models)
   const [activeError, setActiveError] = useState<string | null>(null);
 
   // Auth guard: redirect to login if not authenticated
@@ -166,7 +166,7 @@ export default function DashboardPage() {
             {/* Chat Messages */}
             <div className="space-y-xl pb-32">
               {messages.map((msg) => (
-                <ChatMessage key={msg.id} message={msg} selectedModel={selectedModel} />
+                <ChatMessage key={msg.id} message={msg} />
               ))}
             </div>
           </div>

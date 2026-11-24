@@ -85,23 +85,13 @@ def test_memory_persists_across_turns(tmp_path: Path):
     )
     extract_and_store(chunks, doc_id="memdoc", document_name="sample.pdf", store=stores.facts)
 
-    # Turn 1: classify, plan, synthesize. Turn 2 has history, so the query
-    # rewriter runs too: classify, rewrite, plan, synthesize.
+    # Turn 1: no history, so a rule-based plan and one answer call. Turn 2
+    # has history: one planning call resolves "that amount", then the answer.
     llm = _ScriptedLLM(
         [
-            '{"intent":"document_query"}',
-            '{"calls":[{"tool":"semantic_search","args":{"query":"import tax","top_k":3}}]}',
-            (
-                '{"answer":"Import tax expenditures were ETB 120.7 billion in FY 2020/21.",'
-                '"cite_indices":[0],"refusal":false}'
-            ),
-            '{"intent":"document_query"}',
-            "What was the import tax expenditure amount?",
-            '{"calls":[{"tool":"semantic_search","args":{"query":"that amount","top_k":3}}]}',
-            (
-                '{"answer":"As noted earlier, the figure was ETB 120.7 billion.",'
-                '"cite_indices":[0],"refusal":false}'
-            ),
+            "Import tax expenditures were ETB 120.7 billion in FY 2020/21 [E1].",
+            '{"kind":"question","question":"What was the import tax expenditure amount in FY 2020/21?","facts":null}',
+            "As noted earlier, the figure was ETB 120.7 billion [E1].",
         ]
     )
     checkpointer = InMemorySaver()
@@ -130,8 +120,10 @@ def test_memory_persists_across_turns(tmp_path: Path):
     # The API reads history straight from the checkpointer, without an agent.
     assert [m.content for m in read_messages(checkpointer, thread)] == [m.content for m in history]
 
-    # Second LLM synthesize call should have seen prior conversation text.
-    assert any("recent_conversation" in c for c in llm.calls)
+    # The second turn's planner and answer saw the earlier conversation.
+    assert len(llm.calls) == 3
+    assert "recent conversation" in llm.calls[1] and "recent conversation" in llm.calls[2]
+    assert "import tax expenditure amount" in llm.calls[2]  # the answer got the standalone question
 
 
 def test_different_threads_are_isolated(tmp_path: Path):

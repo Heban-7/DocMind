@@ -1,8 +1,8 @@
 """Count LLM calls, tokens, cost and time without changing the system under test.
 
-The provider client classes are wrapped at runtime, so every call made by any
-part of the pipeline (triage, vision extraction, planner, answer writer) is
-recorded in a ``UsageMeter``.
+Every call made by any part of the pipeline (vision extraction, planner,
+answer writer, embeddings) reports its usage to ``src.llm.usage``; the meter
+listens and records it in a ``UsageMeter``.
 """
 
 from __future__ import annotations
@@ -60,49 +60,29 @@ EMBED_PRICE_PER_M = 0.02  # text-embedding-3-small list price, USD per 1M tokens
 
 
 def install() -> UsageMeter:
-    """Wrap the V1 provider clients once per process."""
+    """Listen to the usage every model and embedding call reports (once per process).
+
+    Since M7 the LLM layer reports each call itself (streamed or not, any
+    provider), so nothing is wrapped any more.
+    """
     global _installed
     if _installed:
         return METER
-    from src.llm.providers._openai_compatible import OpenAICompatibleClient
-    from src.retrieval.embeddings import OpenAIEmbeddingClient
+    from src.llm import usage
 
-    original_chat = OpenAICompatibleClient.chat
-
-    def chat(self, messages, **kwargs):
-        start = time.perf_counter()
-        result = original_chat(self, messages, **kwargs)
-        system = next((m.get("content") for m in messages if m.get("role") == "system"), "")
+    def listen(event) -> None:
         METER.add(
             Call(
-                kind="llm",
-                seconds=time.perf_counter() - start,
-                input_tokens=result.input_tokens,
-                output_tokens=result.output_tokens,
-                cost_usd=result.cost_usd,
-                label=str(system)[:40] if isinstance(system, str) else "vision",
+                kind=event.kind,
+                seconds=event.latency_ms / 1000,
+                input_tokens=event.input_tokens,
+                output_tokens=event.output_tokens,
+                cost_usd=event.cost_usd,
+                label=event.purpose,
             )
         )
-        return result
 
-    original_embed = OpenAIEmbeddingClient.embed
-
-    def embed(self, texts):
-        start = time.perf_counter()
-        out = original_embed(self, texts)
-        tokens = sum(len(t) for t in texts) // 4
-        METER.add(
-            Call(
-                kind="embed",
-                seconds=time.perf_counter() - start,
-                input_tokens=tokens,
-                cost_usd=tokens / 1e6 * EMBED_PRICE_PER_M,
-            )
-        )
-        return out
-
-    OpenAICompatibleClient.chat = chat
-    OpenAIEmbeddingClient.embed = embed
+    usage.add_listener(listen)
     _installed = True
     return METER
 

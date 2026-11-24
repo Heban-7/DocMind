@@ -1,17 +1,22 @@
 """
-The provider factory -- "plug in whatever you have, swap models by name".
+The provider factory: "plug in whatever key you have, swap models by name".
 
-`get_client(model=...)` is the single entry point. Resolution:
-  1. If a `model` is requested (arg > LLM_MODEL), resolve it via the registry to
-     a (provider, slug). If that provider's key is present, use it.
-  2. If LLM_PROVIDER is forced, use exactly that provider (error if key missing).
-  3. Otherwise auto-detect a provider by whichever API key is present
-     (OpenRouter -> OpenAI -> Gemini -> Groq) and use its default model.
-  4. If no credential exists at all, return None so the caller can fall back
-     (e.g., local OCR, or keyword domain classification).
+Two ways to get a client:
 
-`build_vision_client()` / `get_text_client()` are thin wrappers that pick a
-sensible default model for that kind of task.
+* ``get_client`` / ``get_text_client`` / ``build_vision_client`` -- lenient,
+  for background work (extraction, page summaries): a requested model whose
+  provider has no key falls back to whatever provider is configured.
+* ``client_for_request`` -- strict, for the model a user picked: the model
+  must be in the registry, on the admin allow-list, and its provider's key
+  must be set; otherwise ``ModelNotAvailableError`` says which of those
+  failed. A user never silently gets a different model than the one shown.
+
+Resolution for the lenient path:
+  1. LLM_PROVIDER forces a provider (error if its key is missing).
+  2. A requested model (arg > LLM_MODEL) is used if its provider has a key.
+  3. Otherwise auto-detect by key (OpenRouter -> OpenAI -> Gemini -> Groq)
+     and use that provider's default model.
+  4. No key at all -> None, so the caller can fall back (local OCR, keywords).
 """
 
 from __future__ import annotations
@@ -19,12 +24,19 @@ from __future__ import annotations
 from src.config import VisionConfig
 from src.llm import registry
 from src.llm.base import LLMClient
+from src.llm.errors import ModelNotAvailableError
 from src.llm.providers.gemini import GeminiVisionClient
 from src.llm.providers.groq import GroqVisionClient
 from src.llm.providers.openai import OpenAIVisionClient
 from src.llm.providers.openrouter import OpenRouterVisionClient
 
 _AUTODETECT_ORDER = ("openrouter", "openai", "gemini", "groq")
+_CLASSES = {
+    "openrouter": OpenRouterVisionClient,
+    "openai": OpenAIVisionClient,
+    "gemini": GeminiVisionClient,
+    "groq": GroqVisionClient,
+}
 
 
 def _key_for(provider: str) -> str | None:
@@ -36,16 +48,30 @@ def _key_for(provider: str) -> str | None:
     }.get(provider)
 
 
+def provider_configured(provider: str) -> bool:
+    return bool(_key_for(provider))
+
+
+def _construct_spec(spec: registry.ModelSpec, api_key: str) -> LLMClient:
+    cls = _CLASSES.get(spec.provider)
+    if cls is None:
+        raise ValueError(f"Unknown LLM provider '{spec.provider}'.")
+    return cls(spec.slug, api_key, api_style=spec.api, reasoning_effort=spec.reasoning_effort)
+
+
 def _construct(provider: str, slug: str, api_key: str) -> LLMClient:
-    if provider == "openrouter":
-        return OpenRouterVisionClient(slug, api_key)
-    if provider == "openai":
-        return OpenAIVisionClient(slug, api_key)
-    if provider == "gemini":
-        return GeminiVisionClient(slug, api_key)
-    if provider == "groq":
-        return GroqVisionClient(slug, api_key)
-    raise ValueError(f"Unknown LLM provider '{provider}'.")
+    spec = registry.resolve(slug)
+    if spec.provider != provider or not spec.known:
+        spec = registry.ModelSpec(name=slug, provider=provider, slug=slug, known=False)
+    return _construct_spec(spec, api_key)
+
+
+def _provider_default_spec(provider: str) -> registry.ModelSpec:
+    name = registry.provider_default(provider) or VisionConfig.DEFAULT_MODELS.get(provider)
+    spec = registry.resolve(name) if name else None
+    if spec is None or spec.provider != provider:
+        raise ValueError(f"No default model is registered for provider '{provider}'.")
+    return spec
 
 
 def _autodetect(require_vision: bool) -> LLMClient | None:
@@ -53,70 +79,131 @@ def _autodetect(require_vision: bool) -> LLMClient | None:
         key = _key_for(provider)
         if not key:
             continue
-        spec = registry.resolve(VisionConfig.DEFAULT_MODELS[provider])
-        return _construct(provider, spec.slug, key)
+        spec = _provider_default_spec(provider)
+        if require_vision and not spec.supports_vision:
+            continue
+        return _construct_spec(spec, key)
     return None
 
 
-def get_client(
-    model: str | None = None, *, require_vision: bool = False
-) -> LLMClient | None:
+def get_client(model: str | None = None, *, require_vision: bool = False) -> LLMClient | None:
     """Return a ready LLM client for a model name, or None if no key exists."""
     forced_provider = VisionConfig.PROVIDER
     requested = model or VisionConfig.MODEL
 
-    # (2) Explicit provider override wins.
     if forced_provider:
         key = _key_for(forced_provider)
         if not key:
-            raise ValueError(
-                f"LLM_PROVIDER='{forced_provider}' was requested but its API key "
-                "is not set."
-            )
-        if requested:
-            spec = registry.resolve(requested)
-            if spec.provider == forced_provider:
-                slug = spec.slug
-            else:
-                # e.g. defaults.text=gemini-flash but LLM_PROVIDER=openai:
-                # never send a foreign slug to the forced provider (causes 404).
-                slug = registry.resolve(
-                    VisionConfig.DEFAULT_MODELS[forced_provider]
-                ).slug
-        else:
-            slug = registry.resolve(
-                VisionConfig.DEFAULT_MODELS[forced_provider]
-            ).slug
-        return _construct(forced_provider, slug, key)
+            raise ValueError(f"LLM_PROVIDER='{forced_provider}' was requested but its API key is not set.")
+        spec = registry.resolve(requested) if requested else None
+        if spec is None or spec.provider != forced_provider:
+            # never send a foreign slug to the forced provider (it would 404)
+            spec = _provider_default_spec(forced_provider)
+        return _construct_spec(spec, key)
 
-    # (1) Honor a requested model if its provider has a key.
     if requested:
         spec = registry.resolve(requested)
         key = _key_for(spec.provider)
-        if key:
-            return _construct(spec.provider, spec.slug, key)
-        # Requested model's provider has no key -> fall back to auto-detect.
+        if key and (spec.supports_vision or not require_vision):
+            return _construct_spec(spec, key)
 
-    # (3) Auto-detect by available credential.
     return _autodetect(require_vision)
 
 
 def build_vision_client() -> LLMClient | None:
-    """A vision-capable client (used by Strategy C)."""
-    return get_client(require_vision=True)
+    """A vision-capable client (the vision fallback for pages nothing else can read)."""
+    return get_client(model=registry.default_model("vision"), require_vision=True)
+
+
+def default_text_model() -> str | None:
+    return VisionConfig.TEXT_MODEL or VisionConfig.MODEL or registry.default_model("text")
 
 
 def get_text_client(model: str | None = None) -> LLMClient | None:
-    """A client for text tasks, optionally specifying an explicit model slug/alias.
+    """A client for text tasks, optionally for an explicit model slug/alias.
 
     Preference order: ``model`` -> ``LLM_TEXT_MODEL`` -> ``LLM_MODEL`` -> registry
     ``defaults.text``.
     """
-    text_model = (
-        model
-        or VisionConfig.TEXT_MODEL
-        or VisionConfig.MODEL
-        or registry.default_model("text")
-    )
-    return get_client(model=text_model, require_vision=False)
+    return get_client(model=model or default_text_model(), require_vision=False)
 
+
+def availability(spec: registry.ModelSpec) -> tuple[bool, str]:
+    """(usable, reason) for a model a user might pick."""
+    if not spec.known:
+        return False, "not in the model registry"
+    if spec.kind != "chat":
+        return False, "not a chat model"
+    if not registry.is_allowed(spec):
+        return False, "not on this server's allow-list" if registry.allowed_models() is not None else f"status: {spec.status}"
+    forced = VisionConfig.PROVIDER
+    if forced and spec.provider != forced:
+        return False, f"this server is limited to {forced} models (LLM_PROVIDER)"
+    if not provider_configured(spec.provider):
+        return False, f"no {spec.provider} API key on this server"
+    return True, ""
+
+
+def client_for_request(model: str | None) -> LLMClient:
+    """The client for the model a user picked (None = the server default).
+
+    Raises:
+        ModelNotAvailableError: unknown, not allowed, or no key for its provider.
+        RuntimeError: no model is configured at all.
+    """
+    if not model:
+        client = get_text_client()
+        if client is None:
+            raise RuntimeError(
+                "No LLM is configured on this server. Set OPENAI_API_KEY (or another provider key) in .env."
+            )
+        return client
+    spec = registry.resolve(model)
+    ok, reason = availability(spec)
+    if not ok:
+        raise ModelNotAvailableError(f"Model '{model}' is not available: {reason}.")
+    return _construct_spec(spec, _key_for(spec.provider) or "")
+
+
+def catalog() -> dict:
+    """What GET /api/models returns: every chat model, priced, with what it can do."""
+    default = registry.resolve(default_text_model() or "").name if default_text_model() else None
+    models = []
+    for name, spec in registry.all_specs().items():
+        if spec.kind != "chat":
+            continue
+        usable, reason = availability(spec)
+        models.append(
+            {
+                "id": name,
+                "label": spec.label,
+                "provider": spec.provider,
+                "slug": spec.slug,
+                "available": usable,
+                "unavailable_reason": reason or None,
+                "configured": provider_configured(spec.provider),
+                "default": name == default,
+                "status": spec.status,
+                "price": {
+                    "input_per_m": spec.input_price,
+                    "cached_input_per_m": spec.cached_input_price,
+                    "output_per_m": spec.output_price,
+                    "currency": "USD",
+                    "checked_on": registry.prices_checked_on(),
+                    "source": registry.price_sources().get(spec.provider),
+                    "note": spec.price_note or None,
+                },
+                "capabilities": {
+                    "vision": spec.supports_vision,
+                    "reasoning": spec.api == "reasoning",
+                    "streaming": True,
+                    "context_window": spec.context_window,
+                },
+                "free_tier": spec.free_tier,
+                "data_use": spec.data_use or None,
+                "tested": spec.tested,
+                "benchmark": spec.benchmark or None,
+            }
+        )
+    models.sort(key=lambda m: (not m["available"], not m["default"], m["provider"], m["price"]["input_per_m"] or 0))
+    return {"default": default, "prices_checked_on": registry.prices_checked_on(), "models": models}

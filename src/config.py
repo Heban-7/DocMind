@@ -43,8 +43,8 @@ REFINERY_DIR = Path(os.getenv("DOCMIND_REFINERY_DIR", str(PROJECT_ROOT / ".refin
 # cut every chunk at 700 characters, which hid 70% of the average table chunk).
 SEMANTIC_TOP_K: int = int(os.getenv("DOCMIND_SEMANTIC_TOP_K", "6"))
 PAGEINDEX_TOP_K: int = int(os.getenv("DOCMIND_PAGEINDEX_TOP_K", "5"))
+# Citations are the evidence the verified answer cites, never padded (V1 padded to 5).
 MAX_CITATIONS: int = int(os.getenv("DOCMIND_MAX_CITATIONS", "8"))
-MIN_CITATIONS: int = int(os.getenv("DOCMIND_MIN_CITATIONS", "5"))
 EVIDENCE_EXCERPT_CHARS: int = int(os.getenv("DOCMIND_EVIDENCE_EXCERPT_CHARS", "4000"))
 
 # --- Chunking (Phase 3) -----------------------------------------------------
@@ -100,11 +100,12 @@ class VisionConfig:
 
     # Sensible per-provider default models (used when MODEL is unset). Values are
     # friendly names resolved through the model registry (rubric/models.yaml).
+    # (rubric/models.yaml `provider_defaults` wins; this is the fallback.)
     DEFAULT_MODELS: dict[str, str] = {
-        "openrouter": "or-gemini-flash",
+        "openrouter": "or-gpt-4o-mini",
         "openai": "gpt-4o-mini",
-        "gemini": "gemini-flash",
-        "groq": "groq-llama-vision",
+        "gemini": "gemini-2.5-flash-lite",
+        "groq": "groq-gpt-oss-120b",
     }
 
     # Budget guard: hard ceiling on estimated vision spend per document.

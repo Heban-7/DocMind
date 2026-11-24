@@ -142,17 +142,12 @@ def test_agent_route_then_retrieve_corpus(tmp_path: Path):
         CorpusDocument(document_id="taxdoc", document_name="tax.pdf"),
         CorpusDocument(document_id="spacedoc", document_name="mars.pdf"),
     ]
-    # No forced doc_id => intent classifier, then the router LLM, then plan,
-    # then synthesize.
+    # No forced doc_id and two documents: one planning call picks the document
+    # (here: none, a corpus-wide question), then one answer call.
     llm = _ScriptedLLM(
         [
-            '{"intent":"document_query"}',
-            '{"document_id":null,"confidence":0.8,"rationale":"general question"}',
-            '{"calls":[{"tool":"semantic_search","args":{"query":"import tax","top_k":5}}]}',
-            (
-                '{"answer":"Import tax expenditures were ETB 120.7 billion.",'
-                '"cite_indices":[0],"refusal":false}'
-            ),
+            '{"kind":"question","question":"What was import tax expenditure?","document_id":null,"facts":null}',
+            "Import tax expenditures were ETB 120.7 billion [E1].",
         ]
     )
     agent = QueryAgent(
@@ -167,5 +162,6 @@ def test_agent_route_then_retrieve_corpus(tmp_path: Path):
     answer = agent.ask("What was import tax expenditure?")
     assert "120.7" in answer.answer
     assert not answer.provenance.is_empty
-    assert len(llm.calls) == 4
+    assert len(llm.calls) == 2
+    assert 'catalog' in llm.calls[0] and 'taxdoc' in llm.calls[0]  # the planner saw the documents
 

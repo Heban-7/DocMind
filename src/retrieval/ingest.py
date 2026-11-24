@@ -105,8 +105,17 @@ def retrieve(
     """Hybrid search (vectors + keywords, fused), then the cross-encoder reranks the candidates."""
     from src.retrieval import rerank as reranker
 
+    from src.llm.errors import LLMError
+
     embedder = embedder or build_embedding_client()
-    vector = embedder.embed([query])[0]
+    try:
+        vector = embedder.embed([query])[0]
+    except LLMError as exc:
+        if exc.kind == "deadline":
+            raise
+        # keyword search still works without the embedding provider
+        logger.warning("Embedding the query failed (%s); searching by keywords only", exc.kind)
+        vector = None
     found = store.search(query, vector, doc_id=doc_id, top_k=max(top_k, candidates))
     if rerank and len(found) > 1:
         scores = reranker.scores(query, [embed_text_for_hit(h) for h in found])

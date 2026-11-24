@@ -10,6 +10,8 @@ import type {
   DocumentListResponse,
   TokenResponse,
   UserProfile,
+  AnswerUsage,
+  ModelCatalog,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -181,10 +183,23 @@ export async function sendChatMessage(
   return res.json();
 }
 
+export interface StreamDone {
+  answer: string;
+  provenance: any[];
+  followUps: string[];
+  status: string;
+  usage?: AnswerUsage;
+}
+
+/**
+ * POST /chat/stream. `onToken` gets the answer as the model writes it; `onDone`
+ * gets the checked answer, which replaces the streamed text (the verifier may
+ * have removed a sentence it could not match to the evidence).
+ */
 export async function sendChatMessageStream(
   payload: ChatRequest,
   onToken: (token: string) => void,
-  onDone: (provenance: any[], followUps: string[]) => void,
+  onDone: (done: StreamDone) => void,
   onError: (err: Error) => void
 ): Promise<void> {
   try {
@@ -216,24 +231,42 @@ export async function sendChatMessageStream(
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (trimmed.startsWith("data: ")) {
-          const jsonStr = trimmed.slice(6);
-          try {
-            const data = JSON.parse(jsonStr);
-            if (data.type === "token" && typeof data.token === "string") {
-              onToken(data.token);
-            } else if (data.type === "done") {
-              onDone(data.provenance || [], data.follow_ups || []);
-            }
-          } catch {
-            // Ignore JSON parse error
-          }
+        if (!trimmed.startsWith("data: ")) continue;
+        let data: any;
+        try {
+          data = JSON.parse(trimmed.slice(6));
+        } catch {
+          continue;
+        }
+        if (data.type === "token" && typeof data.token === "string") {
+          onToken(data.token);
+        } else if (data.type === "done") {
+          onDone({
+            answer: data.answer ?? "",
+            provenance: data.provenance || [],
+            followUps: data.follow_ups || [],
+            status: data.status || "answered",
+            usage: data.usage,
+          });
+        } else if (data.type === "error") {
+          // a provider failure is an error, not "not found in the document"
+          throw new Error(data.message || "The answer failed");
         }
       }
     }
   } catch (err) {
     onError(err instanceof Error ? err : new Error("Chat stream error"));
   }
+}
+
+/* ─── Models ─── */
+export async function fetchModels(): Promise<ModelCatalog> {
+  const res = await authFetch(`${API_BASE}/models`, { method: "GET", cache: "no-store" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(parseApiError(data, res.status, "Failed to load models"));
+  }
+  return res.json();
 }
 
 

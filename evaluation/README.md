@@ -63,8 +63,10 @@ The V1 baseline (`reports/v1-baseline.*`) and the M2 run (`reports/m2-v2-extract
 | Fact correct | The system's fact table holds the gold value, with its sign, on that page |
 | Answer correct | Numbers: the answer states the gold value (within 0.5%, or 2% for computed changes), with the right sign. Lists: at least 80% of items named. Unanswerable: the answer refuses. |
 | Citation precision | Share of an answer's citations that point at a gold page |
+| Citation support | Share of an answer's citations on a page that prints the answer (a gold page, or one whose extracted text holds the gold figure or list items): a figure is often printed twice while a question names one page |
+| "Not found" but correct | Answerable questions whose answer starts "Not found" yet states the gold figure: a refusal the scorer would otherwise count as right |
 | Retrieval hit@5 | A gold page is among the pages of the top 5 retrieved chunks |
-| Latency, cost | Wall time per question; tokens and cost counted at the provider client |
+| Latency, cost | Wall time per question and time to the first streamed token; tokens and cost as each model and embedding call reports them (`src/llm/usage.py`) |
 
 ## Reviewing the golden set
 

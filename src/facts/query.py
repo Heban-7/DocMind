@@ -134,7 +134,8 @@ def run_in_memory(facts: list[FactRecord], spec: FactQuery, *, doc_id: str | Non
                 same_row = a.table_id and a.table_id == b.table_id and a.row_index == b.row_index
                 if a.id != b.id and a.doc_id == b.doc_id and a.unit == b.unit and (same_row or _norm(a.metric) == _norm(b.metric)):
                     pairs.append((sa + sb, a, b))
-        pairs.sort(key=lambda t: -t[0])
+        # the row whose own label is the metric first (as the SQL does)
+        pairs.sort(key=lambda t: (-word_similarity(spec.metric, t[1].row_label or ""), -t[0]))
         out = FactQueryResult(spec, [])
         for _, a, b in pairs[:3]:
             va, vb = a.absolute_value, b.absolute_value

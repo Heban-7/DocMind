@@ -12,6 +12,8 @@ Covers audit findings P0-1 (PDF access), P0-2 (no tenant isolation), P0-3
 
 from __future__ import annotations
 
+import json
+import re
 import zlib
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
@@ -20,8 +22,7 @@ import jwt
 import pytest
 from fastapi.testclient import TestClient
 
-from src.agents.intent_router import ROUTER_SYSTEM
-from src.agents.query_prompts import CLASSIFIER_SYSTEM, PLANNER_SYSTEM, REWRITER_SYSTEM
+from src.agents.prompt_profiles import get_profile
 from src.api.auth_utils import InsecureSecretError, create_access_token, jwt_secret
 from src.api.main import create_app
 from src.document.model import Block, BlockType, DocumentModel, Page, PageQuality
@@ -59,21 +60,17 @@ class _RecordingLLM(LLMClient):
     def __init__(self):
         super().__init__(model="fake")
 
-    def chat(self, messages, *, response_format=None, temperature=None, max_tokens=None):
+    def _chat(self, messages, **params):
         system = next((m["content"] for m in messages if m.get("role") == "system"), "")
         text = "\n".join(str(m.get("content") or "") for m in messages)
         _RecordingLLM.prompts.append(text)
-        if system == CLASSIFIER_SYSTEM:
-            out = '{"intent":"document_query"}'
-        elif system == ROUTER_SYSTEM:
-            out = '{"document_id":null,"confidence":0.5,"rationale":"corpus"}'
-        elif system == REWRITER_SYSTEM:
-            out = messages[-1]["content"][-200:]
-        elif system == PLANNER_SYSTEM:
-            out = '{"calls":[{"tool":"semantic_search","args":{"query":"revenue","top_k":5}}]}'
-        else:  # synthesizer
-            out = '{"answer":"Revenue is stated in the evidence.","cite_indices":[0],"refusal":false}'
-        return LLMResult(text=out, model=self.model, provider=self.provider)
+        if system == get_profile().plan_system:
+            latest = messages[-1]["content"].split("latest message:\n")[-1].split("\n\nReturn")[0]
+            out = json.dumps({"kind": "question", "question": latest, "document_id": None, "facts": None})
+        else:  # the answer: repeat the first evidence passage and cite it
+            m = re.search(r'<evidence id="E1"[^>]*>\n(.*?)\n</evidence>', messages[-1]["content"], re.S)
+            out = f"{m.group(1).strip()} [E1]" if m else "Not found in the document: nothing matched."
+        return LLMResult(text=out, model=self.model, provider=self.provider, input_tokens=500, output_tokens=40, cost_usd=0.01)
 
 
 def _model_with(text: str) -> DocumentModel:
@@ -101,7 +98,7 @@ def client(pg, monkeypatch):
 
     monkeypatch.setattr("src.document.extract.extract_document", fake_extract)
     monkeypatch.setattr("src.retrieval.ingest.build_embedding_client", lambda: _HashEmbedder())
-    monkeypatch.setattr("src.agents.query_agent.get_text_client", lambda *a, **k: _RecordingLLM())
+    monkeypatch.setattr("src.api.services.client_for_request", lambda *a, **k: _RecordingLLM())
     with TestClient(create_app()) as c:
         c.pdf_texts = texts  # tests register the text a given PDF "contains"
         yield c
@@ -341,3 +338,38 @@ def test_upload_is_queued_and_status_is_private(client):
     assert status["status"] == "indexed" and status["searchable"] and status["progress"] == 1.0
     events = client.get(f"/documents/{doc}/events", params={"token": a["token"]}).text
     assert "event: progress" in events and '"status": "indexed"' in events and "event: end" in events
+
+
+# --- M7: cost ledger and spending caps ------------------------------------------
+
+
+def test_usage_is_recorded_per_account_and_the_cap_blocks_only_that_account(client, monkeypatch):
+    a, b = _account(client), _account(client)
+    doc = _upload(client, a, "Alpha revenue was ETB 9 billion.")["document_id"]
+    res = _chat(client, a, f"t-{uuid4().hex}", document_id=doc)
+    assert res.status_code == 200, res.text
+    footer = res.json()["usage"]
+    assert footer["llm_calls"] == 1 and footer["cost_usd"] == 0.01 and footer["model"] == "fake"
+
+    mine = client.get("/usage", headers=a["h"]).json()
+    assert mine["spent_usd"] >= 0.01
+    assert any(r["purpose"] == "answer" for r in mine["by_purpose"])
+    assert client.get("/usage", headers=b["h"]).json()["spent_usd"] == 0  # B never sees A's rows
+
+    monkeypatch.setenv("DOCMIND_TENANT_MONTHLY_BUDGET_USD", "0.005")
+    blocked = _chat(client, a, f"t-{uuid4().hex}", document_id=doc)
+    assert blocked.status_code == 402 and "monthly model budget" in blocked.json()["detail"]
+    doc_b = _upload(client, b, "Beta revenue was ETB 5 billion.")["document_id"]
+    assert _chat(client, b, f"t-{uuid4().hex}", document_id=doc_b).status_code == 200
+
+
+def test_a_model_the_server_cannot_run_is_refused(client, monkeypatch):
+    from src.llm import factory
+
+    monkeypatch.setattr("src.api.services.client_for_request", factory.client_for_request)
+    a = _account(client)
+    doc = _upload(client, a, "Alpha revenue was ETB 9 billion.")["document_id"]
+    res = _chat(client, a, f"t-{uuid4().hex}", document_id=doc, model="gemini-2.5-flash-lite")
+    assert res.status_code == 400 and "no gemini API key" in res.json()["detail"]
+    res = _chat(client, a, f"t-{uuid4().hex}", document_id=doc, model="made-up-model")
+    assert res.status_code == 400 and "not in the model registry" in res.json()["detail"]

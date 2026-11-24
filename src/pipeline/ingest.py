@@ -322,7 +322,9 @@ def process_document(
         # index mostly waits on the embedding API, the reading on the CPU.
         background = None
         if preview and any(r != "text" for r in tri.routes.values()):
-            background = threading.Thread(target=index_preview_safely, args=(preview_model(tri),), daemon=True)
+            from src.llm.usage import run_in_context
+
+            background = threading.Thread(target=run_in_context(index_preview_safely, preview_model(tri)), daemon=True)
             background.start()
         t = time.perf_counter()
         try:

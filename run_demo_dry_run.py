@@ -40,14 +40,25 @@ class FakeEmbedder:
 
 
 class ScriptedLLM(LLMClient):
+    """Canned replies; ``{E:120.7}`` becomes the id of the evidence that contains "120.7"."""
+
     provider = "fake"
 
     def __init__(self, scripts: list[str]):
         super().__init__(model="fake-demo")
         self._scripts = list(scripts)
 
-    def chat(self, messages, *, response_format=None, temperature=None, max_tokens=None):
+    def _chat(self, messages, **params):
+        import re
+
         text = self._scripts.pop(0) if self._scripts else "{}"
+        prompt = str(messages[-1].get("content") or "")
+        blocks = re.findall(r'<evidence id="(E[0-9]+)"[^>]*>(.*?)</evidence>', prompt, re.S)
+
+        def cite(m: re.Match) -> str:
+            return "[" + next((eid for eid, body in blocks if m.group(1) in body), "E1") + "]"
+
+        text = re.sub(r"\{E:([^}]+)\}", cite, text)
         return LLMResult(text=text, model=self.model, provider=self.provider)
 
 
@@ -82,21 +93,8 @@ def run_offline_demo(work_dir: Path | None = None) -> dict:  # noqa: ARG001 (kep
 
     pdf_path = DEFAULT_SAMPLE_PDF if DEFAULT_SAMPLE_PDF.exists() else None
 
-    ask_llm = ScriptedLLM(
-        [
-            '{"intent":"document_query"}',
-            (
-                '{"calls":[{"tool":"semantic_search",'
-                '"args":{"query":"import tax expenditures","top_k":3}},'
-                '{"tool":"structured_query",'
-                '"args":{"metric_contains":"Import tax","limit":5}}]}'
-            ),
-            (
-                '{"answer":"Import tax expenditures were ETB 120.7 billion in FY 2020/21.",'
-                '"cite_indices":[0],"refusal":false}'
-            ),
-        ]
-    )
+    # a first question about one document: a rule-based plan, then one answer call
+    ask_llm = ScriptedLLM(["Import tax expenditures were ETB 120.7 billion in FY 2020/21 {E:120.7}."])
     query_agent = QueryAgent(
         QueryAgentDeps(
             llm=ask_llm,
@@ -111,16 +109,8 @@ def run_offline_demo(work_dir: Path | None = None) -> dict:  # noqa: ARG001 (kep
 
     audit_llm = ScriptedLLM(
         [
-            (
-                '{"status":"verified",'
-                '"rationale":"Evidence states ETB 120.7 billion for FY 2020/21.",'
-                '"cite_indices":[0]}'
-            ),
-            (
-                '{"status":"unverifiable",'
-                '"rationale":"No evidence supports Martian revenue.",'
-                '"cite_indices":[]}'
-            ),
+            "Verified: the document states import tax expenditures of ETB 120.7 billion in FY 2020/21 {E:120.7}.",
+            "Not found in the document: any revenue on Mars.",
         ]
     )
     audit_agent = AuditAgent(

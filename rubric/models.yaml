@@ -1,143 +1,306 @@
-# DocMind model registry
+# DocMind model registry (version 2)
 # ------------------------------------------------------------------------------
-# The SINGLE source of truth for the LLMs the system can use. A user swaps models
-# by referring to a friendly name here (e.g. LLM_MODEL=gemini-flash) OR by passing
-# a raw provider slug. Each entry records:
-#   provider        : which adapter/endpoint runs it (gemini|openai|openrouter|groq)
-#   slug            : the exact model id the provider expects
-#   supports_vision : can it read images? (needed for Strategy C)
-#   context_window  : max tokens (informational / future routing)
-#   input_price     : USD per 1M input tokens  (for the BudgetGuard estimates)
-#   output_price    : USD per 1M output tokens
+# The single list of models DocMind can use, what each costs, and what it can do.
+# GET /api/models serves it to the model picker; the cost ledger prices every
+# call with it. Edit it here: no code change is needed to add a model.
 #
-# Prices are approximate published rates; they only need to be close enough for
-# the budget guard. Slugs (especially Groq's) evolve -- edit them here, no code
-# change required. That's the whole point of a registry.
+# Fields
+#   provider          gemini | openai | openrouter | groq
+#   slug              the exact model id the provider expects
+#   label             the name the picker shows
+#   api               chat | reasoning   (reasoning models take
+#                     max_completion_tokens + reasoning_effort, no temperature)
+#   reasoning_effort  low | medium | high (reasoning models only)
+#   supports_vision   can it read page images (the vision fallback needs it)
+#   context_window    tokens; null where the provider page does not say
+#   input_price, cached_input_price, output_price
+#                     USD per 1M tokens, standard tier, as on the provider's
+#                     pricing page on `prices_checked_on`; null = not published
+#   free_tier         the provider offers this model free (rate-limited)
+#   data_use          what the provider says it does with prompts
+#   status            current | preview | deprecated
+#   tested            answered a live request from DocMind on prices_checked_on
+#
+# Version 1 had three entries whose names did not match what they called
+# (gpt-5-mini -> gpt-4o-mini, gemini-2.5-flash -> gemini-2.0-flash, ...) and
+# relied on Gemini 2.0 models that Google shut down on 1 June 2026 (audit P1-7).
 
-# Global fallbacks used when nothing else is specified.
+prices_checked_on: "2026-11-24"
+sources:
+  openai: https://developers.openai.com/api/docs/pricing
+  gemini: https://aistudio.google.com/docs/pricing
+  gemini_deprecations: https://aistudio.google.com/docs/deprecations
+  groq: https://console.groq.com/docs/models
+
 defaults:
-  text: gemini-flash
-  vision: gemini-flash
-  # OpenAI embedding model used by Phase 4 Chroma ingestion / semantic_search.
+  text: gpt-4o-mini
+  vision: gpt-4o-mini
   embedding: text-embedding-3-small
 
+# Default model per provider when only that provider's key is set.
+provider_defaults:
+  openai: gpt-4o-mini
+  gemini: gemini-2.5-flash-lite
+  groq: groq-gpt-oss-120b
+  openrouter: or-gpt-4o-mini
+
+# Old names keep working, pointed at a model that still exists.
+aliases:
+  gemini-flash: gemini-2.5-flash-lite
+  gemini-flash-lite: gemini-2.5-flash-lite
+  gemini-2.0-flash: gemini-2.5-flash-lite
+  gemini-2.0-flash-lite: gemini-2.5-flash-lite
+  gemini-2.5-flash: gemini-3.5-flash-lite  # Google routes 2.5 Flash there from 1 Dec 2026
+  or-gemini-flash: or-gemini-2.5-flash-lite
+  groq-llama-text: groq-gpt-oss-120b
+  groq-llama-vision: groq-gpt-oss-120b
+
 models:
-  # --- Embeddings (OpenAI) ---------------------------------------------------
-  # Price is USD per 1M tokens; output_price unused for embeddings (set 0).
+  # --- OpenAI -----------------------------------------------------------------
+  # OpenAI does not train on API data by default; there is no free API tier.
+  gpt-4o-mini:
+    provider: openai
+    slug: gpt-4o-mini
+    label: GPT-4o mini
+    api: chat
+    supports_vision: true
+    context_window: 128000
+    input_price: 0.15
+    cached_input_price: 0.075
+    output_price: 0.60
+    free_tier: false
+    data_use: Not used for training by default (OpenAI API policy).
+    status: current
+    tested: true
+
+  gpt-4.1-mini:
+    provider: openai
+    slug: gpt-4.1-mini
+    label: GPT-4.1 mini
+    api: chat
+    supports_vision: true
+    context_window: 1047576
+    input_price: 0.40
+    cached_input_price: 0.10
+    output_price: 1.60
+    free_tier: false
+    data_use: Not used for training by default (OpenAI API policy).
+    status: current
+    tested: true
+
+  gpt-6-luna:
+    provider: openai
+    slug: gpt-6-luna
+    label: GPT-6 Luna
+    api: reasoning
+    reasoning_effort: low
+    supports_vision: false  # not confirmed here; the vision fallback does not pick it
+    context_window: null
+    input_price: 0.10
+    cached_input_price: 0.01
+    output_price: 0.50
+    free_tier: false
+    data_use: Not used for training by default (OpenAI API policy).
+    status: current
+    tested: true
+
+  gpt-5.4-nano:
+    provider: openai
+    slug: gpt-5.4-nano
+    label: GPT-5.4 nano
+    api: reasoning
+    reasoning_effort: low
+    supports_vision: false  # not confirmed here
+    context_window: null
+    input_price: 0.20
+    cached_input_price: 0.02
+    output_price: 1.25
+    free_tier: false
+    data_use: Not used for training by default (OpenAI API policy).
+    status: current
+    tested: true
+
+  gpt-5-nano:
+    provider: openai
+    slug: gpt-5-nano
+    label: GPT-5 nano
+    api: reasoning
+    reasoning_effort: low
+    supports_vision: true
+    context_window: 400000
+    input_price: 0.05
+    cached_input_price: 0.005
+    output_price: 0.40
+    free_tier: false
+    data_use: Not used for training by default (OpenAI API policy).
+    status: current
+    tested: true
+
+  gpt-5-mini:
+    provider: openai
+    slug: gpt-5-mini
+    label: GPT-5 mini
+    api: reasoning
+    reasoning_effort: low
+    supports_vision: true
+    context_window: 400000
+    input_price: 0.25
+    cached_input_price: 0.025
+    output_price: 2.00
+    free_tier: false
+    data_use: Not used for training by default (OpenAI API policy).
+    status: current
+    tested: false
+
+  # --- Google Gemini (direct) ---------------------------------------------------
+  # Free tier: "Content used to improve our products". Paid tier: not used.
+  gemini-2.5-flash-lite:
+    provider: gemini
+    slug: gemini-2.5-flash-lite
+    label: Gemini 2.5 Flash-Lite
+    api: chat
+    supports_vision: true
+    context_window: 1048576
+    input_price: 0.10
+    cached_input_price: 0.01
+    output_price: 0.40
+    free_tier: true
+    data_use: Free tier - content used to improve Google's products. Paid tier - not used.
+    status: current
+    tested: false
+
+  gemini-3.5-flash-lite:
+    provider: gemini
+    slug: gemini-3.5-flash-lite
+    label: Gemini 3.5 Flash-Lite
+    api: chat
+    supports_vision: true
+    context_window: null
+    input_price: 0.30
+    cached_input_price: 0.03
+    output_price: 2.50
+    free_tier: true
+    data_use: Free tier - content used to improve Google's products. Paid tier - not used.
+    status: current
+    tested: false
+
+  gemini-3.6-flash:
+    provider: gemini
+    slug: gemini-3.6-flash
+    label: Gemini 3.6 Flash
+    api: chat
+    supports_vision: true
+    context_window: null
+    input_price: 0.75
+    cached_input_price: 0.075
+    output_price: 3.75
+    price_note: Doubles to $1.50 / $7.50 per 1M tokens from 1 January 2027.
+    free_tier: true
+    data_use: Free tier - content used to improve Google's products. Paid tier - not used.
+    status: current
+    tested: false
+
+  # --- Groq (fast open models) --------------------------------------------------
+  groq-gpt-oss-120b:
+    provider: groq
+    slug: openai/gpt-oss-120b
+    label: gpt-oss-120b (Groq)
+    api: reasoning
+    reasoning_effort: low
+    supports_vision: false
+    context_window: 131072
+    input_price: 0.15
+    cached_input_price: 0.075
+    output_price: 0.60
+    free_tier: true
+    data_use: Not stated on Groq's models page; see Groq's terms.
+    status: current
+    tested: false
+
+  groq-gpt-oss-20b:
+    provider: groq
+    slug: openai/gpt-oss-20b
+    label: gpt-oss-20b (Groq)
+    api: reasoning
+    reasoning_effort: low
+    supports_vision: false
+    context_window: 131072
+    input_price: 0.075
+    output_price: 0.30
+    free_tier: true
+    data_use: Not stated on Groq's models page; see Groq's terms.
+    status: current
+    tested: false
+
+  # --- OpenRouter (one key, many providers) -------------------------------------
+  # Priced as the underlying provider; OpenRouter's own page was not checked.
+  or-gpt-4o-mini:
+    provider: openrouter
+    slug: openai/gpt-4o-mini
+    label: GPT-4o mini (OpenRouter)
+    api: chat
+    supports_vision: true
+    context_window: 128000
+    input_price: 0.15
+    output_price: 0.60
+    free_tier: false
+    data_use: Depends on the provider OpenRouter routes to.
+    status: current
+    tested: false
+
+  or-gemini-2.5-flash-lite:
+    provider: openrouter
+    slug: google/gemini-2.5-flash-lite
+    label: Gemini 2.5 Flash-Lite (OpenRouter)
+    api: chat
+    supports_vision: true
+    context_window: 1048576
+    input_price: 0.10
+    output_price: 0.40
+    free_tier: false
+    data_use: Depends on the provider OpenRouter routes to.
+    status: current
+    tested: false
+
+  # --- Embeddings (OpenAI) ------------------------------------------------------
   text-embedding-3-small:
     provider: openai
     slug: text-embedding-3-small
-    supports_vision: false
+    label: text-embedding-3-small
+    kind: embedding
     context_window: 8191
     input_price: 0.02
-    output_price: 0.00
+    output_price: 0.0
+    status: current
+    tested: true
 
   text-embedding-3-large:
     provider: openai
     slug: text-embedding-3-large
-    supports_vision: false
+    label: text-embedding-3-large
+    kind: embedding
     context_window: 8191
     input_price: 0.13
-    output_price: 0.00
+    output_price: 0.0
+    status: current
+    tested: false
 
-  # --- Google Gemini (direct) ------------------------------------------------
-  gemini-flash:
-    provider: gemini
-    slug: gemini-2.0-flash
-    supports_vision: true
-    context_window: 1000000
-    input_price: 0.10
-    output_price: 0.40
-
-  gemini-flash-lite:
-    provider: gemini
-    slug: gemini-2.0-flash-lite
-    supports_vision: true
-    context_window: 1000000
-    input_price: 0.075
-    output_price: 0.30
-
-  gemini-2.5-flash:
-    provider: gemini
-    slug: gemini-2.0-flash
-    supports_vision: true
-    context_window: 1000000
-    input_price: 0.10
-    output_price: 0.40
-
-  gemini-3.5-flash-lite:
-    provider: gemini
-    slug: gemini-2.0-flash-lite
-    supports_vision: true
-    context_window: 1000000
-    input_price: 0.075
-    output_price: 0.30
-
-  # --- OpenAI (direct) -------------------------------------------------------
+# Golden set v1 (25 documents, 142 questions), answer engine v2 (M7), measured
+# 2026-11-24 on the test machine. See evaluation/reports/m7-*.md.
+benchmarks:
   gpt-4o-mini:
-    provider: openai
-    slug: gpt-4o-mini
-    supports_vision: true
-    context_window: 128000
-    input_price: 0.15
-    output_price: 0.60
-
-  gpt-5-mini:
-    provider: openai
-    slug: gpt-4o-mini
-    supports_vision: true
-    context_window: 128000
-    input_price: 0.15
-    output_price: 0.60
-
-  gpt-4o:
-    provider: openai
-    slug: gpt-4o
-    supports_vision: true
-    context_window: 128000
-    input_price: 2.50
-    output_price: 10.00
-
-
-  # --- OpenRouter (aggregator: one key, any model, swap by string) ----------
-  or-gemini-flash:
-    provider: openrouter
-    slug: google/gemini-2.0-flash-001
-    supports_vision: true
-    context_window: 1000000
-    input_price: 0.10
-    output_price: 0.40
-
-  or-gpt-4o-mini:
-    provider: openrouter
-    slug: openai/gpt-4o-mini
-    supports_vision: true
-    context_window: 128000
-    input_price: 0.15
-    output_price: 0.60
-
-  or-claude-haiku:
-    provider: openrouter
-    slug: anthropic/claude-3.5-haiku
-    supports_vision: true
-    context_window: 200000
-    input_price: 0.80
-    output_price: 4.00
-
-  # --- Groq (aggregator: very fast, open models) ----------------------------
-  # NOTE: Groq slugs change often; update these to the current catalog as needed.
-  groq-llama-text:
-    provider: groq
-    slug: llama-3.3-70b-versatile
-    supports_vision: false
-    context_window: 128000
-    input_price: 0.59
-    output_price: 0.79
-
-  groq-llama-vision:
-    provider: groq
-    slug: meta-llama/llama-4-scout-17b-16e-instruct
-    supports_vision: true
-    context_window: 128000
-    input_price: 0.11
-    output_price: 0.34
+    golden_set: v1
+    correct_pct: 85.2
+    unanswerable_refused_pct: 96.0
+    first_token_p50_s: 1.1
+    answer_p50_s: 2.35
+    cost_per_question_usd: 0.00056
+    report: evaluation/reports/m7-answer-engine.md
+  gpt-6-luna:
+    golden_set: v1
+    correct_pct: 83.8
+    unanswerable_refused_pct: 96.0
+    first_token_p50_s: 1.29
+    answer_p50_s: 1.89
+    cost_per_question_usd: 0.00038
+    report: evaluation/reports/m7-gpt-6-luna.md

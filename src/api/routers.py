@@ -28,9 +28,14 @@ from src.api.services import (
     get_pdf_file_path,
     list_documents,
     list_threads,
+    model_catalog,
+    prepare_chat,
     process_upload,
     run_chat,
+    run_chat_stream,
+    usage_report,
 )
+from src.llm.errors import LLMError, ModelNotAvailableError, SpendingCapError
 
 logger = logging.getLogger("docmind.api")
 
@@ -63,6 +68,8 @@ def upload_pdf(
     """
     try:
         return process_upload(file, principal=principal)
+    except SpendingCapError as exc:
+        raise HTTPException(status_code=status.HTTP_402_PAYMENT_REQUIRED, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -161,70 +168,71 @@ def get_pdf(
         ) from exc
 
 
-@chat_router.post("/chat", response_model=ChatResponse)
-def chat(payload: ChatRequest, principal: Principal = Depends(get_principal)) -> ChatResponse:
-    """Ask the Query Agent (memory via thread_id; optional document pin)."""
+def _prepare_or_raise(payload: ChatRequest, principal: Principal):
+    """Checks that become status codes; they run before an answer (or a stream) starts."""
     try:
-        return run_chat(payload, principal=principal)
+        return prepare_chat(payload, principal=principal)
     except AccessDeniedError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Thread or document not found.",
-        ) from exc
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Thread or document not found.") from exc
     except DocumentNotReadyError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
-    except RuntimeError as exc:
-        # Missing LLM keys / misconfigured providers.
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc),
-        ) from exc
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
+    except SpendingCapError as exc:
+        raise HTTPException(status_code=status.HTTP_402_PAYMENT_REQUIRED, detail=str(exc)) from exc
+    except ModelNotAvailableError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except RuntimeError as exc:  # no model configured on this server
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+
+
+@chat_router.post("/chat", response_model=ChatResponse)
+def chat(payload: ChatRequest, principal: Principal = Depends(get_principal)) -> ChatResponse:
+    """Ask a question (memory via thread_id; optional document pin, model and mode)."""
+    prepared = _prepare_or_raise(payload, principal)
+    try:
+        return run_chat(payload, principal=principal, prepared=prepared)
+    except LLMError as exc:
+        # a provider failure is an error, not "not found in the document"
+        raise HTTPException(status_code=exc.http_status, detail=exc.user_message()) from exc
+    except AccessDeniedError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Thread or document not found.") from exc
     except Exception as exc:
         logger.exception("chat failed thread_id=%s", payload.thread_id)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Chat failed: {exc}",
-        ) from exc
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Chat failed.") from exc
 
 
 @chat_router.post("/chat/stream")
 def chat_stream(payload: ChatRequest, principal: Principal = Depends(get_principal)):
-    """Stream Query Agent response token by token via Server-Sent Events."""
+    """The answer as Server-Sent Events, token by token as the model writes it.
+
+    Everything that can be refused (access, document not ready, spending cap,
+    unknown model) is checked before the stream starts: once a 200 and the
+    SSE headers are sent, an error can only be an ``error`` event.
+    """
     from starlette.responses import StreamingResponse
-    from src.api.services import authorize_chat, run_chat_stream
 
-    # Access is checked before the stream starts: once a 200 and the SSE
-    # headers are sent, an error can no longer become a proper status code.
-    try:
-        authorize_chat(payload, principal=principal)
-    except AccessDeniedError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Thread or document not found.",
-        ) from exc
-    except DocumentNotReadyError as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    prepared = _prepare_or_raise(payload, principal)
+    return StreamingResponse(
+        run_chat_stream(payload, principal=principal, prepared=prepared),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+    )
 
+
+@chat_router.get("/models")
+def models(principal: Principal = Depends(get_principal)) -> dict:  # noqa: ARG001 - signed-in users only
+    """The models this server can answer with: price per 1M tokens (and when it was checked),
+    capabilities, free tier, what the provider does with prompts, and golden-set results."""
+    return model_catalog()
+
+
+@chat_router.get("/usage")
+def usage(principal: Principal = Depends(get_principal)) -> dict:
+    """This account's model spending this month, against its cap."""
     try:
-        return StreamingResponse(
-            run_chat_stream(payload, principal=principal),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-            },
-        )
+        return usage_report(principal=principal)
     except Exception as exc:
-        logger.exception("chat_stream failed thread_id=%s", payload.thread_id)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Chat stream failed: {exc}",
-        ) from exc
+        logger.exception("usage report failed")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Usage report failed.") from exc
 
 
 @chat_router.get("/history/{thread_id}", response_model=HistoryResponse)

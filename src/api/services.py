@@ -11,16 +11,21 @@ from __future__ import annotations
 import json
 import logging
 import os
+import queue
 import shutil
 import tempfile
+import threading
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 from fastapi import UploadFile
 
 from src.agents.memory import checkpoint_key, postgres_checkpointer, read_messages
+from src.agents.prompt_profiles import normalize_mode
 from src.agents.query_agent import QueryAgent, build_query_agent
 from src.api.schemas import (
+    AnswerUsage,
     ChatRequest,
     ChatResponse,
     DocumentInfo,
@@ -33,7 +38,9 @@ from src.api.schemas import (
 )
 from src.db import repos
 from src.db.repos import AccessDeniedError, DocumentRow, Principal, ThreadRow
-from src.llm.factory import get_text_client
+from src.llm import ledger, usage
+from src.llm.errors import LLMError
+from src.llm.factory import catalog, client_for_request
 from src.models.intent import CorpusDocument
 from src.pipeline.ingest import submit_document
 from src.storage.blobs import get_blob_store
@@ -117,10 +124,13 @@ def process_upload(file: UploadFile, *, principal: Principal) -> UploadResponse:
     """Store the PDF and queue it for the worker; returns in milliseconds.
 
     Follow progress with ``GET /documents/{id}`` or ``/documents/{id}/events``.
+    Raises SpendingCapError when the account's monthly model budget is used
+    up (reading a document embeds it, and may call a vision model).
     """
     folder = Path(tempfile.mkdtemp(prefix="docmind-upload-"))
     try:
-        path = _spool_upload(file, folder)
+        path = _spool_upload(file, folder)  # rejects what is not a PDF first
+        ledger.check_caps(principal.tenant_id)
         result = submit_document(path, principal=principal, file_name=_display_name(file.filename or ""))
     finally:
         shutil.rmtree(folder, ignore_errors=True)
@@ -238,8 +248,9 @@ def authorize_chat(payload: ChatRequest, *, principal: Principal) -> tuple[Threa
     return thread, doc_pin
 
 
-def _agent_for_chat(principal: Principal, document_id: str | None, model: str | None) -> QueryAgent:
-    llm_client = get_text_client(model=model) if model else None
+def _agent_for_chat(principal: Principal, document_id: str | None, model: str | None, mode: str) -> QueryAgent:
+    # the model a user picked must be the model that answers (no silent switch)
+    llm_client = client_for_request(model)
     return build_query_agent(
         document_id,
         stores=pg_stores(principal.tenant_id),
@@ -247,44 +258,156 @@ def _agent_for_chat(principal: Principal, document_id: str | None, model: str | 
         pdf_resolver=_pdf_resolver(principal.tenant_id),
         checkpointer=postgres_checkpointer(),
         corpus=_corpus(principal.tenant_id),
+        mode=mode,
     )
 
 
-def run_chat(payload: ChatRequest, *, principal: Principal) -> ChatResponse:
-    """Invoke the LangGraph Query Agent and return answer + provenance."""
+@dataclass
+class PreparedChat:
+    agent: QueryAgent
+    doc_pin: str | None
+    mode: str
+
+
+def prepare_chat(payload: ChatRequest, *, principal: Principal) -> PreparedChat:
+    """Everything that can fail with a clear status code, before any work or streaming starts.
+
+    Raises AccessDeniedError, DocumentNotReadyError, ModelNotAvailableError,
+    SpendingCapError or RuntimeError (no model configured).
+    """
     _thread, doc_pin = authorize_chat(payload, principal=principal)
+    ledger.check_caps(principal.tenant_id)
+    mode = normalize_mode(payload.mode, audit=payload.audit_mode)
+    return PreparedChat(agent=_agent_for_chat(principal, doc_pin, payload.model, mode), doc_pin=doc_pin, mode=mode)
 
-    agent = _agent_for_chat(principal, doc_pin, payload.model)
-    if payload.audit_mode:
-        logger.info("Chat invoked under audit mode thread_id=%s", payload.thread_id)
-    answer = agent.ask(payload.message, thread_id=checkpoint_key(principal.tenant_id, payload.thread_id))
-    repos.record_turn(principal, payload.thread_id, question=payload.message)
 
-    provenance = []
+def _provenance(answer, doc_pin: str | None) -> list[dict]:
+    out = []
     for c in answer.provenance.citations:
         d = c.model_dump(mode="json")
         if not d.get("doc_id") and doc_pin:
             d["doc_id"] = doc_pin
-        provenance.append(d)
+        out.append(d)
+    return out
 
-    return ChatResponse(
-        response=answer.answer,
-        thread_id=payload.thread_id,
-        provenance=provenance,
-        follow_ups=list(answer.follow_ups) if answer.follow_ups else [],
+
+def _answer_usage(answer, agent: QueryAgent) -> AnswerUsage:
+    u, t = answer.usage or {}, answer.timings or {}
+    return AnswerUsage(
+        model=agent.deps.llm.model,
+        provider=agent.deps.llm.provider,
+        llm_calls=int(u.get("llm_calls") or 0),
+        input_tokens=int(u.get("input_tokens") or 0),
+        output_tokens=int(u.get("output_tokens") or 0),
+        cost_usd=float(u.get("cost_usd") or 0.0),
+        seconds=float(t.get("total_s") or 0.0),
+        first_token_s=t.get("first_token_s"),
     )
 
 
-def run_chat_stream(payload: ChatRequest, *, principal: Principal):
-    """Stream response tokens followed by metadata JSON as Server-Sent Events."""
-    res = run_chat(payload, principal=principal)
-    words = res.response.split(" ")
-    for i, word in enumerate(words):
-        chunk = word if i == len(words) - 1 else word + " "
-        yield f"data: {json.dumps({'type': 'token', 'token': chunk})}\n\n"
-        time.sleep(0.012)
-    done_evt = {"type": "done", "provenance": res.provenance, "follow_ups": res.follow_ups}
-    yield f"data: {json.dumps(done_evt)}\n\n"
+def _chat_response(payload: ChatRequest, prepared: PreparedChat, answer) -> ChatResponse:
+    return ChatResponse(
+        response=answer.answer,
+        thread_id=payload.thread_id,
+        provenance=_provenance(answer, prepared.doc_pin),
+        follow_ups=list(answer.follow_ups or []),
+        status=answer.status,
+        mode=answer.mode,
+        prompt_profile=answer.prompt_profile,
+        usage=_answer_usage(answer, prepared.agent),
+        verification={k: v for k, v in (answer.verification or {}).items()},
+    )
+
+
+def _ask(payload: ChatRequest, prepared: PreparedChat, principal: Principal, on_token=None):
+    """Run the agent and write its model calls to the ledger, whatever the outcome."""
+    with usage.collect() as events:
+        try:
+            return prepared.agent.ask(
+                payload.message,
+                thread_id=checkpoint_key(principal.tenant_id, payload.thread_id),
+                on_token=on_token,
+                mode=prepared.mode,
+            )
+        finally:
+            ledger.record(
+                events,
+                tenant_id=principal.tenant_id,
+                user_id=principal.user_id,
+                thread_id=payload.thread_id,
+                document_id=prepared.doc_pin,
+            )
+
+
+def run_chat(payload: ChatRequest, *, principal: Principal, prepared: PreparedChat | None = None) -> ChatResponse:
+    """Answer one message; raises LLMError when the model provider fails."""
+    prepared = prepared or prepare_chat(payload, principal=principal)
+    answer = _ask(payload, prepared, principal)
+    repos.record_turn(principal, payload.thread_id, question=payload.message)
+    return _chat_response(payload, prepared, answer)
+
+
+def _sse(event: dict) -> str:
+    return f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+
+
+def run_chat_stream(payload: ChatRequest, *, principal: Principal, prepared: PreparedChat):
+    """Server-Sent Events: the answer's text as the model writes it, then the checked answer.
+
+    Events: {"type": "token", "token": "..."} while the answer is written;
+    then {"type": "done", "answer": <the verified text, which replaces the
+    streamed text>, "provenance", "follow_ups", "status", "usage",
+    "verification"}; or {"type": "error", "kind", "message"} when the model
+    provider fails (the answer is then not saved as "not found").
+    """
+    pieces: queue.Queue = queue.Queue()
+    _END = object()
+
+    def work() -> None:
+        try:
+            answer = _ask(payload, prepared, principal, on_token=lambda t: pieces.put(("token", t)))
+            repos.record_turn(principal, payload.thread_id, question=payload.message)
+            pieces.put(("done", _chat_response(payload, prepared, answer)))
+        except LLMError as exc:
+            logger.warning("chat stream: model error %s (%s)", exc.kind, exc)
+            pieces.put(("error", {"kind": exc.kind, "message": exc.user_message()}))
+        except Exception as exc:  # pragma: no cover - surfaced to the client as an error event
+            logger.exception("chat stream failed thread_id=%s", payload.thread_id)
+            pieces.put(("error", {"kind": "internal", "message": f"The answer failed: {type(exc).__name__}"}))
+        finally:
+            pieces.put((_END, None))
+
+    threading.Thread(target=usage.run_in_context(work), daemon=True).start()
+    while True:
+        kind, value = pieces.get()
+        if kind is _END:
+            return
+        if kind == "token":
+            yield _sse({"type": "token", "token": value})
+        elif kind == "done":
+            res: ChatResponse = value
+            yield _sse(
+                {
+                    "type": "done",
+                    "answer": res.response,
+                    "provenance": res.provenance,
+                    "follow_ups": res.follow_ups,
+                    "status": res.status,
+                    "mode": res.mode,
+                    "usage": res.usage.model_dump(),
+                    "verification": {k: v for k, v in res.verification.items() if k != "sentences"},
+                }
+            )
+        else:
+            yield _sse({"type": "error", **value})
+
+
+def model_catalog() -> dict:
+    return catalog()
+
+
+def usage_report(*, principal: Principal) -> dict:
+    return ledger.usage_summary(principal.tenant_id)
 
 
 # --- Threads and history -----------------------------------------------------

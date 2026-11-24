@@ -52,6 +52,12 @@ class QueryAnswer(BaseModel):
         default_factory=list,
         description="Autonomous follow-up questions suggested by the synthesizer.",
     )
+    status: str = Field(default="answered", description="answered | not_found | greeting")
+    mode: str = Field(default="balanced", description="concise | balanced | detailed | audit")
+    prompt_profile: str = Field(default="", description="the versioned prompt profile that wrote the answer")
+    verification: dict = Field(default_factory=dict, description="the sentence-by-sentence evidence check")
+    usage: dict = Field(default_factory=dict, description="model calls, tokens and cost of this answer")
+    timings: dict = Field(default_factory=dict, description="seconds: total, first token, plan, retrieve")
 
     @model_validator(mode="after")
     def _require_citations_for_substantive_answers(self) -> QueryAnswer:
@@ -60,6 +66,8 @@ class QueryAnswer(BaseModel):
         Empty / explicit-refusal answers (e.g. 'I could not find that') may omit
         citations. Everything else must cite at least one source.
         """
+        if self.status in ("not_found", "greeting"):
+            return self
         refusal_markers = (
             "could not find",
             "not found",

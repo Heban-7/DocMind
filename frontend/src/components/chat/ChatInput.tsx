@@ -2,45 +2,14 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 
-export interface ModelOption {
-  id: string;
-  name: string;
-  provider: "OpenAI" | "Gemini";
-  badge?: string;
-  desc: string;
+import { fetchModels } from "@/lib/api";
+import type { ModelCatalog, ModelInfo } from "@/lib/types";
+
+function price(m: ModelInfo): string {
+  const i = m.price.input_per_m, o = m.price.output_per_m;
+  if (i == null || o == null) return "price not published";
+  return `$${i} in / $${o} out per 1M tokens`;
 }
-
-export const AVAILABLE_MODELS: ModelOption[] = [
-  {
-    id: "gpt-4o",
-    name: "GPT-4o",
-    provider: "OpenAI",
-    badge: "Flagship",
-    desc: "Multimodal flagship model for complex document reasoning.",
-  },
-  {
-    id: "gpt-5-mini",
-    name: "GPT-5 Mini",
-    provider: "OpenAI",
-    badge: "Next-Gen Mini",
-    desc: "High-speed next generation lightweight reasoning model.",
-  },
-  {
-    id: "gemini-2.5-flash",
-    name: "Gemini 2.5 Flash",
-    provider: "Gemini",
-    badge: "2.5 Flash",
-    desc: "Ultra-fast multimodal reasoning engine with 1M context.",
-  },
-  {
-    id: "gemini-3.5-flash-lite",
-    name: "Gemini 3.5 Flash-Lite",
-    provider: "Gemini",
-    badge: "3.5 Lite",
-    desc: "High-speed low-cost flash lite model for batch indexing.",
-  },
-];
-
 
 interface ChatInputProps {
   onSend: (text: string, model: string) => void;
@@ -58,7 +27,8 @@ export default function ChatInput({
   onSelectModel,
 }: ChatInputProps) {
   const [text, setText] = useState("");
-  const [currentModel, setCurrentModel] = useState(externalModel || "gpt-4o");
+  const [currentModel, setCurrentModel] = useState(externalModel || "");
+  const [catalog, setCatalog] = useState<ModelCatalog | null>(null);
   const [isOpenMenu, setIsOpenMenu] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
@@ -69,6 +39,17 @@ export default function ChatInput({
   useEffect(() => {
     if (externalModel) setCurrentModel(externalModel);
   }, [externalModel]);
+
+  // The models this server can run, with prices (empty model = the server default)
+  useEffect(() => {
+    fetchModels()
+      .then((c) => {
+        setCatalog(c);
+        if (!externalModel && c.default) setCurrentModel(c.default);
+      })
+      .catch(() => setCatalog({ default: null, prices_checked_on: null, models: [] }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Click outside menu closer
   useEffect(() => {
@@ -81,8 +62,9 @@ export default function ChatInput({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const activeModelObj =
-    AVAILABLE_MODELS.find((m) => m.id === currentModel) || AVAILABLE_MODELS[0];
+  const models = catalog?.models ?? [];
+  const activeModelObj = models.find((m) => m.id === currentModel);
+  const providers = Array.from(new Set(models.map((m) => m.provider)));
 
   const handleSelect = (modelId: string) => {
     setCurrentModel(modelId);
@@ -122,8 +104,6 @@ export default function ChatInput({
     }
   };
 
-  const openAiModels = AVAILABLE_MODELS.filter((m) => m.provider === "OpenAI");
-  const geminiModels = AVAILABLE_MODELS.filter((m) => m.provider === "Gemini");
 
   return (
     <footer className="absolute bottom-0 left-0 w-full p-lg flex justify-center pointer-events-none z-30">
@@ -139,89 +119,67 @@ export default function ChatInput({
                 Select Intelligence Model
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">
-                API Tier 1
+                {models.filter((m) => m.available).length} available
               </span>
             </div>
 
-            {/* OpenAI Group */}
-            <div className="mb-md">
-              <span className="text-[11px] font-bold text-on-surface-variant/60 uppercase tracking-wider block px-sm mb-xs">
-                OpenAI Series
-              </span>
-              <div className="space-y-xs">
-                {openAiModels.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => handleSelect(m.id)}
-                    className={`w-full text-left p-xs px-sm rounded-xl transition-all flex items-center justify-between ${
-                      currentModel === m.id
-                        ? "bg-primary/10 text-primary font-bold"
-                        : "hover:bg-surface-container text-on-surface hover:text-primary"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center gap-xs">
-                        <span className="font-label-md text-xs font-bold">{m.name}</span>
-                        {m.badge && (
-                          <span
-                            className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
-                              m.badge === "Recommended"
-                                ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
-                                : "bg-surface-container-high text-on-surface-variant"
-                            }`}
-                          >
-                            {m.badge}
-                          </span>
+            {providers.length === 0 && (
+              <p className="text-[11px] text-on-surface-variant/70 px-sm">Using the server's default model.</p>
+            )}
+            {providers.map((provider) => (
+              <div key={provider} className="mb-md last:mb-0">
+                <span className="text-[11px] font-bold text-on-surface-variant/60 uppercase tracking-wider block px-sm mb-xs">
+                  {provider}
+                </span>
+                <div className="space-y-xs">
+                  {models
+                    .filter((m) => m.provider === provider)
+                    .map((m) => (
+                      <button
+                        key={m.id}
+                        disabled={!m.available}
+                        onClick={() => handleSelect(m.id)}
+                        title={m.available ? m.data_use || "" : m.unavailable_reason || "not available"}
+                        className={`w-full text-left p-xs px-sm rounded-xl transition-all flex items-center justify-between ${
+                          currentModel === m.id
+                            ? "bg-primary/10 text-primary font-bold"
+                            : m.available
+                              ? "hover:bg-surface-container text-on-surface hover:text-primary"
+                              : "opacity-50 cursor-not-allowed text-on-surface"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center gap-xs">
+                            <span className="font-label-md text-xs font-bold">{m.label}</span>
+                            {m.default && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">
+                                Default
+                              </span>
+                            )}
+                            {m.free_tier && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-surface-container-high text-on-surface-variant">
+                                Free tier
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-on-surface-variant/70 font-normal line-clamp-1">
+                            {m.available ? price(m) : m.unavailable_reason}
+                            {m.benchmark?.correct_pct != null ? ` · ${m.benchmark.correct_pct}% right on the test set` : ""}
+                          </p>
+                        </div>
+                        {currentModel === m.id && (
+                          <span className="material-symbols-outlined text-sm text-primary">check</span>
                         )}
-                      </div>
-                      <p className="text-[10px] text-on-surface-variant/70 font-normal line-clamp-1">
-                        {m.desc}
-                      </p>
-                    </div>
-                    {currentModel === m.id && (
-                      <span className="material-symbols-outlined text-sm text-primary">check</span>
-                    )}
-                  </button>
-                ))}
+                      </button>
+                    ))}
+                </div>
               </div>
-            </div>
-
-            {/* Gemini Group */}
-            <div>
-              <span className="text-[11px] font-bold text-on-surface-variant/60 uppercase tracking-wider block px-sm mb-xs">
-                Google Gemini Series
-              </span>
-              <div className="space-y-xs">
-                {geminiModels.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => handleSelect(m.id)}
-                    className={`w-full text-left p-xs px-sm rounded-xl transition-all flex items-center justify-between ${
-                      currentModel === m.id
-                        ? "bg-primary/10 text-primary font-bold"
-                        : "hover:bg-surface-container text-on-surface hover:text-primary"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center gap-xs">
-                        <span className="font-label-md text-xs font-bold">{m.name}</span>
-                        {m.badge && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-surface-container-high text-on-surface-variant">
-                            {m.badge}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-on-surface-variant/70 font-normal line-clamp-1">
-                        {m.desc}
-                      </p>
-                    </div>
-                    {currentModel === m.id && (
-                      <span className="material-symbols-outlined text-sm text-primary">check</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
+            ))}
+            {catalog?.prices_checked_on && (
+              <p className="text-[10px] text-on-surface-variant/60 px-sm pt-xs">
+                Prices checked {catalog.prices_checked_on}.
+              </p>
+            )}
           </div>
         )}
 
@@ -253,7 +211,7 @@ export default function ChatInput({
           >
             <span className="material-symbols-outlined text-[16px] text-primary">smart_toy</span>
             <span className="font-label-md text-[12px] font-bold text-slate-900 dark:text-white">
-              {activeModelObj.name}
+              {activeModelObj?.label || "Default model"}
             </span>
             <span className="material-symbols-outlined text-[14px]">
               {isOpenMenu ? "expand_less" : "expand_more"}

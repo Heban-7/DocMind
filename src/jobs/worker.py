@@ -66,10 +66,17 @@ def run_job(job: queue.Job, worker: str, **process_kwargs) -> bool:
     from src.db import repos
     from src.pipeline.ingest import process_document
 
+    from src.llm import ledger, usage
+
     lease = _Lease(job, worker, every=max(5.0, queue.LEASE_SECONDS / 3))
     lease.start()
     try:
-        process_document(job.tenant_id, job.document_id, **process_kwargs)
+        # embeddings and any vision calls of the ingest go in the account's ledger
+        with usage.purpose("ingest"), usage.collect() as events:
+            try:
+                process_document(job.tenant_id, job.document_id, **process_kwargs)
+            finally:
+                ledger.record(events, tenant_id=job.tenant_id, document_id=job.document_id)
     except Exception as exc:
         error = f"{type(exc).__name__}: {exc}"
         logger.exception("job %s failed (attempt %d of %d)", job.id, job.attempts, job.max_attempts)
