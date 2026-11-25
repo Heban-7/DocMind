@@ -48,6 +48,11 @@ jobs:
       - name: Run tests
         run: uv run pytest -q
 
+      # Prices are copied by hand from the providers' pages: warn (never fail)
+      # once they are more than 90 days old.
+      - name: Model prices are recent
+        run: uv run python -m src.llm.price_age --max-days 90
+
   frontend:
     name: Frontend build
     runs-on: ubuntu-latest
@@ -71,8 +76,5 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
-      # V1 has 23 known lint errors; the frontend is rebuilt in milestone M9,
-      # after which this step becomes blocking.
-      - name: Lint (report only until M9)
+      - name: Lint
         run: npm run lint
-        continue-on-error: true

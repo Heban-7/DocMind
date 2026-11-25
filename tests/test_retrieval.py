@@ -175,3 +175,31 @@ def test_reranker_is_skipped_when_off_or_for_ethiopic(monkeypatch):
     assert rerank.scores("what was revenue?", ["a", "b"]) is None
     monkeypatch.setenv("DOCMIND_RERANKER", "some/model")
     assert rerank.scores("የበጀት ዓመቱ ገቢ ስንት ነበር?", ["a", "b"]) is None
+
+
+def test_a_slow_query_embedding_falls_back_to_keywords(monkeypatch):
+    """A hung embedding call must not use up the answer's time limit."""
+    from src.llm import usage
+    from src.llm.errors import LLMError
+
+    store = MemoryChunkStore()
+    ingest_chunks(
+        [_chunk("Import tax expenditures were ETB 120.7 billion.", [4], ["Summary"])],
+        doc_id="docA", document_name="sample.pdf", store=store, embedder=_FakeEmbedder(),
+    )
+
+    class _Hung:
+        model = "fake"
+
+        def embed(self, texts):
+            # what post_json raises once the (inner) time limit has passed
+            raise LLMError("no time left", kind="deadline", provider="openai")
+
+    monkeypatch.setenv("DOCMIND_QUERY_EMBED_BUDGET_S", "2")
+    with usage.deadline(60):
+        hits = semantic_search("import tax expenditures", doc_id="docA", top_k=2, store=store, embedder=_Hung())
+    assert hits and hits[0].page_numbers == [4]
+
+    # with the answer's own limit used up, the error still stops the answer
+    with usage.deadline(0.5), pytest.raises(LLMError):
+        semantic_search("import tax expenditures", doc_id="docA", top_k=2, store=store, embedder=_Hung())

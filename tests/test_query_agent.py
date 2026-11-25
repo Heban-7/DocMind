@@ -234,3 +234,28 @@ def test_greeting_with_document():
     answer = _agent(llm, doc_id="annual_report", stores=memory_stores()).ask("Hi!")
     assert "ready to help" in answer.answer.lower()
     assert llm.calls == []
+
+
+def test_a_stream_that_stops_partway_is_asked_again_without_streaming():
+    llm = _ScriptedLLM([])
+    agent = _agent(llm)
+    original = llm._chat
+    streams: list[int] = []
+
+    def chat(messages, **kw):
+        eid = _evidence_id(messages[-1]["content"], "120.7 billion")
+        llm._scripts = [f"It was ETB 120.7 billion [{eid}]."]
+        return original(messages, **kw)
+
+    def stream(messages, **kw):
+        streams.append(1)
+        yield "It was ETB "
+        raise LLMError("ReadTimeout while streaming", kind="timeout", provider="fake")
+
+    llm._chat = chat
+    llm._stream = stream
+    pieces: list[str] = []
+    answer = agent.ask("What was import tax expenditure in FY 2020/21?", on_token=pieces.append)
+    assert streams == [1]
+    assert answer.status == "answered" and "120.7 billion" in answer.answer
+    assert answer.provenance.citations[0].page_number == 4

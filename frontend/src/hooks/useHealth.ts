@@ -22,9 +22,12 @@ export function useHealth(pollIntervalMs = 30_000) {
   }, []);
 
   useEffect(() => {
-    poll();
     const id = setInterval(poll, pollIntervalMs);
-    return () => clearInterval(id);
+    const first = setTimeout(poll, 0);
+    return () => {
+      clearInterval(id);
+      clearTimeout(first);
+    };
   }, [poll, pollIntervalMs]);
 
   return { isOnline, version, error, refresh: poll };

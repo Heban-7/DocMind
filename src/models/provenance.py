@@ -68,6 +68,13 @@ class Citation(BaseModel):
         description="1-indexed physical PDF page (source of truth for bbox / I/O)",
     )
     bbox: BoundingBox
+    boxes: list[BoundingBox] = Field(
+        default_factory=list,
+        description="the regions on the page that print the claim (cells, a row label, text blocks); "
+        "empty when only the page is known. ``bbox`` is their union.",
+    )
+    box_kind: str = Field(default="page", description="what the boxes mark: fact (the cell a fact was read from), cell (the cell that prints "
+        "the answer's figure, and its row label), block (the text the passage came from) or page")
 
     content_hash: str = Field(description="SHA-256 of the supporting LDU text")
     chunk_id: str | None = Field(

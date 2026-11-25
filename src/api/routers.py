@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
-from src.api.dependencies import get_principal, get_principal_header_or_query
+from src.api.dependencies import get_principal, get_principal_or_file_link
 from src.db.repos import AccessDeniedError, Principal
 
 from src.api.schemas import (
@@ -23,6 +23,8 @@ from src.api.schemas import (
 from src.api.services import (
     DocumentNotReadyError,
     document_events,
+    document_ledger,
+    document_link,
     fetch_history,
     get_document_status,
     get_pdf_file_path,
@@ -111,10 +113,10 @@ def get_document(doc_id: str, principal: Principal = Depends(get_principal)) -> 
 
 
 @upload_router.get("/documents/{doc_id}/events")
-def get_document_events(doc_id: str, principal: Principal = Depends(get_principal_header_or_query)):
+def get_document_events(doc_id: str, principal: Principal = Depends(get_principal_or_file_link)):
     """Server-Sent Events with progress until the document is ready or failed.
 
-    Accepts ``?token=`` because a browser EventSource cannot send headers.
+    Accepts a short-lived ``?sig=`` link because a browser EventSource cannot send headers.
     """
     from starlette.responses import StreamingResponse
 
@@ -134,13 +136,13 @@ def get_document_events(doc_id: str, principal: Principal = Depends(get_principa
 @upload_router.get("/documents/{doc_id}/pdf")
 def get_pdf(
     doc_id: str,
-    principal: Principal = Depends(get_principal_header_or_query),
+    principal: Principal = Depends(get_principal_or_file_link),
 ):
     """Serve the stored PDF of a document in the caller's account.
 
-    Login is required. The token may come from the Authorization header or,
-    for the in-browser viewer, a ``token`` query parameter (to be replaced by
-    short-lived signed URLs in milestone M9). Documents the caller does not own
+    Login is required: the Authorization header (the in-app viewer fetches
+    with it), or a ten-minute ``?sig=`` link from ``POST /documents/{id}/link``
+    for opening the file in a new tab. Documents the caller does not own
     return 404, exactly like documents that do not exist.
     """
     try:
@@ -166,6 +168,24 @@ def get_pdf(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve PDF: {exc}",
         ) from exc
+
+
+@upload_router.post("/documents/{doc_id}/link")
+def pdf_link(doc_id: str, principal: Principal = Depends(get_principal)) -> dict:
+    """A ten-minute link to the document's PDF, for opening it in a new tab."""
+    try:
+        return document_link(doc_id, principal=principal)
+    except AccessDeniedError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.") from exc
+
+
+@upload_router.get("/documents/{doc_id}/ledger")
+def page_ledger(doc_id: str, principal: Principal = Depends(get_principal)) -> dict:
+    """How each page of the document was read: engine, confidence, time, cost and flags."""
+    try:
+        return document_ledger(doc_id, principal=principal)
+    except AccessDeniedError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.") from exc
 
 
 def _prepare_or_raise(payload: ChatRequest, principal: Principal):

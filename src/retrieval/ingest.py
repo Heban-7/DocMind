@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import re
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -92,6 +93,14 @@ def ingest_chunks(
     )
 
 
+def _query_embed_budget() -> float:
+    """Seconds a question's embedding may take, retries included (DOCMIND_QUERY_EMBED_BUDGET_S)."""
+    try:
+        return max(1.0, float(os.getenv("DOCMIND_QUERY_EMBED_BUDGET_S", "12")))
+    except ValueError:
+        return 12.0
+
+
 def retrieve(
     query: str,
     *,
@@ -107,11 +116,17 @@ def retrieve(
 
     from src.llm.errors import LLMError
 
+    from src.llm import usage
+
     embedder = embedder or build_embedding_client()
     try:
-        vector = embedder.embed([query])[0]
+        # a query embeds in about a second; a hung connection must not use up the
+        # answer's whole time limit when keyword search can go on without it
+        with usage.deadline(_query_embed_budget()):
+            vector = embedder.embed([query])[0]
     except LLMError as exc:
-        if exc.kind == "deadline":
+        outer = usage.remaining_seconds()  # the answer's own limit, outside the block
+        if exc.kind == "deadline" and outer is not None and outer <= 1.0:
             raise
         # keyword search still works without the embedding provider
         logger.warning("Embedding the query failed (%s); searching by keywords only", exc.kind)

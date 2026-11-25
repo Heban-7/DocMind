@@ -194,6 +194,18 @@ def ask(doc_id: str, pdf_path: Path, question: str, *, model: str | None = None)
         "answer": answer.answer,
         "status": answer.status,
         "cited_pages": [c.page_number for c in answer.provenance.citations],
+        # boxes as [x0, top, x1, bottom] from the top-left corner, like the golden figures
+        "citations": [
+            {
+                "page": c.page_number,
+                "kind": c.box_kind,
+                "page_size": [c.bbox.page_width, c.bbox.page_height],
+                "boxes": [
+                    [b.x0, (b.page_height or 0) - b.y1, b.x1, (b.page_height or 0) - b.y0] for b in c.boxes
+                ],
+            }
+            for c in answer.provenance.citations
+        ],
         "tools": [t.tool.value for t in answer.tool_trace],
         "latency_s": round(latency, 3),
         "first_token_s": round(first[0] if first else latency, 3),

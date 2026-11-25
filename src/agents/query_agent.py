@@ -219,6 +219,13 @@ def _evidence_text(h: EvidenceHit) -> str:
     return " ".join(x for x in (h.excerpt, h.title, str(h.extra.get("context") or "")) if x)
 
 
+def _with_claims(h: EvidenceHit, numbers: list[str], claims: list[str]) -> EvidenceHit:
+    """The hit, carrying the figures the answer found in it (for the citation box)."""
+    if not numbers and not claims:
+        return h
+    return h.model_copy(update={"extra": {**h.extra, "claim_numbers": numbers, "claim_text": " ".join(claims)}})
+
+
 def _evidence_values(h: EvidenceHit) -> list[float]:
     vals = [h.extra.get("value"), h.extra.get("value_abs")]
     return [float(v) for v in vals if isinstance(v, (int, float))]
@@ -460,24 +467,36 @@ class QueryAgent:
             messages = [{"role": "system", "content": deps.profile.answer_prompt(mode)}, {"role": "user", "content": prompt}]
             sink = _TOKEN_SINK.get()
             stream_filter = StreamFilter(_labels(hits))
+            max_tokens = 1600 if mode == "detailed" else 900
             with usage.purpose("answer"):
-                stream = deps.llm.stream(messages, temperature=0.0, max_tokens=1600 if mode == "detailed" else 900)
-                for piece in stream:
-                    shown = stream_filter.feed(piece)
-                    if shown and sink is not None:
-                        if "first_token_s" not in run:
-                            run["first_token_s"] = time.perf_counter() - run.get("t0", time.perf_counter())
-                        sink(shown)
-                rest = stream_filter.finish()
-                if rest and sink is not None:
-                    run.setdefault("first_token_s", time.perf_counter() - run.get("t0", time.perf_counter()))
-                    sink(rest)
-            text = stream.result.text if stream.result else stream_filter.raw
+                stream = deps.llm.stream(messages, temperature=0.0, max_tokens=max_tokens)
+                try:
+                    for piece in stream:
+                        shown = stream_filter.feed(piece)
+                        if shown and sink is not None:
+                            if "first_token_s" not in run:
+                                run["first_token_s"] = time.perf_counter() - run.get("t0", time.perf_counter())
+                            sink(shown)
+                    rest = stream_filter.finish()
+                    if rest and sink is not None:
+                        run.setdefault("first_token_s", time.perf_counter() - run.get("t0", time.perf_counter()))
+                        sink(rest)
+                    text = stream.result.text if stream.result else stream_filter.raw
+                except LLMError as exc:
+                    # the stream stopped partway (a dropped or stalled connection): ask
+                    # once more without streaming; the checked answer replaces the
+                    # streamed text, so nothing shows twice
+                    left = usage.remaining_seconds()
+                    if exc.kind not in ("timeout", "network") or (left is not None and left < 6.0):
+                        raise
+                    logger.warning("answer stream stopped (%s); asking again without streaming", exc.kind)
+                    text = deps.llm.chat(messages, temperature=0.0, max_tokens=max_tokens).text
             if "first_token_s" not in run:
                 run["first_token_s"] = time.perf_counter() - run.get("t0", time.perf_counter())
             body, follow_ups = split_follow_ups(text)
             run["answer_model"] = f"{deps.llm.provider}/{deps.llm.model}"
             run["draft"], run["follow_ups"] = body, follow_ups
+            run["answer_s"] = time.perf_counter() - run.get("t0", time.perf_counter())
             return {}
 
         def verify_node(state: QueryState) -> QueryState:
@@ -509,7 +528,11 @@ class QueryAgent:
                 titles=titles + " " + " ".join(d.document_name for d in deps.corpus if d.document_id == state.get("active_doc_id")),
                 strict=(mode == "audit"),
             )
-            selected = [hits[i - 1] for i in check.cited if 1 <= i <= len(hits)][: deps.max_citations]
+            selected = [
+                _with_claims(hits[i - 1], check.evidence_numbers.get(i, []), check.evidence_claims.get(i, []))
+                for i in check.cited
+                if 1 <= i <= len(hits)
+            ][: deps.max_citations]
             status = "not_found" if check.not_found else "answered"
             if status == "answered" and not selected:
                 status = "not_found"
@@ -517,11 +540,23 @@ class QueryAgent:
             final_text = display_text(check.answer, _labels(hits))
             provenance = ProvenanceChain()
             if status == "answered":
-                pdf = state.get("pdf_path") or deps.pdf_path or _resolve_pdf(deps, selected[0].doc_id)
+                pinned = state.get("pdf_path") or deps.pdf_path
+                pdfs: dict[str, Path | None] = {}
+
+                def pdf_for(doc_id: str):
+                    # each citation is boxed on its own document's file
+                    if pinned and (not doc_id or doc_id == (state.get("active_doc_id") or deps.doc_id)):
+                        return pinned
+                    if doc_id not in pdfs:
+                        pdfs[doc_id] = _resolve_pdf(deps, doc_id) or (pinned if deps.pdf_resolver is None else None)
+                    return pdfs[doc_id]
+
                 from src.query.page_map import enrich_hit_printed_page
 
-                selected = [enrich_hit_printed_page(h, pdf_path=pdf) for h in selected]
-                provenance = assemble_provenance(selected, pdf_path=pdf, max_citations=deps.max_citations)
+                selected = [enrich_hit_printed_page(h, pdf_path=pdf_for(h.doc_id)) for h in selected]
+                provenance = assemble_provenance(
+                    selected, pdf_path=pinned, max_citations=deps.max_citations, pdf_for=pdf_for
+                )
                 if provenance.is_empty:
                     status = "not_found"
                     final_text = f"{NOT_FOUND}: the cited evidence could not be located in the document."
@@ -615,6 +650,7 @@ class QueryAgent:
                 "first_token_s": round(run.get("first_token_s", total), 3),
                 "plan_s": round(run.get("plan_s", 0.0), 3),
                 "retrieve_s": round(run.get("retrieve_s", 0.0), 3),
+                "answer_s": round(run.get("answer_s", 0.0), 3),
             }
             return QueryAnswer.model_validate(data)
 

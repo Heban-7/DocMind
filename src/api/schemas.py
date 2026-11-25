@@ -75,6 +75,10 @@ class AnswerUsage(BaseModel):
     cost_usd: float = 0.0
     seconds: float = 0.0
     first_token_s: float | None = None
+    # where the time went: reading the question, finding evidence, writing, checking
+    stages: dict[str, float] = Field(default_factory=dict)
+    # what each kind of model call cost: plan, embed, answer
+    cost_by_purpose: dict[str, float] = Field(default_factory=dict)
 
 
 class ChatResponse(BaseModel):

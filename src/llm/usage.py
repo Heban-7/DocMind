@@ -129,4 +129,13 @@ def summarize(events: list[UsageEvent]) -> dict:
         "cost_usd": round(sum(e.cost_usd for e in events), 6),
         "embed_calls": sum(1 for e in events if e.kind == "embed"),
         "models": sorted({f"{e.provider}/{e.model}" for e in llm}),
+        "cost_by_purpose": _by_purpose(events),
     }
+
+
+def _by_purpose(events: list[UsageEvent]) -> dict[str, float]:
+    out: dict[str, float] = {}
+    for e in events:
+        key = getattr(e, "purpose", "") or "other"
+        out[key] = out.get(key, 0.0) + e.cost_usd
+    return {k: round(v, 6) for k, v in out.items()}

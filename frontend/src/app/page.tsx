@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -11,8 +10,8 @@ import { useAuth } from "@/context/AuthContext";
 
 const capabilities = [
   {
-    title: "Automated Document Triage & Cost-Optimized Routing",
-    desc: "Intelligently categorize incoming documents and route them through optimized processing pipelines to balance precision and operational costs at scale.",
+    title: "Page-by-Page Reading & Cost-Aware Routing",
+    desc: "Each page is read the cheapest way that works: its text layer, a layout model for tables, OCR for scans, and a vision model only for pages the others fail on. Every page is logged with its engine, confidence, time and cost.",
     img: "/AutomatedDocumentTriageAndCost-Optimized Routing.png",
     alt: "Automated Document Triage",
   },
@@ -24,7 +23,7 @@ const capabilities = [
   },
   {
     title: "Context-Aware Semantic Chunking (Logical Units)",
-    desc: "Moving beyond simple character counts. We fragment documents into semantically coherent units to ensure RAG pipelines maintain perfect context.",
+    desc: "Chunks follow the document's own sections and keep their headings as context, and search combines meaning with exact words.",
     img: "/Context-AwareSemanticChunking(LogicalDocumentUnits).png",
     alt: "Semantic Chunking",
   },
@@ -36,19 +35,19 @@ const capabilities = [
   },
   {
     title: "Structured FactTable & SQL Query Execution",
-    desc: "Convert unstructured paragraphs into rigid FactTables, allowing you to run complex SQL queries directly against your document set.",
+    desc: "Table figures are stored as typed facts with sign, scale and period, so totals and changes are computed by the database instead of guessed by a model.",
     img: "/Structured_FactTableAndSQLQueryExecution.png",
     alt: "FactTable",
   },
   {
-    title: "Zero-Trust Audit Mode (Hallucination Guardrail)",
-    desc: "Enterprise-grade verification layers that cross-reference every AI claim with source evidence, effectively eliminating hallucinations.",
+    title: "Audit Mode and a Number Checker",
+    desc: "Every number in an answer is matched against the evidence it cites; a sentence whose figure the evidence does not hold is removed. In Audit Mode, any sentence without a citation is removed too.",
     img: "/Zero-TrustAuditMode(Anti-HallucinationGuardrail).png",
     alt: "Zero-Trust Audit",
   },
   {
     title: "Spatial Provenance & Bounding Box Citations",
-    desc: "Don't just trust the answer—see exactly where it came from with pixel-perfect bounding box citations on the original page.",
+    desc: "Open a citation and the page opens with a box on the table cell or paragraph that prints the figure, not just a page number.",
     img: "/SpatialProvenanceAndBoundingBoxCitations.png",
     alt: "Spatial Provenance",
   },
@@ -61,9 +60,9 @@ const capabilities = [
 ];
 
 const advantages = [
-  { icon: "account_tree", title: "Intelligent Triage", desc: "Automated document classification & cost-effective routing for enterprise scale." },
+  { icon: "account_tree", title: "Page-Level Routing", desc: "Text layer, layout model, OCR or vision, chosen per page and logged with its cost." },
   { icon: "segment", title: "Context-Aware Chunking", desc: "Preserves financial tables and complex multi-column reading orders intact." },
-  { icon: "verified", title: "Zero-Trust Provenance", desc: "Every answer backed by exact page numbers and spatial citations." },
+  { icon: "verified", title: "Checked Citations", desc: "Every figure is matched to its evidence and boxed on the page that prints it." },
 ];
 
 const heroImages = [

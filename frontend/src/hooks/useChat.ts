@@ -8,11 +8,16 @@ export function useChat() {
   const [messages, setMessages] = useState<ChatMessageUI[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const threadIdRef = useRef<string>(crypto.randomUUID());
+  const [threadId, setThreadId] = useState<string>(() => crypto.randomUUID());
+  const [threadDocs, setThreadDocs] = useState<Record<string, string>>({});
+  const threadIdRef = useRef<string>(threadId);
   const threadDocMapRef = useRef<Record<string, string>>({});
+  const activeDocId = threadDocs[threadId];
 
-  const threadId = threadIdRef.current;
-  const activeDocId = threadDocMapRef.current[threadId];
+  const bindDocument = useCallback((tid: string, docId: string) => {
+    threadDocMapRef.current[tid] = docId;
+    setThreadDocs((m) => ({ ...m, [tid]: docId }));
+  }, []);
 
   const send = useCallback(
     async (
@@ -23,7 +28,7 @@ export function useChat() {
       const currentThreadId = threadIdRef.current;
 
       if (documentId) {
-        threadDocMapRef.current[currentThreadId] = documentId;
+        bindDocument(currentThreadId, documentId);
       }
 
       const effectiveDocId = options?.federatedSearch
@@ -93,7 +98,7 @@ export function useChat() {
         }
       );
     },
-    []
+    [bindDocument]
   );
 
   const loadThread = useCallback(async (targetThreadId: string) => {
@@ -101,9 +106,10 @@ export function useChat() {
     setError(null);
     try {
       threadIdRef.current = targetThreadId;
+      setThreadId(targetThreadId);
       const res = await fetchHistory(targetThreadId);
       if (res.document_id) {
-        threadDocMapRef.current[targetThreadId] = res.document_id;
+        bindDocument(targetThreadId, res.document_id);
       }
       const uiMsgs: ChatMessageUI[] = res.messages.map((m) => ({
         id: crypto.randomUUID(),
@@ -119,10 +125,12 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [bindDocument]);
 
   const newChat = useCallback(() => {
-    threadIdRef.current = crypto.randomUUID();
+    const fresh = crypto.randomUUID();
+    threadIdRef.current = fresh;
+    setThreadId(fresh);
     setMessages([]);
     setError(null);
   }, []);

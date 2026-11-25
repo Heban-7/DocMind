@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 interface ProcessingProgressMessageProps {
   fileName: string;
   fileSizeMb?: string | null;
@@ -21,25 +19,22 @@ export default function ProcessingProgressMessage({
   progress,
   progressLabel,
 }: ProcessingProgressMessageProps) {
-  const [progressPercent, setProgressPercent] = useState<number>(15);
-  const [currentStep, setCurrentStep] = useState<number>(1);
-
-  useEffect(() => {
-    if (uploadState === "uploading") {
-      setProgressPercent(25);
-      setCurrentStep(1);
-    } else if (uploadState === "processing") {
-      // Real page progress from the server, not a timer.
-      const p = Math.round(30 + 65 * (progress ?? 0));
-      setProgressPercent(p);
-      setCurrentStep((progress ?? 0) >= 1 ? 4 : (progress ?? 0) > 0 ? 3 : 2);
-    } else if (uploadState === "indexed") {
-      setProgressPercent(100);
-      setCurrentStep(4);
-    } else if (uploadState === "error") {
-      setProgressPercent(0);
-    }
-  }, [uploadState, progress]);
+  // real page progress from the server, not a timer
+  const done = progress ?? 0;
+  let progressPercent = 15;
+  let currentStep = 1;
+  if (uploadState === "uploading") {
+    progressPercent = 25;
+    currentStep = 1;
+  } else if (uploadState === "processing") {
+    progressPercent = Math.round(30 + 65 * done);
+    currentStep = done >= 1 ? 4 : done > 0 ? 3 : 2;
+  } else if (uploadState === "indexed") {
+    progressPercent = 100;
+    currentStep = 4;
+  } else if (uploadState === "error") {
+    progressPercent = 0;
+  }
 
   // SVG Circular Ring calculation
   const radius = 28;

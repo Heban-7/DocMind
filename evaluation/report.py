@@ -191,6 +191,9 @@ def _qa(golden: GoldenSet, run_dir: Path) -> dict | None:
             d["citation_support"] = sum(ok) / len(ok)
         else:
             d["citation_support"] = None
+        d["box_on_figure"], d["box_on_figure_facts_only"], d["box_page_share"] = _box_scores(
+            q, row, figures, d["correct"]
+        )
         answer_text = (row.get("answer") or "").strip().lower()
         d["not_found_but_correct"] = bool(d["correct"] and q.qtype.value != "unanswerable" and answer_text.startswith("not found"))
         d["doc_class"] = doc_class.get(q.doc_key)
@@ -205,6 +208,7 @@ def _qa(golden: GoldenSet, run_dir: Path) -> dict | None:
         unans = [r for r in rows if r["qtype"] == "unanswerable"]
         prec = [r["citation_precision"] for r in answerable if r["citation_precision"] is not None]
         support = [r["citation_support"] for r in answerable if r.get("citation_support") is not None]
+        boxed = [r for r in answerable if r.get("box_on_figure") is not None]
         ret = [r["retrieval_hit_at_5"] for r in answerable if r["retrieval_hit_at_5"] is not None]
         lat = [r["latency_s"] for r in rows if r.get("latency_s")]
         ftt = [r["first_token_s"] for r in rows if r.get("first_token_s")]
@@ -218,6 +222,12 @@ def _qa(golden: GoldenSet, run_dir: Path) -> dict | None:
             "unanswerable_refused_pct": _pct(sum(r["correct"] for r in unans), len(unans)),
             "citation_precision_mean": round(statistics.mean(prec), 3) if prec else None,
             "citation_support_mean": round(statistics.mean(support), 3) if support else None,
+            "box_on_figure_pct": _pct(sum(bool(r["box_on_figure"]) for r in boxed), len(boxed)) if boxed else None,
+            "box_on_figure_facts_only_pct": _pct(sum(bool(r["box_on_figure_facts_only"]) for r in boxed), len(boxed))
+            if boxed
+            else None,
+            "box_page_share_p50": round(statistics.median(shares), 4) if (shares := [r["box_page_share"] for r in boxed if r.get("box_page_share")]) else None,
+            "boxed_questions": len(boxed),
             "not_found_but_correct": sum(bool(r.get("not_found_but_correct")) for r in answerable),
             "citation_hit_pct": _pct(sum(bool(r["citation_hit"]) for r in answerable), len(answerable)),
             "retrieval_hit_at_5_pct": _pct(sum(ret), len(ret)),
@@ -240,6 +250,40 @@ def _qa(golden: GoldenSet, run_dir: Path) -> dict | None:
         "by_class": {k: summary(v) for k, v in sorted(by_class.items())},
         "results": results,
     }
+
+
+def _overlaps(a: list[float], b: list[float], slack: float = 2.0) -> bool:
+    return a[0] - slack <= b[2] and b[0] - slack <= a[2] and a[1] - slack <= b[3] and b[1] - slack <= a[3]
+
+
+def _box_scores(q, row: dict, figures: dict, correct: bool) -> tuple[bool | None, bool | None, float | None]:
+    """Does a citation box on the figure's page cover the gold figure's own box?
+
+    Scored for right answers whose gold figure has a box (digital pages). The
+    second value counts only boxes that came with a fact (all an answer had
+    before M9); the third is the covering box's share of the page area.
+    """
+    cites = row.get("citations")
+    if cites is None or not correct:
+        return None, None, None
+    golds = [figures[i] for i in q.figure_ids if i in figures and getattr(figures[i], "bbox", None)]
+    if not golds:
+        return None, None, None
+    hit = fact_hit = False
+    share: float | None = None
+    for c in cites:
+        for g in golds:
+            if c.get("page") != g.page:
+                continue
+            for b in c.get("boxes") or []:
+                if _overlaps(b, list(g.bbox)):
+                    hit = True
+                    fact_hit = fact_hit or c.get("kind") == "fact"
+                    w, h = (c.get("page_size") or [None, None])[:2]
+                    if w and h:
+                        s = (b[2] - b[0]) * (b[3] - b[1]) / (w * h)
+                        share = s if share is None else min(share, s)
+    return hit, fact_hit, (round(share, 4) if share is not None else None)
 
 
 def build_report(run_dir: Path, *, golden_version: str = "v1", name: str = "") -> dict:
@@ -358,6 +402,9 @@ def render_markdown(r: dict) -> str:
             f"| Retrieval: a gold page in the top 5 | {_fmt(o['retrieval_hit_at_5_pct'], '%')} |",
             f"| Citation precision (share of citations on a gold page) | {_fmt(o['citation_precision_mean'])} |",
             f"| Citation support (share of citations on a page that prints the answer) | {_fmt(o.get('citation_support_mean'))} |",
+            f"| Box on the printed figure (right answers whose figure has a box: {o.get('boxed_questions') or 0}) | {_fmt(o.get('box_on_figure_pct'))} |",
+            f"| ... with fact cells only, as before M9 | {_fmt(o.get('box_on_figure_facts_only_pct'))} |",
+            f"| Covering box, share of the page area (median) | {_fmt(o.get('box_page_share_p50'))} |",
             f"| Answers citing at least one gold page | {_fmt(o['citation_hit_pct'], '%')} |",
             f"| \"Not found\" answers that still state the right figure | {o.get('not_found_but_correct', '-')} |",
             f"| Latency p50 / p95 | {_fmt(o['latency_p50_s'], ' s')} / {_fmt(o['latency_p95_s'], ' s')} |",

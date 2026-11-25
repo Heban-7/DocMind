@@ -1,86 +1,64 @@
 "use client";
 
 import { useState } from "react";
+
+import { boxNote, citationBoxes, displayFileName } from "@/lib/boxes";
 import type { ProvenanceCitation } from "@/lib/types";
 import PDFViewerModal from "./PDFViewerModal";
 
 interface ProvenanceBadgeProps {
   citation: ProvenanceCitation;
+  /** the citation's number in the answer ([1], [2], ...) */
+  index?: number;
 }
 
-function formatDisplayFilename(rawName?: string): string {
-  if (!rawName) return "Document.pdf";
-  // Strip auto-generated hex/UUID prefixes like 212dc42370e2_
-  let clean = rawName.replace(/^[a-f0-9]{8,32}_/i, "");
-  if (clean.length > 20) {
-    const extIdx = clean.lastIndexOf(".");
-    const ext = extIdx !== -1 ? clean.slice(extIdx) : "";
-    const base = extIdx !== -1 ? clean.slice(0, extIdx) : clean;
-    clean = `${base.slice(0, 14)}...${ext}`;
-  }
-  return clean;
+function shortName(name: string): string {
+  if (name.length <= 26) return name;
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 ? name.slice(dot) : "";
+  return `${name.slice(0, 20)}…${ext}`;
 }
 
-export default function ProvenanceBadge({ citation }: ProvenanceBadgeProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const KIND: Record<string, string> = { fact: "cell", cell: "cell", block: "passage" };
 
-  const rawFileName = citation.source_file || (citation as any).document_name || "Document.pdf";
-  const displayFileName = formatDisplayFilename(rawFileName);
-
-  const docId =
-    (citation as any).doc_id ||
-    (citation as any).document_id ||
-    (typeof citation.chunk_id === "string" && citation.chunk_id.includes("_") ? citation.chunk_id.split("_")[0] : undefined) ||
-    (typeof citation.source_file === "string" && citation.source_file.includes("_") ? citation.source_file.split("_")[0] : undefined) ||
-    (typeof (citation as any).document_name === "string" && (citation as any).document_name.includes("_") ? (citation as any).document_name.split("_")[0] : undefined);
+export default function ProvenanceBadge({ citation, index }: ProvenanceBadgeProps) {
+  const [open, setOpen] = useState(false);
+  const fileName = displayFileName(citation.document_name);
   const page = citation.page_number ?? 1;
-
-  const hash = citation.content_hash;
-
-  const rawBbox = citation.bbox;
-  const bboxArray: number[] | undefined = Array.isArray(rawBbox)
-    ? rawBbox
-    : typeof rawBbox === "string"
-    ? (rawBbox as string)
-        .split(",")
-        .map((s) => parseFloat(s.trim()))
-        .filter((n) => !isNaN(n))
-    : undefined;
-
-  const bboxStr = bboxArray && bboxArray.length > 0 ? bboxArray.join(", ") : null;
-  const chunkText = citation.chunk_text as string | undefined;
+  const boxes = citationBoxes(citation);
+  const kind = boxes.length ? KIND[citation.box_kind || ""] || "region" : "page";
+  const printed = citation.printed_page && citation.printed_page !== String(page) ? ` (p. ${citation.printed_page})` : "";
 
   return (
     <>
       <button
-        onClick={() => setIsModalOpen(true)}
-        className="w-full flex items-center justify-between gap-1.5 bg-surface-container-lowest border border-outline-variant/30 hover:border-primary px-3 py-1.5 rounded-xl transition-all group shadow-2xs hover:shadow-xs cursor-pointer min-w-0"
-        title={
-          hash
-            ? `Click to view source PDF evidence.\nDocument: ${rawFileName}\nPage: ${page}\nContent hash: ${hash}${bboxStr ? `\nBBox: [${bboxStr}]` : ""}`
-            : `Click to view source PDF evidence (Page ${page})`
-        }
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full flex items-center gap-1.5 bg-surface-container-lowest border border-outline-variant/30 hover:border-primary px-3 py-1.5 rounded-xl transition-all group cursor-pointer min-w-0 text-left"
+        aria-label={`Open ${fileName} at page ${page}${boxes.length ? ", with the cited " + kind + " marked" : ""}`}
+        title={citation.content_hash ? `Evidence hash ${citation.content_hash.slice(0, 12)}…` : undefined}
       >
-        <span className="material-symbols-outlined text-primary text-sm shrink-0">
-          description
+        {index != null && <span className="text-[11px] font-bold text-primary shrink-0">[{index}]</span>}
+        <span className="material-symbols-outlined text-primary text-sm shrink-0" aria-hidden="true">description</span>
+        <span className="text-xs text-on-surface-variant group-hover:text-primary font-medium truncate">
+          {shortName(fileName)}, page {page}
+          {printed}
         </span>
-        <span className="font-body-sm text-xs text-on-surface-variant group-hover:text-primary font-medium truncate max-w-[210px]">
-          📄 {displayFileName} — Page {page}{" "}
-          <span className="font-bold text-green-600 ml-1">[Verified]</span>
-        </span>
-        <span className="material-symbols-outlined text-xs text-on-surface-variant/40 group-hover:text-primary shrink-0">
-          visibility
+        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">
+          {kind}
         </span>
       </button>
 
       <PDFViewerModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        docId={docId}
-        fileName={rawFileName}
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        docId={citation.doc_id}
+        fileName={fileName}
         pageNumber={page}
-        bbox={bboxArray}
-        chunkText={chunkText}
+        printedPage={citation.printed_page}
+        boxes={boxes}
+        note={boxNote(citation.box_kind, boxes.length)}
+        excerpt={citation.excerpt}
       />
     </>
   );

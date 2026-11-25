@@ -72,6 +72,10 @@ class Verification:
     removed: int = 0
     not_found: bool = False
     missing_terms: list[str] = field(default_factory=list)
+    # evidence number -> the figures (as the answer writes them) it was found to print,
+    # and the kept sentences that cite it: where on the page the box goes
+    evidence_numbers: dict[int, list[str]] = field(default_factory=dict)
+    evidence_claims: dict[int, list[str]] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         claims = [s for s in self.sentences if s.status != "no_claim"]
@@ -277,6 +281,7 @@ def verify_answer(
     # a figure the user wrote (a claim to check, "is it ETB 9 billion?") may be repeated
     asked = EvidenceNumbers(question or "")
     checks: list[SentenceCheck] = []
+    held: list[dict[int, list[str]]] = []  # per sentence: evidence number -> its figures
     refusal = (answer or "").strip().lower().startswith(NOT_FOUND.lower())
 
     for sentence in split_sentences(answer):
@@ -287,6 +292,8 @@ def verify_answer(
         check.numbers = [n.text for n in nums]
         low = strip_cites(sentence).lower()
         check.missing_terms = [t for t in missing if re.search(rf"(?<![\w]){re.escape(t)}", low)]
+        where: dict[int, list[str]] = {}
+        held.append(where)
 
         if nums:
             supporting: list[int] = []
@@ -297,11 +304,16 @@ def verify_answer(
                 if own:
                     supporting += own
                     found.append(n)
+                    if not _in_date(body_of(sentence), n):
+                        for c in own:
+                            where.setdefault(c, []).append(n.text)
                     continue
                 elsewhere = [i + 1 for i, ev in enumerate(numbers) if ev.holds(n)]
                 if elsewhere:
                     supporting.append(elsewhere[0])
                     found.append(n)
+                    if not _in_date(body_of(sentence), n):
+                        where.setdefault(elsewhere[0], []).append(n.text)
                 else:
                     not_found.append(n)
             for n in not_found:
@@ -337,9 +349,36 @@ def verify_answer(
     else:
         kept_text = _rebuild(answer, checks)
         cited = list(dict.fromkeys(c for s in kept for c in s.final_cites))
+    ev_numbers: dict[int, list[str]] = {}
+    ev_claims: dict[int, list[str]] = {}
+    if not not_found:
+        for check, where in zip(checks, held):
+            if not check.kept:
+                continue
+            for c, texts in where.items():
+                ev_numbers.setdefault(c, []).extend(t for t in texts if t not in ev_numbers.get(c, []))
+            for c in check.final_cites:
+                ev_claims.setdefault(c, []).append(strip_cites(check.text).strip())
     return Verification(
-        answer=kept_text, sentences=checks, cited=cited, removed=removed, not_found=not_found, missing_terms=missing
+        answer=kept_text, sentences=checks, cited=cited, removed=removed, not_found=not_found, missing_terms=missing,
+        evidence_numbers=ev_numbers, evidence_claims=ev_claims,
     )
+
+
+def body_of(sentence: str) -> str:
+    """The text ``claim_numbers`` reads positions from."""
+    return _LIST_MARKER.sub("", strip_cites(sentence))
+
+
+_MONTH_WORD = re.compile(r"\b(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)\b\.?", re.IGNORECASE)
+
+
+def _in_date(body: str, n: Number) -> bool:
+    """Is ``n`` the day of a date ("30 June 2017", "June 30, 2017")?"""
+    if n.percent or n.scale != 1.0 or not (1 <= abs(n.value) <= 31) or n.value != int(n.value):
+        return False
+    near = body[max(0, n.start - 11): n.start] + " " + body[n.end: n.end + 11]
+    return bool(_MONTH_WORD.search(near))
 
 
 def _states_fact(sentence: str) -> bool:

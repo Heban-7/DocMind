@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { fetchDocumentStatus, uploadDocument } from "@/lib/api";
 import type { UploadedDocument, UploadState, DocumentInfo } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
@@ -35,21 +35,18 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [progressLabel, setProgressLabel] = useState<string>("");
-  const [threadDocMap, setThreadDocMap] = useState<Record<string, UploadedDocument>>({});
-
-  // Load persisted thread documents on mount or user change
-  useEffect(() => {
-    if (!storageKey) {
-      setThreadDocMap({});
-      return;
-    }
+  // the documents bound to chat threads, per account (saved in localStorage)
+  const [maps, setMaps] = useState<Record<string, Record<string, UploadedDocument>>>({});
+  const threadDocMap = useMemo<Record<string, UploadedDocument>>(() => {
+    if (!storageKey) return {};
+    if (maps[storageKey]) return maps[storageKey];
     try {
-      const saved = localStorage.getItem(storageKey);
-      setThreadDocMap(saved ? JSON.parse(saved) : {});
+      const saved = typeof window === "undefined" ? null : localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : {};
     } catch {
-      setThreadDocMap({});
+      return {};
     }
-  }, [storageKey]);
+  }, [maps, storageKey]);
 
   // Sync to localStorage on threadDocMap change
   const persistThreadDocs = useCallback((map: Record<string, UploadedDocument>) => {
@@ -71,12 +68,11 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
       status: doc.status,
       uploadedAt: (doc as UploadedDocument).uploadedAt || Date.now(),
     };
-    setThreadDocMap((prev) => {
-      const next = { ...prev, [threadId]: uploadedDoc };
-      persistThreadDocs(next);
-      return next;
-    });
-  }, [persistThreadDocs]);
+    if (!storageKey) return;
+    const next = { ...threadDocMap, [threadId]: uploadedDoc };
+    persistThreadDocs(next);
+    setMaps((m) => ({ ...m, [storageKey]: next }));
+  }, [persistThreadDocs, storageKey, threadDocMap]);
 
   const getThreadDocument = useCallback((threadId: string): UploadedDocument | null => {
     if (!threadId) return null;

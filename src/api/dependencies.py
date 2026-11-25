@@ -11,7 +11,7 @@ import jwt
 from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 
-from src.api.auth_utils import decode_access_token
+from src.api.auth_utils import decode_access_token, decode_file_token
 from src.db.repos import Principal
 
 _oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
@@ -41,13 +41,23 @@ async def get_principal(token: str | None = Depends(_oauth2_scheme)) -> Principa
     return _principal_from_token(token)
 
 
-async def get_principal_header_or_query(
+async def get_principal_or_file_link(
+    doc_id: str,
     header_token: str | None = Depends(_oauth2_scheme),
-    token: str | None = Query(default=None, description="Bearer token, for <iframe> PDF views"),
+    sig: str | None = Query(default=None, description="short-lived file link from POST /documents/{doc_id}/link"),
 ) -> Principal:
-    """Like ``get_principal`` but also accepts ``?token=``.
+    """Like ``get_principal``, or a short-lived link to this one document.
 
-    Only for endpoints a browser loads directly (the PDF viewer), where no
-    Authorization header can be attached. A token is always required.
+    For URLs a browser loads by itself (a PDF opened in a new tab, an
+    EventSource), which cannot send an Authorization header. The sign-in token
+    itself is never accepted in a URL.
     """
-    return _principal_from_token(header_token or token)
+    if header_token:
+        return _principal_from_token(header_token)
+    if not sig:
+        raise _UNAUTHORIZED
+    try:
+        user_id, tenant_id = decode_file_token(sig, doc_id)
+        return Principal(user_id=user_id, tenant_id=tenant_id)
+    except (jwt.InvalidTokenError, ValueError):
+        raise _UNAUTHORIZED from None

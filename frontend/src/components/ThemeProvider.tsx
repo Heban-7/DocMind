@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useCallback, useContext, useEffect, useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark";
 
@@ -10,58 +10,48 @@ interface ThemeCtx {
 }
 
 const ThemeContext = createContext<ThemeCtx>({ theme: "light", toggle: () => {} });
+const CHANGED = "docmind-theme";
 
 export function useTheme() {
   return useContext(ThemeContext);
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+function readTheme(): Theme {
+  try {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark" || saved === "light") return saved;
+  } catch {
+    // storage blocked: follow the system
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
-  const applyTheme = (t: Theme) => {
-    localStorage.setItem("theme", t);
-    if (t === "dark") {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    } else {
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-    }
+function subscribe(onChange: () => void): () => void {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(CHANGED, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(CHANGED, onChange);
   };
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // the saved theme (or the system's), shared by every tab
+  const theme = useSyncExternalStore<Theme>(subscribe, readTheme, () => "light");
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme") as Theme | null;
-    let initial: Theme = "light";
-    if (saved === "dark" || saved === "light") {
-      initial = saved;
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      initial = "dark";
-    }
-    setTheme(initial);
-    applyTheme(initial);
-
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "theme" && (e.newValue === "dark" || e.newValue === "light")) {
-        setTheme(e.newValue as Theme);
-        applyTheme(e.newValue as Theme);
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme !== "dark");
+  }, [theme]);
 
   const toggle = useCallback(() => {
-    setTheme((prev) => {
-      const next = prev === "light" ? "dark" : "light";
-      applyTheme(next);
-      return next;
-    });
+    try {
+      localStorage.setItem("theme", readTheme() === "light" ? "dark" : "light");
+    } catch {
+      // storage blocked: the change lasts for this page only
+    }
+    window.dispatchEvent(new Event(CHANGED));
   }, []);
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;
 }

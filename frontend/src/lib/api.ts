@@ -12,6 +12,13 @@ import type {
   UserProfile,
   AnswerUsage,
   ModelCatalog,
+  SchemaInfo,
+  FieldExtraction,
+  ExtractedField,
+  ReviewItem,
+  UsageReport,
+  DocumentLedger,
+  ProvenanceCitation,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -58,12 +65,16 @@ async function authFetch(
   return res;
 }
 
-function parseApiError(data: any, status: number, defaultMsg: string): string {
+type ApiErrorBody = { detail?: unknown } | null;
+
+function parseApiError(data: ApiErrorBody, status: number, defaultMsg: string): string {
   if (!data) return `${defaultMsg}: ${status}`;
   if (typeof data.detail === "string") return data.detail;
   if (Array.isArray(data.detail)) {
     return data.detail
-      .map((e: any) => e.msg || e.message || (typeof e === "string" ? e : JSON.stringify(e)))
+      .map((e: { msg?: string; message?: string } | string) =>
+        typeof e === "string" ? e : e.msg || e.message || JSON.stringify(e),
+      )
       .join("; ");
   }
   if (data.detail && typeof data.detail === "object") {
@@ -185,7 +196,7 @@ export async function sendChatMessage(
 
 export interface StreamDone {
   answer: string;
-  provenance: any[];
+  provenance: ProvenanceCitation[];
   followUps: string[];
   status: string;
   usage?: AnswerUsage;
@@ -221,6 +232,7 @@ export async function sendChatMessageStream(
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let finished = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -232,7 +244,16 @@ export async function sendChatMessageStream(
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed.startsWith("data: ")) continue;
-        let data: any;
+        let data: {
+          type?: string;
+          token?: string;
+          answer?: string;
+          provenance?: ProvenanceCitation[];
+          follow_ups?: string[];
+          status?: string;
+          usage?: AnswerUsage;
+          message?: string;
+        };
         try {
           data = JSON.parse(trimmed.slice(6));
         } catch {
@@ -241,6 +262,7 @@ export async function sendChatMessageStream(
         if (data.type === "token" && typeof data.token === "string") {
           onToken(data.token);
         } else if (data.type === "done") {
+          finished = true;
           onDone({
             answer: data.answer ?? "",
             provenance: data.provenance || [],
@@ -254,8 +276,17 @@ export async function sendChatMessageStream(
         }
       }
     }
+    if (!finished) {
+      // the connection closed before the server sent the checked answer
+      throw new Error("The connection closed before the answer finished. Please ask again.");
+    }
   } catch (err) {
-    onError(err instanceof Error ? err : new Error("Chat stream error"));
+    const e = err instanceof Error ? err : new Error("Chat stream error");
+    if (e.name === "TypeError" && /fetch|network/i.test(e.message)) {
+      onError(new Error("The server could not be reached. Check that the API is running, then ask again."));
+    } else {
+      onError(e);
+    }
   }
 }
 
@@ -309,8 +340,103 @@ export async function fetchDocuments(): Promise<DocumentListResponse> {
   return res.json();
 }
 
-export function getDocumentPdfUrl(docId: string): string {
+/** The PDF's URL and the header that opens it (the viewer fetches with it; no token in the URL). */
+export function documentPdfSource(docId: string): { url: string; httpHeaders: Record<string, string> } {
   const token = getStoredToken();
-  const baseUrl = `${API_BASE}/documents/${encodeURIComponent(docId)}/pdf`;
-  return token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
+  return {
+    url: `${API_BASE}/documents/${encodeURIComponent(docId)}/pdf`,
+    httpHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+  };
+}
+
+/** A ten-minute link to the PDF, for opening it in a new tab. */
+export async function fetchPdfLink(docId: string): Promise<string> {
+  const res = await authFetch(`${API_BASE}/documents/${encodeURIComponent(docId)}/link`, { method: "POST" });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(parseApiError(data, res.status, "Could not open the PDF"));
+  return `${API_BASE}${data.url}`;
+}
+
+async function getJson<T>(path: string, what: string, init: RequestInit = {}): Promise<T> {
+  const res = await authFetch(`${API_BASE}${path}`, { cache: "no-store", ...init });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const err = new Error(parseApiError(data, res.status, what)) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
+  return data as T;
+}
+
+/* ─── Schema fields ─── */
+
+export async function fetchSchemas(): Promise<SchemaInfo[]> {
+  const data = await getJson<{ schemas: SchemaInfo[] }>("/schemas", "Could not load the schemas");
+  return data.schemas;
+}
+
+export async function requestFields(docId: string, schema: string): Promise<{ extraction_id: string; status: string }> {
+  return getJson(`/documents/${encodeURIComponent(docId)}/fields`, "Could not start reading the fields", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ schema }),
+  });
+}
+
+/** The latest extraction, or null when the document has none for this schema. */
+export async function fetchFields(docId: string, schema?: string): Promise<FieldExtraction | null> {
+  const q = schema ? `?schema=${encodeURIComponent(schema)}` : "";
+  try {
+    return await getJson<FieldExtraction>(`/documents/${encodeURIComponent(docId)}/fields${q}`, "Could not load the fields");
+  } catch (e) {
+    if ((e as { status?: number }).status === 404 && !/document not found/i.test((e as Error).message)) return null;
+    throw e;
+  }
+}
+
+export async function reviewField(
+  docId: string,
+  field: string,
+  action: "confirm" | "correct" | "reject",
+  opts: { value?: unknown; schema?: string } = {},
+): Promise<ExtractedField> {
+  return getJson(`/documents/${encodeURIComponent(docId)}/fields/${encodeURIComponent(field)}`, "Could not save the review", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, value: opts.value, schema: opts.schema }),
+  });
+}
+
+export async function fetchReviewQueue(): Promise<ReviewItem[]> {
+  const data = await getJson<{ fields: ReviewItem[] }>("/review", "Could not load the review queue");
+  return data.fields;
+}
+
+/** Download a schema's table (one row per document) as CSV or Excel. */
+export async function downloadExport(schema: string, fmt: "csv" | "xlsx", documentIds?: string[]): Promise<void> {
+  const q = (documentIds || []).map((d) => `document_id=${encodeURIComponent(d)}`).join("&");
+  const res = await authFetch(`${API_BASE}/exports/${encodeURIComponent(schema)}.${fmt}${q ? `?${q}` : ""}`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(parseApiError(data, res.status, "Export failed"));
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `docmind-${schema}.${fmt}`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ─── Usage and the page ledger ─── */
+
+export async function fetchUsage(): Promise<UsageReport> {
+  return getJson<UsageReport>("/usage", "Could not load usage");
+}
+
+export async function fetchLedger(docId: string): Promise<DocumentLedger> {
+  return getJson<DocumentLedger>(`/documents/${encodeURIComponent(docId)}/ledger`, "Could not load the page ledger");
 }

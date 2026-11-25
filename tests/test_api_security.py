@@ -156,12 +156,23 @@ def test_pdf_needs_a_valid_token(client):
     assert client.get(f"/documents/{doc}/pdf", params={"token": "not-a-jwt"}).status_code == 401
 
 
-def test_owner_downloads_pdf_by_header_and_query_token(client):
-    a = _account(client)
+def test_owner_downloads_pdf_by_header_or_a_short_lived_link(client):
+    a, b = _account(client), _account(client)
     doc = _upload(client, a, "Alpha revenue")["document_id"]
+    other = _upload(client, a, "Beta revenue")["document_id"]
     res = client.get(f"/documents/{doc}/pdf", headers=a["h"])
     assert res.status_code == 200 and res.content.startswith(b"%PDF")
-    assert client.get(f"/documents/{doc}/pdf", params={"token": a["token"]}).status_code == 200
+    # the sign-in token never works in a URL
+    assert client.get(f"/documents/{doc}/pdf", params={"token": a["token"]}).status_code == 401
+    assert client.get(f"/documents/{doc}/pdf", params={"sig": a["token"]}).status_code == 401
+    link = client.post(f"/documents/{doc}/link", headers=a["h"]).json()
+    assert link["expires_in"] == 600
+    assert client.get(link["url"]).content.startswith(b"%PDF")
+    sig = link["url"].split("sig=", 1)[1]
+    # a link opens its own document only, and is not a sign-in
+    assert client.get(f"/documents/{other}/pdf", params={"sig": sig}).status_code == 401
+    assert client.get("/documents", headers={"Authorization": f"Bearer {sig}"}).status_code == 401
+    assert client.post(f"/documents/{doc}/link", headers=b["h"]).status_code == 404
 
 
 def test_other_tenant_gets_not_found_for_pdf_and_bad_ids_are_not_errors(client):
@@ -336,7 +347,8 @@ def test_upload_is_queued_and_status_is_private(client):
     run_once()
     status = client.get(f"/documents/{doc}", headers=a["h"]).json()
     assert status["status"] == "indexed" and status["searchable"] and status["progress"] == 1.0
-    events = client.get(f"/documents/{doc}/events", params={"token": a["token"]}).text
+    sig = client.post(f"/documents/{doc}/link", headers=a["h"]).json()["url"].split("sig=", 1)[1]
+    events = client.get(f"/documents/{doc}/events", params={"sig": sig}).text
     assert "event: progress" in events and '"status": "indexed"' in events and "event: end" in events
 
 

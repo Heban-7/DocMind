@@ -295,6 +295,8 @@ benchmarks:
     first_token_p50_s: 1.1
     answer_p50_s: 2.35
     cost_per_question_usd: 0.00056
+    input_tokens_mean: 3389  # a typical answer: the evidence is most of it
+    output_tokens_mean: 84
     report: evaluation/reports/m7-answer-engine.md
   gpt-6-luna:
     golden_set: v1

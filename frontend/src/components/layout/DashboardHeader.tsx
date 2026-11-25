@@ -54,8 +54,10 @@ export default function DashboardHeader({
       <div className="flex items-center gap-md">
         {/* Federated Search Toggle */}
         <button
+          type="button"
           onClick={onToggleFederated}
-          title="Federated Mode: Search across all your uploaded documents"
+          aria-pressed={federatedSearch}
+          title="Search across all your documents instead of the one attached to this chat"
           className={`flex items-center gap-xs px-3 py-1.5 rounded-full text-label-md font-label-md font-bold transition-all border ${
             federatedSearch
               ? "bg-primary text-white border-primary shadow-sm"
@@ -68,8 +70,10 @@ export default function DashboardHeader({
 
         {/* Audit Mode Toggle */}
         <button
+          type="button"
           onClick={onToggleAudit}
-          title="Audit Mode: Ground query strictly on the loaded document"
+          aria-pressed={auditMode}
+          title="Audit: check a claim against the document; every sentence must cite evidence, and uncited ones are removed"
           className={`flex items-center gap-xs px-3 py-1.5 rounded-full text-label-md font-label-md font-bold transition-all border ${
             auditMode
               ? "bg-primary text-white border-primary shadow-sm"
@@ -83,19 +87,21 @@ export default function DashboardHeader({
         {/* User Avatar Badge on Top Right */}
         {user ? (
           <div className="relative group flex items-center">
-            <div
+            <button
+              type="button"
+              aria-label={`Account: ${user.email}`}
               className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-blue-500 text-white font-bold text-sm flex items-center justify-center shadow-md cursor-pointer border-2 border-white dark:border-slate-800 transition-transform group-hover:scale-105"
               title={user.email}
             >
               {user.email.charAt(0).toUpperCase()}
-            </div>
+            </button>
 
             {/* Hover Tooltip displaying email & Sign Out */}
-            <div className="absolute right-0 top-11 hidden group-hover:flex flex-col items-end min-w-[200px] bg-white dark:bg-[#0c1021] border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xl z-50 fade-in">
+            <div className="absolute right-0 top-11 hidden group-hover:flex group-focus-within:flex flex-col items-end min-w-[200px] bg-white dark:bg-[#0c1021] border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xl z-50 fade-in">
               <span className="text-xs font-semibold text-slate-900 dark:text-white truncate max-w-[180px]">
                 {user.email}
               </span>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 mb-2">Authenticated User</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 mb-2">Signed in</span>
               <button
                 onClick={logout}
                 className="w-full flex items-center justify-center gap-1.5 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 py-1.5 px-3 rounded-lg font-medium transition-colors"

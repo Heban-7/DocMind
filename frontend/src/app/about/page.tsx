@@ -21,13 +21,13 @@ const techStack = [
     name: "LangGraph Memory",
     icon: "account_tree",
     category: "Agent State",
-    desc: "Cyclic multi-agent orchestrator backed by SQLite checkpointers.",
+    desc: "The answer graph (understand, retrieve, answer, verify), with chat memory kept in Postgres.",
   },
   {
-    name: "ChromaDB Store",
+    name: "Postgres + pgvector",
     icon: "database",
-    category: "Vector Index",
-    desc: "Dense semantic vector indexing for multi-document LDUs.",
+    category: "Storage and search",
+    desc: "Documents, facts, chunks and vectors in one database, each account isolated by row-level security.",
   },
   {
     name: "Next.js 16",
@@ -40,10 +40,10 @@ const techStack = [
 const archTabs = [
   {
     id: "triage",
-    title: "1. Automated Triage",
+    title: "1. Page-Level Routing",
     icon: "speed",
     detail:
-      "Inspects PDF origin, vector density, and layout complexity to route documents into optimal cost & speed execution tiers (Fast, Standard, Premium).",
+      "Each page is read by its text layer when it has one, by a layout model when it holds tables, by OCR when it is a scan, and by a vision model only when the others fail; every page is logged with its engine, confidence, time and cost.",
   },
   {
     id: "extract",
@@ -57,14 +57,14 @@ const archTabs = [
     title: "3. Logical Unit Chunking",
     icon: "segment",
     detail:
-      "Fragments text on logical document boundaries (~450 target words) to ensure RAG retrieval retains full context.",
+      "Splits text on the document's own sections and keeps the headings above each chunk, so search finds a figure with its context.",
   },
   {
     id: "audit",
-    title: "4. Zero-Trust Audit",
+    title: "4. Checked Answers",
     icon: "verified",
     detail:
-      "Cross-references generated answers against spatial bounding box citations on original document pages.",
+      "Every number an answer states is matched against the evidence it cites, and each citation is boxed on the cell or paragraph that prints it. Audit Mode also removes any sentence without a citation.",
   },
 ];
 
@@ -171,7 +171,7 @@ export default function AboutPage() {
                     <span>Provenance Blindness</span>
                   </div>
                   <p className="font-body-sm text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Backing every AI answer with pixel-perfect bounding box source citations.
+                    Boxing each cited figure on the page that prints it, so a reader can check it in a second.
                   </p>
                 </div>
               </div>

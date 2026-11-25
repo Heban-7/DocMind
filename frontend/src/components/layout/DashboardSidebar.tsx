@@ -5,9 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import FileDropzone from "@/components/upload/FileDropzone";
+import Modal from "@/components/ui/Modal";
 import { useAuth } from "@/context/AuthContext";
+import { fetchDocuments } from "@/lib/api";
+import { displayFileName } from "@/lib/boxes";
 
-import type { ThreadSummary } from "@/lib/types";
+import type { DocumentInfo, ThreadSummary } from "@/lib/types";
 
 interface SidebarProps {
   onNewChat: () => void;
@@ -27,19 +30,27 @@ export default function DashboardSidebar({
   onSelectThread,
   onUpload,
   uploadState,
-  uploadedFileName,
-  strategyTier,
 }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState<"settings" | "support" | "info" | null>(null);
+  const [activeModal, setActiveModal] = useState<"support" | "info" | null>(null);
+  const [documents, setDocuments] = useState<DocumentInfo[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
-    { href: "/", label: "Home", icon: "home" },
+    { href: "/dashboard", label: "Chat", icon: "chat" },
+    { href: "/review", label: "Review fields", icon: "fact_check" },
+    { href: "/usage", label: "Usage", icon: "payments" },
+    { href: "/benchmarks", label: "Benchmarks", icon: "monitoring" },
   ];
+
+  // the account's documents, refreshed when an upload finishes
+  useEffect(() => {
+    fetchDocuments()
+      .then((r) => setDocuments(r.documents))
+      .catch(() => setDocuments([]));
+  }, [uploadState]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -68,7 +79,7 @@ export default function DashboardSidebar({
               DocMind AI
             </h1>
             <p className="font-body-sm text-xs text-slate-500 dark:text-slate-400">
-              Enterprise Intelligence
+              Document intelligence
             </p>
           </div>
         </Link>
@@ -136,6 +147,31 @@ export default function DashboardSidebar({
             )}
           </div>
 
+          {/* Documents: fields, review and how each page was read */}
+          <div className="pt-xl pb-sm">
+            <span className="px-4 font-label-md text-label-md text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              Documents
+            </span>
+          </div>
+          <div className="space-y-xs">
+            {documents.length === 0 ? (
+              <p className="px-4 py-2 text-xs text-slate-400 dark:text-slate-500 italic">No documents yet</p>
+            ) : (
+              documents.slice(0, 12).map((d) => (
+                <Link
+                  key={d.document_id}
+                  href={`/documents/${d.document_id}`}
+                  className="flex items-center gap-sm px-4 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-white/5"
+                  title={`${displayFileName(d.file_name)}: fields and pages`}
+                >
+                  <span className="material-symbols-outlined text-sm shrink-0" aria-hidden="true">description</span>
+                  <span className="font-body-sm text-body-sm truncate">{displayFileName(d.file_name)}</span>
+                  {d.status !== "indexed" && <span className="ml-auto text-[10px] text-slate-400 shrink-0">{d.status}</span>}
+                </Link>
+              ))
+            )}
+          </div>
+
           {/* Upload Zone */}
           <div className="pt-lg">
             <FileDropzone
@@ -154,7 +190,7 @@ export default function DashboardSidebar({
               {user && (
                 <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
                   <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">{user.email}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">DocMind Enterprise Account</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">Signed in</p>
                 </div>
               )}
 
@@ -167,22 +203,13 @@ export default function DashboardSidebar({
                 <span>Account Info</span>
               </button>
 
-              {/* Settings Option */}
-              <button
-                onClick={() => { setActiveModal("settings"); setIsAccountMenuOpen(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-left cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[18px]">settings</span>
-                <span>Settings</span>
-              </button>
-
               {/* Support Option */}
               <button
                 onClick={() => { setActiveModal("support"); setIsAccountMenuOpen(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-left cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">help</span>
-                <span>Support &amp; Docs</span>
+                <span>Help</span>
               </button>
 
               <div className="border-t border-slate-100 dark:border-slate-800 pt-1 mt-1">
@@ -227,95 +254,61 @@ export default function DashboardSidebar({
         </div>
       </aside>
 
-      {/* Interactive Account Modals */}
-      {activeModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0c1021] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 fade-in">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">
-                  {activeModal === "settings" ? "settings" : activeModal === "support" ? "help" : "info"}
-                </span>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white capitalize">
-                  {activeModal === "settings" ? "Account Settings" : activeModal === "support" ? "Support & Assistance" : "Account Information"}
-                </h3>
-              </div>
-              <button
-                onClick={() => setActiveModal(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
+      {/* Account dialogs */}
+      <Modal
+        open={activeModal !== null}
+        onClose={() => setActiveModal(null)}
+        title={activeModal === "support" ? "Help" : "Account"}
+        className="max-w-md w-full p-6 space-y-4"
+      >
+        {activeModal === "info" && (
+          <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+            <div>
+              <p className="text-xs uppercase text-slate-400 font-semibold">Email</p>
+              <p className="font-medium text-slate-900 dark:text-white">{user?.email}</p>
             </div>
-
-            {activeModal === "info" && (
-              <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
-                <div>
-                  <label className="text-xs uppercase text-slate-400 font-semibold block">Email Address</label>
-                  <p className="font-medium text-slate-900 dark:text-white">{user?.email}</p>
-                </div>
-                <div>
-                  <label className="text-xs uppercase text-slate-400 font-semibold block">Account ID</label>
-                  <p className="font-mono text-xs text-slate-500">{user?.id}</p>
-                </div>
-                <div>
-                  <label className="text-xs uppercase text-slate-400 font-semibold block">Status</label>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 mt-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active Enterprise User
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {activeModal === "settings" && (
-              <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
-                <p className="text-xs text-slate-500">Manage your LLM preferences and pipeline parameters.</p>
-                <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl space-y-2 border border-slate-200 dark:border-slate-800">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">Default LLM Model</label>
-                  <p className="text-xs text-slate-500">GPT-4o / Gemini Flash (Configured via API)</p>
-                </div>
-                <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl space-y-2 border border-slate-200 dark:border-slate-800">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">Zero-Trust Verification</label>
-                  <p className="text-xs text-slate-500">Audit Mode enabled for spatial citations</p>
-                </div>
-              </div>
-            )}
-
-            {activeModal === "support" && (
-              <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
-                <p className="text-xs text-slate-500">Need help or documentation for the DocMind Refinery?</p>
-                <div className="space-y-2">
-                  <a
-                    href="https://github.com/Heban-7/DocMind"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors"
-                  >
-                    <span className="font-medium text-slate-900 dark:text-white">GitHub Documentation</span>
-                    <span className="material-symbols-outlined text-sm">open_in_new</span>
-                  </a>
-                  <a
-                    href="/contact"
-                    className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors"
-                  >
-                    <span className="font-medium text-slate-900 dark:text-white">Contact Enterprise Support</span>
-                    <span className="material-symbols-outlined text-sm">mail</span>
-                  </a>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => setActiveModal(null)}
-                className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl hover:opacity-90 transition-opacity"
-              >
-                Done
-              </button>
+            <div>
+              <p className="text-xs uppercase text-slate-400 font-semibold">Account ID</p>
+              <p className="font-mono text-xs text-slate-500">{user?.id}</p>
             </div>
+            <p className="text-xs text-slate-500">
+              Your documents, chats and fields are visible to this account only. Spending this month is on the{" "}
+              <Link href="/usage" className="text-primary hover:underline">Usage</Link> page.
+            </p>
           </div>
+        )}
+        {activeModal === "support" && (
+          <div className="space-y-2 text-sm">
+            <a
+              href="https://github.com/Heban-7/DocMind#readme"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-800"
+            >
+              <span className="font-medium text-slate-900 dark:text-white">How DocMind works (README)</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">open_in_new</span>
+            </a>
+            <a
+              href="https://github.com/Heban-7/DocMind/issues/new"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-800"
+            >
+              <span className="font-medium text-slate-900 dark:text-white">Report a problem on GitHub</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">bug_report</span>
+            </a>
+          </div>
+        )}
+        <div className="pt-2 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setActiveModal(null)}
+            className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl hover:opacity-90"
+          >
+            Close
+          </button>
         </div>
-      )}
+      </Modal>
     </>
   );
 }

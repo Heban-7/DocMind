@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from src.api.dependencies import get_principal, get_principal_header_or_query
+from src.api.dependencies import get_principal, get_principal_or_file_link
 from src.api.main import create_app
 from src.api.schemas import ChatResponse, HistoryResponse, UploadResponse
 from src.db.repos import Principal
@@ -23,7 +23,7 @@ _PRINCIPAL = Principal(
 def _client() -> TestClient:
     app = create_app()
     app.dependency_overrides[get_principal] = lambda: _PRINCIPAL
-    app.dependency_overrides[get_principal_header_or_query] = lambda: _PRINCIPAL
+    app.dependency_overrides[get_principal_or_file_link] = lambda: _PRINCIPAL
     return TestClient(app)
 
 

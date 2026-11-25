@@ -23,8 +23,14 @@ export function useThreads() {
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    let live = true;
+    fetchThreads()
+      .then((data) => live && setThreads(data.threads || []))
+      .catch((err) => live && setError(err instanceof Error ? err.message : "Failed to load threads"));
+    return () => {
+      live = false;
+    };
+  }, []);
 
   return { threads, isLoading, error, refresh };
 }

@@ -221,6 +221,8 @@ def _hit_from_computed(result, computed, index: int) -> EvidenceHit:
             "formula": computed.formula,
             "inputs": list(computed.inputs),
             "bbox": anchor.bbox if anchor else None,
+            # every input cell on the anchor's page: a change is boxed on both figures
+            "bboxes": [f.bbox for f in inputs if f.bbox and anchor and f.page_number == anchor.page_number],
         },
     )
 

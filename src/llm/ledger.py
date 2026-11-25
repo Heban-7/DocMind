@@ -162,6 +162,27 @@ def usage_summary(tenant_id: str, *, recent: int = 20) -> dict:
                  FROM llm_usage WHERE created_at >= %s GROUP BY purpose ORDER BY sum(cost_usd) DESC""",
             (start,),
         ).fetchall()
+        by_day = conn.execute(
+            """SELECT (created_at AT TIME ZONE 'UTC')::date AS day, count(*) AS calls, sum(cost_usd) AS cost_usd
+                 FROM llm_usage WHERE created_at >= %s GROUP BY 1 ORDER BY 1""",
+            (start,),
+        ).fetchall()
+        chat = conn.execute(
+            """SELECT count(*) FILTER (WHERE purpose = 'answer' AND ok) AS questions,
+                      coalesce(sum(cost_usd) FILTER (WHERE thread_id IS NOT NULL), 0) AS cost_usd
+                 FROM llm_usage WHERE created_at >= %s""",
+            (start,),
+        ).fetchone()
+        documents = conn.execute(
+            """SELECT u.document_id, d.file_name, d.page_count,
+                      coalesce(sum(u.cost_usd) FILTER (WHERE u.purpose = 'ingest'), 0) AS ingest_usd,
+                      coalesce(sum(u.cost_usd) FILTER (WHERE u.purpose = 'fields'), 0) AS fields_usd,
+                      count(*) AS calls
+                 FROM llm_usage u LEFT JOIN documents d ON d.id = u.document_id
+                WHERE u.document_id IS NOT NULL AND u.thread_id IS NULL
+                GROUP BY u.document_id, d.file_name, d.page_count
+                ORDER BY max(u.created_at) DESC LIMIT 50"""
+        ).fetchall()
         latest = conn.execute(
             """SELECT created_at, purpose, provider, model, input_tokens, output_tokens, cost_usd, latency_ms, ok, error_kind
                  FROM llm_usage ORDER BY created_at DESC, id DESC LIMIT %s""",
@@ -180,7 +201,32 @@ def usage_summary(tenant_id: str, *, recent: int = 20) -> dict:
         "service_cap_usd": status.global_cap,
         "by_model": [dict(r) | {"cost_usd": money(r["cost_usd"])} for r in by_model],
         "by_purpose": [dict(r) | {"cost_usd": money(r["cost_usd"])} for r in by_purpose],
+        "by_provider": _by_provider(by_model),
+        "by_day": [{"day": r["day"].isoformat(), "calls": r["calls"], "cost_usd": money(r["cost_usd"])} for r in by_day],
+        "questions": int(chat["questions"] or 0),
+        "cost_per_question_usd": money(float(chat["cost_usd"] or 0) / chat["questions"]) if chat["questions"] else None,
+        # documents ever read with model calls (vision on a page, schema fields), newest first
+        "documents": [
+            {
+                "document_id": str(r["document_id"]),
+                "file_name": r["file_name"] or "(deleted)",
+                "page_count": r["page_count"] or 0,
+                "ingest_usd": money(r["ingest_usd"]),
+                "fields_usd": money(r["fields_usd"]),
+                "calls": r["calls"],
+            }
+            for r in documents
+        ],
         "latest": [
             dict(r) | {"cost_usd": money(r["cost_usd"]), "created_at": r["created_at"].isoformat()} for r in latest
         ],
     }
+
+
+def _by_provider(rows) -> list[dict]:
+    out: dict[str, dict] = {}
+    for r in rows:
+        p = out.setdefault(r["provider"] or "unknown", {"provider": r["provider"] or "unknown", "calls": 0, "cost_usd": 0.0})
+        p["calls"] += r["calls"]
+        p["cost_usd"] += float(r["cost_usd"] or 0)
+    return sorted(({**p, "cost_usd": round(p["cost_usd"], 6)} for p in out.values()), key=lambda p: -p["cost_usd"])

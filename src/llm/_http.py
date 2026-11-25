@@ -47,6 +47,15 @@ def read_timeout() -> float:
     return _env_float("DOCMIND_LLM_READ_TIMEOUT_S", 90.0)
 
 
+def stream_read_timeout() -> float:
+    """Longest wait for the next piece of a stream (the first one included).
+
+    Shorter than ``read_timeout``: a stream that stops mid-answer is better
+    given up after this long, leaving time to ask again without streaming.
+    """
+    return _env_float("DOCMIND_LLM_STREAM_READ_TIMEOUT_S", 25.0)
+
+
 def max_attempts(kind: str = "") -> int:
     # a dropped connection is usually back within seconds: try longer than for a 5xx
     default = 5 if kind == "network" else 3
@@ -175,7 +184,8 @@ def stream_sse(
         remaining = _check_deadline(provider)
         started = False
         try:
-            with client().stream("POST", url, json=json, headers=headers, timeout=_timeout(remaining, timeout)) as response:
+            wait = timeout if timeout is not None else stream_read_timeout()
+            with client().stream("POST", url, json=json, headers=headers, timeout=_timeout(remaining, wait)) as response:
                 if response.status_code >= 400:
                     response.read()
                     message = _error_text(response)

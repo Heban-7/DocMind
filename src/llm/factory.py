@@ -168,6 +168,7 @@ def client_for_request(model: str | None) -> LLMClient:
 def catalog() -> dict:
     """What GET /api/models returns: every chat model, priced, with what it can do."""
     default = registry.resolve(default_text_model() or "").name if default_text_model() else None
+    typical = _typical_tokens()
     models = []
     for name, spec in registry.all_specs().items():
         if spec.kind != "chat":
@@ -203,7 +204,33 @@ def catalog() -> dict:
                 "data_use": spec.data_use or None,
                 "tested": spec.tested,
                 "benchmark": spec.benchmark or None,
+                "estimate": _answer_estimate(spec, typical),
             }
         )
     models.sort(key=lambda m: (not m["available"], not m["default"], m["provider"], m["price"]["input_per_m"] or 0))
-    return {"default": default, "prices_checked_on": registry.prices_checked_on(), "models": models}
+    return {
+        "default": default,
+        "prices_checked_on": registry.prices_checked_on(),
+        "typical_answer_tokens": typical,
+        "models": models,
+    }
+
+
+def _typical_tokens() -> dict | None:
+    """Tokens of a typical answer, from the benchmarked model that measured them."""
+    for spec in registry.all_specs().values():
+        b = spec.benchmark or {}
+        if b.get("input_tokens_mean") and b.get("output_tokens_mean"):
+            return {"input": int(b["input_tokens_mean"]), "output": int(b["output_tokens_mean"]), "model": spec.name}
+    return None
+
+
+def _answer_estimate(spec, typical: dict | None) -> dict | None:
+    """Cost of a typical answer: measured on the golden set when it was run, else from the price."""
+    b = spec.benchmark or {}
+    if b.get("cost_per_question_usd") is not None:
+        return {"usd": float(b["cost_per_question_usd"]), "basis": "measured"}
+    if typical and spec.input_price is not None and spec.output_price is not None:
+        usd = (typical["input"] * spec.input_price + typical["output"] * spec.output_price) / 1e6
+        return {"usd": round(usd, 6), "basis": "price"}
+    return None

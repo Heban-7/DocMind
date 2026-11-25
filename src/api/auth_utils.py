@@ -93,8 +93,39 @@ def decode_access_token(token: str) -> tuple[str, str]:
         algorithms=[_ALGORITHM],
         options={"require": ["exp", "sub", "tid"]},
     )
+    if payload.get("scope"):
+        # a file link opens one document; it is not a sign-in
+        raise jwt.InvalidTokenError("file link used as an access token")
     user_id = payload.get("sub")
     tenant_id = payload.get("tid")
     if not user_id or not tenant_id:
         raise jwt.InvalidTokenError("Token missing 'sub' or 'tid' claim")
     return str(user_id), str(tenant_id)
+
+
+FILE_LINK_SECONDS = 600
+
+
+def create_file_token(user_id: str, tenant_id: str, document_id: str, *, seconds: int = FILE_LINK_SECONDS) -> str:
+    """A short-lived token that opens one document's files, for links a browser loads directly.
+
+    The sign-in token never goes into a URL (URLs end up in browser history,
+    server logs and Referer headers); this one is valid for ten minutes and
+    for one document only.
+    """
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": user_id, "tid": tenant_id, "doc": document_id, "scope": "file",
+        "iat": now, "exp": now + timedelta(seconds=seconds),
+    }
+    return jwt.encode(payload, jwt_secret(), algorithm=_ALGORITHM)
+
+
+def decode_file_token(token: str, document_id: str) -> tuple[str, str]:
+    """``(user_id, tenant_id)`` of a file link for ``document_id``; InvalidTokenError otherwise."""
+    payload = jwt.decode(
+        token, jwt_secret(), algorithms=[_ALGORITHM], options={"require": ["exp", "sub", "tid", "doc", "scope"]}
+    )
+    if payload.get("scope") != "file" or str(payload.get("doc")) != str(document_id):
+        raise jwt.InvalidTokenError("file link for another document")
+    return str(payload["sub"]), str(payload["tid"])

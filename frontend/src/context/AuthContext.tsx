@@ -28,29 +28,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  // loading until the stored token is checked
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // On mount, check for existing token and validate it
   useEffect(() => {
+    let live = true;
     const stored = getStoredToken();
-    if (stored) {
-      setToken(stored);
-      fetchMe()
-        .then((profile) => {
-          setUser(profile);
-          setIsLoading(false);
-        })
-        .catch(() => {
-          // Token is expired/invalid — clear it
-          clearStoredToken();
-          setToken(null);
-          setUser(null);
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
+    (stored ? fetchMe() : Promise.resolve(null))
+      .then((profile) => {
+        if (!live) return;
+        setToken(profile ? stored : null);
+        setUser(profile);
+      })
+      .catch(() => {
+        if (!live) return;
+        // the token expired or is invalid: clear it
+        clearStoredToken();
+        setToken(null);
+        setUser(null);
+      })
+      .finally(() => {
+        if (live) setIsLoading(false);
+      });
+    return () => {
+      live = false;
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {

@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const [federatedSearch, setFederatedSearch] = useState(false);
   const [auditMode, setAuditMode] = useState(false);
   const [selectedModel, setSelectedModel] = useState(""); // "" = the server default (GET /models)
-  const [activeError, setActiveError] = useState<string | null>(null);
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
 
   // Auth guard: redirect to login if not authenticated
   useEffect(() => {
@@ -39,11 +39,9 @@ export default function DashboardPage() {
   const activeDoc = getThreadDocument(threadId);
   const isCurrentThreadUploading = uploadingThreadId === threadId && uploadState !== "idle";
 
-  // Sync errors to banner state
-  useEffect(() => {
-    if (chatError) setActiveError(chatError);
-    else if (uploadError) setActiveError(uploadError);
-  }, [chatError, uploadError]);
+  // the latest error shows until it is dismissed
+  const latestError = chatError || uploadError || null;
+  const activeError = latestError && latestError !== dismissedError ? latestError : null;
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -129,16 +127,18 @@ export default function DashboardPage() {
 
         {/* Error Alert Banner */}
         {activeError && (
-          <div className="bg-red-500/10 border-b border-red-500/30 text-red-700 px-lg py-sm flex items-center justify-between z-20 text-body-sm">
+          <div role="alert" className="bg-red-500/10 border-b border-red-500/30 text-red-700 px-lg py-sm flex items-center justify-between z-20 text-body-sm">
             <div className="flex items-center gap-sm">
               <span className="material-symbols-outlined text-[18px]">error</span>
               <span>{activeError}</span>
             </div>
             <button
-              onClick={() => setActiveError(null)}
+              type="button"
+              onClick={() => setDismissedError(latestError)}
               className="hover:bg-red-500/20 p-1 rounded transition-colors"
+              aria-label="Dismiss the error"
             >
-              <span className="material-symbols-outlined text-[16px]">close</span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">close</span>
             </button>
           </div>
         )}

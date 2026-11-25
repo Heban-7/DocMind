@@ -192,6 +192,41 @@ def get_pdf_file_path(doc_id: str, *, principal: Principal) -> Path:
         raise FileNotFoundError(f"PDF for document_id={doc_id} not found.") from exc
 
 
+def document_link(doc_id: str, *, principal: Principal) -> dict:
+    """A ten-minute link to a document's PDF (for opening it in a new tab)."""
+    from src.api.auth_utils import FILE_LINK_SECONDS, create_file_token
+
+    doc = repos.require_document(principal.tenant_id, doc_id)
+    sig = create_file_token(principal.user_id, principal.tenant_id, doc.id)
+    return {"url": f"/documents/{doc.id}/pdf?sig={sig}", "expires_in": FILE_LINK_SECONDS}
+
+
+def document_ledger(doc_id: str, *, principal: Principal) -> dict:
+    """How each page was read: engine, confidence, seconds, model cost and flags."""
+    from src.document.model import DocumentModel
+
+    doc = repos.require_document(principal.tenant_id, doc_id)
+    rows: list[dict] = []
+    if doc.model_key:
+        try:
+            path = get_blob_store().local_path(doc.model_key)
+            rows = DocumentModel.model_validate_json(path.read_bytes()).ledger()
+        except FileNotFoundError:
+            rows = []
+    engines: dict[str, int] = {}
+    for r in rows:
+        engines[r["engine"]] = engines.get(r["engine"], 0) + 1
+    return {
+        "document_id": doc.id,
+        "file_name": doc.file_name,
+        "pages": rows,
+        "engines": engines,
+        "seconds": round(sum(r["seconds"] for r in rows), 2),
+        "cost_usd": round(sum(r["cost_usd"] for r in rows), 6),
+        "needs_review": sum(1 for r in rows if r["needs_review"]),
+    }
+
+
 def _pdf_resolver(tenant_id: str):
     blobs = get_blob_store()
 
@@ -302,7 +337,25 @@ def _answer_usage(answer, agent: QueryAgent) -> AnswerUsage:
         cost_usd=float(u.get("cost_usd") or 0.0),
         seconds=float(t.get("total_s") or 0.0),
         first_token_s=t.get("first_token_s"),
+        stages=_stages(t),
+        cost_by_purpose={k: round(float(v), 6) for k, v in (u.get("cost_by_purpose") or {}).items()},
     )
+
+
+def _stages(t: dict) -> dict[str, float]:
+    """Stage durations from the cumulative marks the agent records."""
+    total = float(t.get("total_s") or 0.0)
+    plan, retrieve, answer = (float(t.get(k) or 0.0) for k in ("plan_s", "retrieve_s", "answer_s"))
+    if not total:
+        return {}
+    if not answer:  # a greeting or an early "not found": no evidence step
+        return {"understand": round(plan, 3), "check": round(max(0.0, total - plan), 3)}
+    return {
+        "understand": round(plan, 3),
+        "retrieve": round(max(0.0, retrieve - plan), 3),
+        "answer": round(max(0.0, answer - retrieve), 3),
+        "check": round(max(0.0, total - answer), 3),
+    }
 
 
 def _chat_response(payload: ChatRequest, prepared: PreparedChat, answer) -> ChatResponse:
