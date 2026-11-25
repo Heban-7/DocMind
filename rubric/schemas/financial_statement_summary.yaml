@@ -1,0 +1,127 @@
+# Financial statement summary: the headline figures of an annual report or a
+# set of audited financial statements, for the latest fiscal year it reports.
+#
+# Field types
+#   text     a name, as printed
+#   date     a calendar date (year-end); stored as YYYY-MM-DD
+#   code     a short code (currency)
+#   money    an amount; stored as the absolute number (scale applied) with its
+#            currency, the printed text and the scale kept beside it
+#
+# `find` lists the words that mark the pages and rows where a field is
+# printed; the extractor reads those pages first. `rules` are checked after
+# extraction; a field that breaks one goes to the review queue.
+
+name: financial_statement_summary
+version: 1
+label: Financial statement summary
+description: >
+  Headline figures of an annual report or audited financial statements, for the
+  latest fiscal year in the document (the current-year column, not the comparative).
+  When a statement splits the company into business lines (general and long-term
+  insurance), use the Total column.
+detect:  # words that suggest a document of this type
+  - statement of financial position
+  - balance sheet
+  - statement of profit or loss
+  - income statement
+  - profit and loss account
+  - annual report
+  - audited financial statements
+# The statements the fields are printed on. A page is one of them when its title
+# is printed near the top of the page and its rows carry the statement's labels.
+pages:
+  balance_sheet: [statement of financial position, balance sheet, statement of financial condition]
+  income_statement: [statement of profit or loss, income statement, profit and loss account, statement of comprehensive income, profit or loss and other comprehensive income]
+  cover: [annual report, financial statements for the year ended, independent auditor]
+# When a report prints the group's (consolidated) and the company's own (separate)
+# statements, the company's own are the answer.
+prefer_titles: [separate]
+avoid_titles: [consolidated]
+
+fields:
+  entity_name:  # printed on every page header: agreement across pages decides
+    type: text
+    label: Entity
+    required: true
+    pattern: '.*[A-Za-z]{4,}.*'  # a name has at least one real word (OCR debris like "ees" does not)
+    description: The legal name of the company or institution the statements are for.
+    find: [share company, s.c., plc, bank, corporation, enterprise, insurance]
+
+  period_end:
+    printed_on: balance_sheet
+    type: date
+    label: Fiscal year end
+    required: true
+    description: The last day of the latest fiscal year the statements cover (e.g. 30 June 2023).
+    find: [for the year ended, as at, as of, year ended]
+
+  currency:
+    printed_on: balance_sheet
+    type: code
+    label: Currency
+    required: true
+    description: ISO code of the reporting currency (ETB for Birr).
+    find: [birr, etb, usd]
+
+  total_assets:
+    printed_on: balance_sheet
+    type: money
+    label: Total assets
+    required: true
+    description: Total assets at the fiscal year end, from the statement of financial position (balance sheet).
+    find: [total assets]
+
+  total_liabilities:
+    printed_on: balance_sheet
+    type: money
+    label: Total liabilities
+    required: true
+    description: Total liabilities at the fiscal year end (not including equity).
+    find: [total liabilities]
+
+  total_equity:
+    printed_on: balance_sheet
+    type: money
+    label: Total equity
+    required: true
+    description: Total equity (capital and reserves, shareholders' funds) at the fiscal year end.
+    find: [total equity, total shareholders' equity, capital and reserves, shareholders' funds, total capital and reserves]
+
+  profit_before_tax:
+    printed_on: income_statement
+    type: money
+    label: Profit before tax
+    required: true
+    description: Profit (or loss, negative) before income tax for the fiscal year.
+    find: [profit before tax, profit before income tax, profit before taxation, loss before tax]
+
+  profit_after_tax:
+    printed_on: income_statement
+    type: money
+    label: Profit after tax
+    required: true
+    description: Profit (or loss, negative) for the year after income tax.
+    find: [profit for the year, profit after tax, net profit, net income, loss for the year]
+
+# Checks after extraction (kinds: sum, sum_of_items, product_of_item, not_greater, date_order, differ, ratio_between).
+rules:
+  - name: balance_sheet_adds_up
+    kind: sum
+    total: total_assets
+    parts: [total_liabilities, total_equity]
+    tolerance: 0.01
+  - name: tax_is_not_negative_income
+    kind: not_greater
+    smaller: profit_after_tax
+    larger: profit_before_tax
+    soft: true  # tax credits exist: a break lowers confidence but does not flag alone
+  - name: profit_before_and_after_tax_differ
+    kind: differ  # equal only when no tax at all: more often a scan that shifted a row
+    fields: [profit_before_tax, profit_after_tax]
+  - name: tax_rate_is_plausible
+    kind: ratio_between  # profit after tax / profit before tax, for a profit; outside it, a row was misread
+    numerator: profit_after_tax
+    denominator: profit_before_tax
+    min: 0.3
+    max: 1.5

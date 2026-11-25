@@ -1,0 +1,148 @@
+{
+  "schema": "invoice",
+  "generator": "evaluation/golden/schemas/invoice/generate.py",
+  "seed": 20261125,
+  "corpus_dir": "data/synthetic/invoices",
+  "documents": [
+    {
+      "doc_key": "inv_01",
+      "file_name": "inv_01.pdf",
+      "layout": "classic",
+      "scanned": false,
+      "sha256": "87a9c574de32eca71fce3b66b87ac6b927a5c36d18543899948133c576f74a57"
+    },
+    {
+      "doc_key": "inv_02",
+      "file_name": "inv_02.pdf",
+      "layout": "banded",
+      "scanned": false,
+      "sha256": "b812f96342316600e9b8f1dace409f3ae9a845ccb901d5de462b2d419d5e0405"
+    },
+    {
+      "doc_key": "inv_03",
+      "file_name": "inv_03.pdf",
+      "layout": "compact",
+      "scanned": true,
+      "sha256": "8d3482cf18de1af1f902b5aed6a736b8224370f11230d3934a14a846b904823b"
+    },
+    {
+      "doc_key": "inv_04",
+      "file_name": "inv_04.pdf",
+      "layout": "bilingual",
+      "scanned": false,
+      "sha256": "81fd384213046c8b7c35a5a6d781dc567c0f372d46455f68e46dbd86cff22c2a"
+    },
+    {
+      "doc_key": "inv_05",
+      "file_name": "inv_05.pdf",
+      "layout": "distractors",
+      "scanned": false,
+      "sha256": "7ff1f2e41957f2122b6d42c810687d015d8d005ed873293d3134cb60e11f09c9"
+    },
+    {
+      "doc_key": "inv_06",
+      "file_name": "inv_06.pdf",
+      "layout": "classic",
+      "scanned": true,
+      "sha256": "4fd719e7d77cd41b5cd2af3f053a6893d79313f85f035eb2e359b063f5844113"
+    },
+    {
+      "doc_key": "inv_07",
+      "file_name": "inv_07.pdf",
+      "layout": "banded",
+      "scanned": false,
+      "sha256": "ed8b1b85e9aa04a47d58d125f957b9688a4326710ed1a1c9de91b13b02b2c9ee"
+    },
+    {
+      "doc_key": "inv_08",
+      "file_name": "inv_08.pdf",
+      "layout": "compact",
+      "scanned": false,
+      "sha256": "f6470def823c549a577a76849278016750fd58507b54fe3486abb15536da093b"
+    },
+    {
+      "doc_key": "inv_09",
+      "file_name": "inv_09.pdf",
+      "layout": "bilingual",
+      "scanned": false,
+      "sha256": "a86067a4f5ce903cb92940b0c5cc57d8755c388a42fb1403b6c535566beeb6b4"
+    },
+    {
+      "doc_key": "inv_10",
+      "file_name": "inv_10.pdf",
+      "layout": "distractors",
+      "scanned": true,
+      "sha256": "51344f2d8b76a179ae37804e8a6f312c2ef1bdbe7f706c904c074aa92c25f773"
+    },
+    {
+      "doc_key": "inv_11",
+      "file_name": "inv_11.pdf",
+      "layout": "classic",
+      "scanned": false,
+      "sha256": "1dda4590fa271f95dacf52281fb5ee0d1a246f7bf93653fafedc1afdec0c1012"
+    },
+    {
+      "doc_key": "inv_12",
+      "file_name": "inv_12.pdf",
+      "layout": "banded",
+      "scanned": false,
+      "sha256": "7606aed253db7a75dfe636f82296055327632eae83daea160cd7273612f0365a"
+    },
+    {
+      "doc_key": "inv_13",
+      "file_name": "inv_13.pdf",
+      "layout": "compact",
+      "scanned": true,
+      "sha256": "ffae80fc7cbad7c2db5d17bc8e67f9c305d88dc111c71eb591cafdc25ff51f38"
+    },
+    {
+      "doc_key": "inv_14",
+      "file_name": "inv_14.pdf",
+      "layout": "bilingual",
+      "scanned": false,
+      "sha256": "65ccbdda4ce70e015fbfae93f9924e97e7a2a9e637a3c5bf0a751040a4b1df0c"
+    },
+    {
+      "doc_key": "inv_15",
+      "file_name": "inv_15.pdf",
+      "layout": "distractors",
+      "scanned": false,
+      "sha256": "bad1dfa623c78cf392b998e8114c6065aaa9739f6a76b12e8ca180337e403034"
+    },
+    {
+      "doc_key": "inv_16",
+      "file_name": "inv_16.pdf",
+      "layout": "classic",
+      "scanned": false,
+      "sha256": "0efd82bf49af9bcf42a5570f3c8fd176811a7ec2e16d7242d11fee151da3c131"
+    },
+    {
+      "doc_key": "inv_17",
+      "file_name": "inv_17.pdf",
+      "layout": "banded",
+      "scanned": true,
+      "sha256": "7abe0c64924730865d64169e85e7994763fb84453576bd25be52cf1380595e3b"
+    },
+    {
+      "doc_key": "inv_18",
+      "file_name": "inv_18.pdf",
+      "layout": "compact",
+      "scanned": false,
+      "sha256": "6c6f67ade11bd5a45963ba3e5105c9482a10ff72a388c969598002838d7cd6cf"
+    },
+    {
+      "doc_key": "inv_19",
+      "file_name": "inv_19.pdf",
+      "layout": "bilingual",
+      "scanned": false,
+      "sha256": "7ffe13d15d78b077866271616b8902b007d68d3fa38026fd758dd44b4612ebc8"
+    },
+    {
+      "doc_key": "inv_20",
+      "file_name": "inv_20.pdf",
+      "layout": "distractors",
+      "scanned": true,
+      "sha256": "d04d74dd3439da68cee818f81e1aee2ac2a572acd381b88933b272356be36441"
+    }
+  ]
+}

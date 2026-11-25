@@ -11,6 +11,7 @@ dependencies = [
     "langgraph-checkpoint-postgres>=2.0",
     "langsmith>=0.10.9",
     "opencv-python-headless>=4.10,<5",
+    "openpyxl>=3.1",
     "pandas>=3.0.3",
     "pdfplumber>=0.11.10",
     "pgvector>=0.3",
@@ -28,6 +29,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "reportlab>=4.2",
 ]
 
 # --- PyTorch wheels per platform ---------------------------------------------

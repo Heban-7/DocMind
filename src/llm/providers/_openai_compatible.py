@@ -35,12 +35,10 @@ def _to_openai_messages(messages: list[Message]) -> list[dict]:
             elif part["type"] == "image":
                 mime = part.get("mime", "image/png")
                 b64 = base64.b64encode(part["image"]).decode()
-                parts.append(
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:{mime};base64,{b64}"},
-                    }
-                )
+                image_url = {"url": f"data:{mime};base64,{b64}"}
+                if part.get("detail"):
+                    image_url["detail"] = part["detail"]  # "high" to read small print
+                parts.append({"type": "image_url", "image_url": image_url})
         out.append({"role": msg["role"], "content": parts})
     return out
 

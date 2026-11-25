@@ -25,6 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.auth_utils import jwt_secret
 from src.api.routers import chat_router, health_router, upload_router
 from src.api.routes.auth import auth_router
+from src.api.routes.fields import fields_router
 
 logger = logging.getLogger("docmind.api")
 
@@ -105,6 +106,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(upload_router)
     app.include_router(chat_router)
+    app.include_router(fields_router)
     return app
 
 

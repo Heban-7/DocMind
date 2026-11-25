@@ -1,0 +1,133 @@
+# Invoice: who sells to whom, when, and for how much, line by line.
+#
+# Ethiopian invoices carry the seller's and buyer's TIN (a 10-digit taxpayer
+# number) and 15% VAT; the schema does not assume either, the rules only check
+# what is printed.
+
+name: invoice
+version: 1
+label: Invoice
+description: A commercial or tax invoice.
+detect:
+  - invoice
+  - tax invoice
+  - bill to
+  - invoice no
+  - amount due
+pages:
+  invoice: [invoice, tax invoice, bill to, invoice no, invoice number]
+
+fields:
+  invoice_number:
+    type: text
+    label: Invoice number
+    required: true
+    description: The invoice's own number or reference, as printed (not an order or TIN number).
+    find: [invoice no, invoice number, "invoice #", inv no, ref]
+
+  invoice_date:
+    type: date
+    label: Invoice date
+    required: true
+    description: The date the invoice was issued.
+    find: [date, invoice date, issue date]
+
+  due_date:
+    type: date
+    label: Due date
+    required: false
+    description: The date payment is due, when printed.
+    find: [due date, payment due, pay by]
+
+  seller_name:
+    type: text
+    label: Seller
+    required: true
+    description: The company that issued the invoice.
+    find: [from, seller, supplier, vendor]
+
+  seller_tin:
+    type: text
+    label: Seller TIN
+    required: false
+    pattern: '[0-9]{10}'  # an Ethiopian TIN has 10 digits
+    description: The seller's taxpayer identification number, digits only.
+    find: [tin, tax id, vat reg]
+
+  buyer_name:
+    type: text
+    label: Buyer
+    required: true
+    description: The customer the invoice is addressed to.
+    find: [bill to, customer, buyer, sold to, to]
+
+  buyer_tin:
+    type: text
+    label: Buyer TIN
+    required: false
+    pattern: '[0-9]{10}'  # an Ethiopian TIN has 10 digits
+    description: The buyer's taxpayer identification number, digits only.
+    find: [customer tin, buyer tin, tin]
+
+  currency:
+    type: code
+    label: Currency
+    required: true
+    description: ISO code of the invoice currency (ETB for Birr).
+    find: [birr, etb, usd, eur]
+
+  subtotal:
+    type: money
+    label: Subtotal
+    required: true
+    description: The total before VAT or other taxes.
+    find: [subtotal, sub-total, total before vat, net amount, taxable amount]
+
+  vat_amount:
+    type: money
+    label: VAT
+    required: true
+    description: The VAT (or sales tax) amount charged. 0 when none is charged.
+    find: [vat, tax, value added tax]
+
+  total_amount:
+    type: money
+    label: Total
+    required: true
+    description: The total amount payable, including tax.
+    find: [total, grand total, amount due, total payable, balance due]
+
+  line_items:
+    type: list
+    label: Line items
+    required: true
+    description: One entry per line of goods or services billed.
+    item:
+      description: {type: text, label: Description}
+      quantity: {type: number, label: Quantity}
+      unit_price: {type: money, label: Unit price}
+      amount: {type: money, label: Amount}
+
+# Checks after extraction (kinds: sum, sum_of_items, product_of_item, not_greater, date_order).
+rules:
+  - name: total_is_subtotal_plus_vat
+    kind: sum
+    total: total_amount
+    parts: [subtotal, vat_amount]
+    tolerance: 0.005
+  - name: lines_add_up_to_subtotal
+    kind: sum_of_items
+    list: line_items
+    column: amount
+    total: subtotal
+    tolerance: 0.005
+  - name: line_amount_is_quantity_times_price
+    kind: product_of_item
+    list: line_items
+    result: amount
+    factors: [quantity, unit_price]
+    tolerance: 0.005
+  - name: due_after_issue
+    kind: date_order
+    earlier: invoice_date
+    later: due_date

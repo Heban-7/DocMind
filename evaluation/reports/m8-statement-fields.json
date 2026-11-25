@@ -1,0 +1,439 @@
+{
+  "schema": "financial_statement_summary",
+  "schema_version": 1,
+  "generated": "2026-11-25T07:57:56+00:00",
+  "overall": {
+    "tp": 156,
+    "fp": 4,
+    "fn": 4,
+    "precision": 0.975,
+    "recall": 0.975,
+    "f1": 0.975,
+    "documents": 20,
+    "errors": 0,
+    "auto_rate": 0.9563,
+    "auto_precision": 0.9935,
+    "errors_flagged": 0.75,
+    "wrong_values": 4,
+    "page_correct": 0.8542,
+    "seconds_p50": 8.36,
+    "cost_per_document_usd": 0.004206
+  },
+  "fields": {
+    "entity_name": {
+      "tp": 19,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1": 0.95
+    },
+    "period_end": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "currency": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "total_assets": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "total_liabilities": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "total_equity": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "profit_before_tax": {
+      "tp": 19,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1": 0.95
+    },
+    "profit_after_tax": {
+      "tp": 18,
+      "fp": 2,
+      "fn": 2,
+      "precision": 0.9,
+      "recall": 0.9,
+      "f1": 0.9
+    }
+  },
+  "documents": [
+    {
+      "doc_key": "cbe_2023_24",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        32,
+        86,
+        111,
+        112,
+        117,
+        159
+      ],
+      "seconds": 8.81,
+      "cost_usd": 0.002361
+    },
+    {
+      "doc_key": "ethiore_2017",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        33,
+        37,
+        38,
+        39,
+        54
+      ],
+      "seconds": 8.29,
+      "cost_usd": 0.00218
+    },
+    {
+      "doc_key": "ets_2023_24",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        46,
+        48,
+        50,
+        52,
+        53,
+        57
+      ],
+      "seconds": 8.31,
+      "cost_usd": 0.002039
+    },
+    {
+      "doc_key": "ethswitch_10th_2023_24",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        39,
+        41,
+        42,
+        55,
+        58
+      ],
+      "seconds": 5.99,
+      "cost_usd": 0.00176
+    },
+    {
+      "doc_key": "ethswitch_2021_22",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        36,
+        38,
+        39,
+        55,
+        64
+      ],
+      "seconds": 7.06,
+      "cost_usd": 0.002112
+    },
+    {
+      "doc_key": "cbe_2006_07",
+      "wrong": [],
+      "needs_review": [
+        "total_assets",
+        "total_liabilities"
+      ],
+      "pages_read": [
+        1,
+        6,
+        14,
+        16,
+        31,
+        33,
+        52
+      ],
+      "seconds": 8.54,
+      "cost_usd": 0.003071
+    },
+    {
+      "doc_key": "dbe_audit_2023",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        11,
+        12,
+        25,
+        28,
+        31,
+        69
+      ],
+      "seconds": 10.36,
+      "cost_usd": 0.003183
+    },
+    {
+      "doc_key": "ethswitch_2019",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        33,
+        35,
+        36,
+        38,
+        56
+      ],
+      "seconds": 5.35,
+      "cost_usd": 0.001825
+    },
+    {
+      "doc_key": "audited_fs_2021",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        2,
+        3
+      ],
+      "seconds": 19.32,
+      "cost_usd": 0.007147
+    },
+    {
+      "doc_key": "audited_fs_2018",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        2,
+        3
+      ],
+      "seconds": 8.52,
+      "cost_usd": 0.001645
+    },
+    {
+      "doc_key": "audited_fs_2019",
+      "wrong": [
+        {
+          "field": "profit_before_tax",
+          "got": "(3,880,965)",
+          "got_value": -3880965000.0,
+          "want": 10553638000.0,
+          "page": 1,
+          "status": "needs_review",
+          "reasons": [
+            "breaks tax_rate_is_plausible"
+          ]
+        }
+      ],
+      "needs_review": [
+        "profit_before_tax",
+        "profit_after_tax"
+      ],
+      "pages_read": [
+        1,
+        2,
+        3
+      ],
+      "seconds": 22.1,
+      "cost_usd": 0.012889
+    },
+    {
+      "doc_key": "audited_fs_2020",
+      "wrong": [
+        {
+          "field": "entity_name",
+          "got": "ees",
+          "got_value": "ees",
+          "want": "Ethio Telecom",
+          "page": 1,
+          "status": "needs_review",
+          "reasons": [
+            "another page gives ሎፍ.--ጨሬ (page 2)",
+            "does not look like a Entity"
+          ]
+        },
+        {
+          "field": "profit_after_tax",
+          "got": ":433:072",
+          "got_value": 433000.0,
+          "want": 9453072000.0,
+          "page": 1,
+          "status": "needs_review",
+          "reasons": [
+            "breaks tax_rate_is_plausible"
+          ]
+        }
+      ],
+      "needs_review": [
+        "entity_name",
+        "profit_before_tax",
+        "profit_after_tax"
+      ],
+      "pages_read": [
+        1,
+        2,
+        3
+      ],
+      "seconds": 15.34,
+      "cost_usd": 0.007267
+    },
+    {
+      "doc_key": "audited_fs_2022",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        2,
+        3
+      ],
+      "seconds": 22.55,
+      "cost_usd": 0.012816
+    },
+    {
+      "doc_key": "ethiore_2020",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        31,
+        35,
+        36,
+        37,
+        38
+      ],
+      "seconds": 7.31,
+      "cost_usd": 0.002558
+    },
+    {
+      "doc_key": "ethiore_2022",
+      "wrong": [
+        {
+          "field": "profit_after_tax",
+          "got": "233,523,541",
+          "got_value": 233523541.0,
+          "want": 223523541.0,
+          "page": 42,
+          "status": "auto",
+          "reasons": []
+        }
+      ],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        36,
+        41,
+        42,
+        58,
+        90
+      ],
+      "seconds": 7.3,
+      "cost_usd": 0.002221
+    },
+    {
+      "doc_key": "cbe_2016_17",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        27,
+        28,
+        29,
+        107,
+        109
+      ],
+      "seconds": 8.0,
+      "cost_usd": 0.00291
+    },
+    {
+      "doc_key": "ethiore_2021",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        9,
+        39,
+        40,
+        41,
+        47,
+        56
+      ],
+      "seconds": 8.4,
+      "cost_usd": 0.002678
+    },
+    {
+      "doc_key": "ethswitch_2020_21",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        44,
+        46,
+        47,
+        51,
+        61
+      ],
+      "seconds": 13.65,
+      "cost_usd": 0.007548
+    },
+    {
+      "doc_key": "ets_2024_25",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        52,
+        54,
+        56,
+        57,
+        72
+      ],
+      "seconds": 7.75,
+      "cost_usd": 0.002212
+    },
+    {
+      "doc_key": "ethiore_2023",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        6,
+        37,
+        38,
+        39,
+        40
+      ],
+      "seconds": 8.11,
+      "cost_usd": 0.003697
+    }
+  ],
+  "run": "runs\\m8",
+  "tag": "",
+  "notes": "Extractor as for invoices; pages chosen by statement (title near the top and the statement's row labels), the company's own statements preferred over the group's, a business-line row moved to its Total column when the parts add up, scale read from the page header, entity names by agreement across pages. Set: 20 annual reports and audited statements (Commercial Bank of Ethiopia, Development Bank, Ethio Telecom, Ethiopian Reinsurance, EthSwitch); answers drafted with gpt-4.1-mini from the statement pages, every value checked against the page text, 5 documents corrected against the page images (draft until a person confirms them)."
+}

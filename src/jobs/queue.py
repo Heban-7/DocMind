@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import os
 import socket
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import uuid4
+
+from psycopg.types.json import Jsonb
 
 from src.db.pool import app_tx, tenant_tx
 
@@ -31,15 +33,22 @@ class Job:
     kind: str
     attempts: int
     max_attempts: int
+    payload: dict = field(default_factory=dict)
 
 
-def enqueue(tenant_id: str, document_id: str, *, conn=None, max_attempts: int = 3) -> str:
-    """Add an ingest job for a document (inside the caller's transaction if given)."""
-    sql = "INSERT INTO jobs (document_id, max_attempts) VALUES (%s, %s) RETURNING id"
+def enqueue(
+    tenant_id: str, document_id: str, *, conn=None, max_attempts: int = 3, kind: str = "ingest", payload: dict | None = None
+) -> str:
+    """Add a job for a document (inside the caller's transaction if given).
+
+    kind: 'ingest' (read the document) or 'extract_fields' (payload: schema, extraction_id).
+    """
+    sql = "INSERT INTO jobs (document_id, max_attempts, kind, payload) VALUES (%s, %s, %s, %s) RETURNING id"
+    args = (document_id, max_attempts, kind, Jsonb(payload or {}))
     if conn is not None:
-        return str(conn.execute(sql, (document_id, max_attempts)).fetchone()["id"])
+        return str(conn.execute(sql, args).fetchone()["id"])
     with tenant_tx(tenant_id) as c:
-        return str(c.execute(sql, (document_id, max_attempts)).fetchone()["id"])
+        return str(c.execute(sql, args).fetchone()["id"])
 
 
 def claim(worker: str, *, lease_seconds: int = LEASE_SECONDS) -> Job | None:
@@ -58,7 +67,7 @@ def claim(worker: str, *, lease_seconds: int = LEASE_SECONDS) -> Job | None:
                     ORDER BY run_after, created_at
                     FOR UPDATE SKIP LOCKED
                     LIMIT 1)
-            RETURNING id, tenant_id, document_id, kind, attempts, max_attempts
+            RETURNING id, tenant_id, document_id, kind, attempts, max_attempts, payload
             """,
             (worker, lease_seconds),
         ).fetchone()
@@ -71,6 +80,7 @@ def claim(worker: str, *, lease_seconds: int = LEASE_SECONDS) -> Job | None:
         kind=row["kind"],
         attempts=row["attempts"],
         max_attempts=row["max_attempts"],
+        payload=dict(row.get("payload") or {}),
     )
 
 

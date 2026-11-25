@@ -1,0 +1,432 @@
+{
+  "schema": "invoice",
+  "schema_version": 1,
+  "generated": "2026-11-25T07:57:55+00:00",
+  "overall": {
+    "tp": 374,
+    "fp": 8,
+    "fn": 9,
+    "precision": 0.9791,
+    "recall": 0.9765,
+    "f1": 0.9778,
+    "documents": 20,
+    "errors": 0,
+    "auto_rate": 0.9526,
+    "auto_precision": 1.0,
+    "errors_flagged": 1.0,
+    "wrong_values": 8,
+    "page_correct": 1.0,
+    "seconds_p50": 14.39,
+    "cost_per_document_usd": 0.001936
+  },
+  "fields": {
+    "invoice_number": {
+      "tp": 18,
+      "fp": 2,
+      "fn": 2,
+      "precision": 0.9,
+      "recall": 0.9,
+      "f1": 0.9
+    },
+    "invoice_date": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "due_date": {
+      "tp": 14,
+      "fp": 0,
+      "fn": 1,
+      "precision": 1.0,
+      "recall": 0.9333,
+      "f1": 0.9655
+    },
+    "seller_name": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "seller_tin": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "buyer_name": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "buyer_tin": {
+      "tp": 17,
+      "fp": 1,
+      "fn": 0,
+      "precision": 0.9444,
+      "recall": 1.0,
+      "f1": 0.9714
+    },
+    "currency": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "subtotal": {
+      "tp": 19,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1": 0.95
+    },
+    "vat_amount": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "total_amount": {
+      "tp": 19,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1": 0.95
+    },
+    "line_items": {
+      "tp": 167,
+      "fp": 3,
+      "fn": 4,
+      "precision": 0.9824,
+      "recall": 0.9766,
+      "f1": 0.9795
+    }
+  },
+  "documents": [
+    {
+      "doc_key": "inv_01",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 16.01,
+      "cost_usd": 0.00061
+    },
+    {
+      "doc_key": "inv_02",
+      "wrong": [
+        {
+          "field": "subtotal",
+          "got": "989,419.75",
+          "got_value": 989419.75,
+          "want": 860365.0,
+          "page": 1,
+          "status": "needs_review",
+          "reasons": [
+            "breaks lines_add_up_to_subtotal"
+          ]
+        },
+        {
+          "field": "total_amount",
+          "got": "1,118,474.50",
+          "got_value": 1118474.5,
+          "want": 989419.75,
+          "page": 1,
+          "status": "needs_review",
+          "reasons": [
+            "the value is not printed on the page"
+          ]
+        }
+      ],
+      "needs_review": [
+        "subtotal",
+        "total_amount",
+        "line_items"
+      ],
+      "pages_read": [
+        1
+      ],
+      "seconds": 16.86,
+      "cost_usd": 0.000751
+    },
+    {
+      "doc_key": "inv_03",
+      "wrong": [
+        {
+          "field": "due_date",
+          "got": null,
+          "got_value": null,
+          "want": "2025-12-25",
+          "page": null,
+          "status": "missing",
+          "reasons": []
+        },
+        {
+          "field": "line_items",
+          "got": "7 lines (7 right)",
+          "want": "8 lines",
+          "status": "needs_review"
+        }
+      ],
+      "needs_review": [
+        "subtotal",
+        "line_items"
+      ],
+      "pages_read": [
+        1
+      ],
+      "seconds": 22.83,
+      "cost_usd": 0.006323
+    },
+    {
+      "doc_key": "inv_04",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 12.74,
+      "cost_usd": 0.000585
+    },
+    {
+      "doc_key": "inv_05",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 14.04,
+      "cost_usd": 0.000649
+    },
+    {
+      "doc_key": "inv_06",
+      "wrong": [
+        {
+          "field": "line_items",
+          "got": "5 lines (3 right)",
+          "want": "5 lines",
+          "status": "needs_review"
+        }
+      ],
+      "needs_review": [
+        "line_items"
+      ],
+      "pages_read": [
+        1
+      ],
+      "seconds": 13.88,
+      "cost_usd": 0.000663
+    },
+    {
+      "doc_key": "inv_07",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 12.66,
+      "cost_usd": 0.000624
+    },
+    {
+      "doc_key": "inv_08",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        2
+      ],
+      "seconds": 39.77,
+      "cost_usd": 0.002551
+    },
+    {
+      "doc_key": "inv_09",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 9.61,
+      "cost_usd": 0.000492
+    },
+    {
+      "doc_key": "inv_10",
+      "wrong": [
+        {
+          "field": "invoice_number",
+          "got": "S!-710998",
+          "got_value": "S!-710998",
+          "want": "SI-710998",
+          "page": 1,
+          "status": "needs_review",
+          "reasons": [
+            "has characters a scan often misreads (! or |)"
+          ]
+        },
+        {
+          "field": "buyer_tin",
+          "got": "8366910",
+          "got_value": "8366910",
+          "want": null,
+          "page": 1,
+          "status": "needs_review",
+          "reasons": [
+            "does not look like a Buyer TIN"
+          ]
+        }
+      ],
+      "needs_review": [
+        "invoice_number",
+        "buyer_tin"
+      ],
+      "pages_read": [
+        1
+      ],
+      "seconds": 16.46,
+      "cost_usd": 0.006195
+    },
+    {
+      "doc_key": "inv_11",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 14.48,
+      "cost_usd": 0.00056
+    },
+    {
+      "doc_key": "inv_12",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 14.02,
+      "cost_usd": 0.000631
+    },
+    {
+      "doc_key": "inv_13",
+      "wrong": [
+        {
+          "field": "line_items",
+          "got": "2 lines (1 right)",
+          "want": "2 lines",
+          "status": "needs_review"
+        }
+      ],
+      "needs_review": [
+        "subtotal",
+        "line_items"
+      ],
+      "pages_read": [
+        1
+      ],
+      "seconds": 13.95,
+      "cost_usd": 0.006057
+    },
+    {
+      "doc_key": "inv_14",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 13.78,
+      "cost_usd": 0.000698
+    },
+    {
+      "doc_key": "inv_15",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1,
+        2
+      ],
+      "seconds": 39.16,
+      "cost_usd": 0.002647
+    },
+    {
+      "doc_key": "inv_16",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 11.03,
+      "cost_usd": 0.000499
+    },
+    {
+      "doc_key": "inv_17",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 14.44,
+      "cost_usd": 0.000663
+    },
+    {
+      "doc_key": "inv_18",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 17.84,
+      "cost_usd": 0.000768
+    },
+    {
+      "doc_key": "inv_19",
+      "wrong": [],
+      "needs_review": [],
+      "pages_read": [
+        1
+      ],
+      "seconds": 14.35,
+      "cost_usd": 0.000609
+    },
+    {
+      "doc_key": "inv_20",
+      "wrong": [
+        {
+          "field": "invoice_number",
+          "got": "5|-662523",
+          "got_value": "5|-662523",
+          "want": "SI-662523",
+          "page": 1,
+          "status": "needs_review",
+          "reasons": [
+            "has characters a scan often misreads (! or |)"
+          ]
+        }
+      ],
+      "needs_review": [
+        "invoice_number"
+      ],
+      "pages_read": [
+        1
+      ],
+      "seconds": 16.53,
+      "cost_usd": 0.006155
+    }
+  ],
+  "run": "runs\\m8",
+  "tag": "",
+  "notes": "Extractor: gpt-4o-mini, page by page with block and cell ids, values grounded to their cell, schema rules (subtotal + VAT = total, lines add up, quantity x price), the candidates that make the rules hold chosen across pages, a second look at the page image for flagged values on scanned pages. Set: 20 invoices generated by evaluation/golden/schemas/invoice/generate.py (5 layouts incl. bilingual Amharic/English and one with look-alike numbers; 2 two-page; 6 scanned at 150 dpi); answers exact by construction."
+}

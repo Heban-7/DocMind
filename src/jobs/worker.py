@@ -61,12 +61,32 @@ class _Lease(threading.Thread):
                 logger.warning("lease renewal failed for job %s: %s", self.job.id, exc)
 
 
-def run_job(job: queue.Job, worker: str, **process_kwargs) -> bool:
-    """Process one claimed job. Returns True when the document is ready."""
-    from src.db import repos
-    from src.pipeline.ingest import process_document
+def run_field_job(job: queue.Job, worker: str) -> bool:
+    """Extract a schema's fields (M8). A failure marks the extraction failed, never the document."""
+    from src.schemas.service import run_extraction
 
+    lease = _Lease(job, worker, every=max(5.0, queue.LEASE_SECONDS / 3))
+    lease.start()
+    try:
+        run_extraction(job.tenant_id, job.document_id, job.payload["extraction_id"], job.payload["schema"])
+    except Exception as exc:
+        logger.exception("field job %s failed (attempt %d of %d)", job.id, job.attempts, job.max_attempts)
+        queue.fail(job, worker, f"{type(exc).__name__}: {exc}")
+        return False
+    finally:
+        lease.done.set()
+    queue.complete(job, worker)
+    return True
+
+
+def run_job(job: queue.Job, worker: str, **process_kwargs) -> bool:
+    """Process one claimed job. Returns True when it succeeded."""
+    if job.kind == "extract_fields":
+        return run_field_job(job, worker)
+
+    from src.db import repos
     from src.llm import ledger, usage
+    from src.pipeline.ingest import process_document
 
     lease = _Lease(job, worker, every=max(5.0, queue.LEASE_SECONDS / 3))
     lease.start()
